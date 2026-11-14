@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-11-13T21:02:09.735172+00:00",
+  "system": "/nix/store/c9pqm3d78112ydvjfnjkxhljp8r7jbcm-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "boot_tree": "/nix/store/9lv475093r0xshli38863gzmzg3mkpjb-nixos-kshim-boot-tree",
+  "boot_id": "nixos-59e14b93b0d3683e29ed643a28d3bf53",
+  "release": "7.3.4-erhai-p3",
+  "boot_manifest_and_payload_hashes": "passed",
+  "kernel_module_directory": "matched release",
+  "initrd_entries": 2134,
+  "initrd_mailbox_module": "present",
+  "initrd_usb_management": "present",
+  "initrd_wifi_and_bluetooth_firmware": "present",
+  "payloads": [
+    {
+      "path": "/nix/store/9amwkb0qpp2f02ssi06h892pzxr3v17d-linux-erhai-aarch64-unknown-linux-gnu-7.3.4/Image",
+      "size": 54635008,
+      "sha256": "6908065d27f7cdf95d7008d4f8f4acecc0c21c78b5b656a05d2d54c397a2d5dc"
+    },
+    {
+      "path": "/nix/store/hki029zvmgl3sqfa46cs5p31iv3276ab-erhai-kshim-device-tree/qcom/sm8750-erhai.dtb",
+      "size": 193965,
+      "sha256": "1d1eba127b2e9f4f5f4da4107ebac6fcd5150ee7f98fc710750f1ed081061e64"
+    },
+    {
+      "path": "/nix/store/gp4i8ipjb5fzbjfw0qks8bnicdmi5jxm-initrd-linux-erhai-aarch64-unknown-linux-gnu-7.3.4/initrd",
+      "size": 50678076,
+      "sha256": "f187c3fda2d83b1eed4669207c920a486a01b7061b47d1f16ffd914b305ca2b8"
+    }
+  ],
+  "hardware_verified": false,
+  "cmdline_bytes": 179,
+  "normal_kernel_params": true,
+  "vddio_constraint_uV": {
+    "regulator-min-microvolt": 1896000,
+    "regulator-max-microvolt": 1896000
+  },
+  "vmlinux_arch": "AArch64",
+  "vmlinux_btf": "present",
+  "source_checks": {
+    "strict_replay": "/nix/store/iqa074n493jrs44j6fydg8qzbs2va37d-erhai-patchset-replay",
+    "device_regression": "/nix/store/7dcxy1a9msmmnzgz2m6nd8fvsqfqwfv0-erhai-device-regression"
+  },
+  "patch_head": "d31d13f5d0b1117160e2930da43996219933f14d"
+}

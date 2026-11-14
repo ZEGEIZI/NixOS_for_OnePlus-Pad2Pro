@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "source": "ArmadaOS OPD2413 successful29 original-device Bluetooth firmware",
+  "reference_revision": "937d88a2c28a67153d572bcf7f89049eaada93f2",
+  "files": [
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.b2e",
+      "sha256": "d7249be55bccc5da5b58d985e1b3facac27e002e7e97ad789331a03285eb6b14",
+      "size": 13227
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.b34",
+      "sha256": "fa31648ce55155492d48ccfc874831a6f675b4bd385cad0e8ecfdc7d52aad93f",
+      "size": 13335
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.b35",
+      "sha256": "fa31648ce55155492d48ccfc874831a6f675b4bd385cad0e8ecfdc7d52aad93f",
+      "size": 13335
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.b36",
+      "sha256": "fa31648ce55155492d48ccfc874831a6f675b4bd385cad0e8ecfdc7d52aad93f",
+      "size": 13335
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.b37",
+      "sha256": "fa31648ce55155492d48ccfc874831a6f675b4bd385cad0e8ecfdc7d52aad93f",
+      "size": 13335
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.b38",
+      "sha256": "fa31648ce55155492d48ccfc874831a6f675b4bd385cad0e8ecfdc7d52aad93f",
+      "size": 13335
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.b39",
+      "sha256": "fa31648ce55155492d48ccfc874831a6f675b4bd385cad0e8ecfdc7d52aad93f",
+      "size": 13335
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.b3e",
+      "sha256": "fb03f98be56486533d55f33262cab7970b746c5eb35c9d495022086e106b1769",
+      "size": 13227
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.b41",
+      "sha256": "fa31648ce55155492d48ccfc874831a6f675b4bd385cad0e8ecfdc7d52aad93f",
+      "size": 13335
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtfw20.mbn",
+      "sha256": "07047a909a731959ff5f89d95ed3819759faa652a4d0eb0b3f7a0a041f9cdd9a",
+      "size": 228872
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhbtnv20.bin",
+      "sha256": "ba898ff3d352e54421a8fdef5ff744f00224e1cae6264aef164c943b030a228a",
+      "size": 13335
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhperifw20.mbn",
+      "sha256": "16d4e64cead8a79140943c734ca48cb5d7124d34227078e28ef97d8ebbd8728e",
+      "size": 25420
+    },
+    {
+      "install": "qca/oneplus/opd2413/brhperinv20.bin",
+      "sha256": "7422563f2d07f585f4b3f17a5d6194127625ffe2eaf2ead42e0ddf2ef7208250",
+      "size": 741
+    },
+    {
+      "install": "qca/oneplus/opd2413/tmel_peach_20.elf",
+      "sha256": "4814d33de80088dc3d79e8a08a3afabf193d33b0666a9d062fc4722546267774",
+      "size": 55204
+    }
+  ]
+}

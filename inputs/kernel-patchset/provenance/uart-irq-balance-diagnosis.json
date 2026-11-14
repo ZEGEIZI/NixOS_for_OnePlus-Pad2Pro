@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-11-13T21:20:17.664985+00:00",
+  "release_target": "7.3.4-erhai-p4",
+  "source_fix": "bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb",
+  "subsystem": "qcom_geni_serial / Brahma UART bootstrap",
+  "trigger": "Bluetooth closes and reopens UART before the first 115200-baud peripheral wake",
+  "cause": "7.3 upstream disable_irq at shutdown entry and carried downstream disable_irq_nosync at exit each increment depth; startup decrements only once, leaving interrupts masked",
+  "fix": "remove the duplicate downstream disable; retain upstream shutdown synchronization and status draining",
+  "regression": {
+    "method": "compile actual driver startup/shutdown functions with IRQ and runtime-PM mocks",
+    "before": "fails IRQ/PM invariant after first shutdown",
+    "after": "passes 16 open/close cycles on console and non-console, PM-resume failure, setup failure and retry",
+    "scope": "host lifecycle regression; hardware Bluetooth success is pending p4 boot"
+  },
+  "observed_p3": "peripheral-version-115200 timeout, byte_tx=1 byte_rx=0; same as p2",
+  "hardware_verified": true,
+  "p4_hardware_result": "two firmware bootstrap completions ret0, controller powered, user confirms Settings switch and Bluetooth connection/use normal"
+}

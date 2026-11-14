@@ -1,0 +1,146 @@
+Subject: [PATCH] boot files: optionally share verified identical payloads
+
+NixOS installer extension; default publication and the runtime protocol remain
+unchanged. Apply after the menu pagination changes recorded in inputs/kshim-protocol/README.md.
+
+--- a/tools/boot_files.py
++++ b/tools/boot_files.py
+@@ -119,6 +119,18 @@
+         os.close(fd)
+ 
+ 
++def validate_payload_header(header, size, kind):
++    if kind == 'image':
++        if len(header) != 64 or header[56:60] != b'ARM\x64':
++            raise ValueError('Expected uncompressed ARM64 Image')
++        offset, memory_size, flags = struct.unpack_from('<QQQ', header, 8)
++        if not memory_size or memory_size > TOTAL_MAX or offset >= 0x200000 or offset % 65536 or flags & ~14:
++            raise ValueError('Unsupported ARM64 Image header')
++    if kind == 'dtb':
++        if len(header) < 40 or header[:4] != b'\xd0\x0d\xfe\xed' or struct.unpack_from('>I', header, 4)[0] != size or size > DTB_MAX:
++            raise ValueError('Expected a complete DTB (max 1 MiB)')
++
++
+ def copy_file(source, dest, kind):
+     fd = os.open(source, os.O_RDONLY | os.O_NOFOLLOW)
+     try:
+@@ -128,15 +140,7 @@
+         h = hashlib.sha256()
+         with os.fdopen(os.dup(fd), 'rb') as src, dest.open('xb') as dst:
+             header = src.read(64)
+-            if kind == 'image':
+-                if len(header) != 64 or header[56:60] != b'ARM\x64':
+-                    raise ValueError('Expected uncompressed ARM64 Image')
+-                offset, memory_size, flags = struct.unpack_from('<QQQ', header, 8)
+-                if not memory_size or memory_size > TOTAL_MAX or offset >= 0x200000 or offset % 65536 or flags & ~14:
+-                    raise ValueError('Unsupported ARM64 Image header')
+-            if kind == 'dtb':
+-                if len(header) < 40 or header[:4] != b'\xd0\x0d\xfe\xed' or struct.unpack_from('>I', header, 4)[0] != before.st_size or before.st_size > DTB_MAX:
+-                    raise ValueError('Expected a complete DTB (max 1 MiB)')
++            validate_payload_header(header, before.st_size, kind)
+             dst.write(header)
+             h.update(header)
+             for chunk in iter(lambda: src.read(1024*1024), b''):
+@@ -251,7 +255,62 @@
+     return result
+ 
+ 
+-def publish(args, boot):
++def payload_digest(source, kind):
++    """Inspect a regular source without following a final symlink."""
++    fd = os.open(source, os.O_RDONLY | os.O_NOFOLLOW)
++    try:
++        before = os.fstat(fd)
++        if not stat.S_ISREG(before.st_mode) or not 0 < before.st_size <= FILE_MAX:
++            raise ValueError('Invalid/oversized ' + kind)
++        with os.fdopen(os.dup(fd), 'rb') as stream:
++            validate_payload_header(stream.read(64), before.st_size, kind)
++            stream.seek(0)
++            digest = hashlib.file_digest(stream, 'sha256').hexdigest()
++        after = os.fstat(fd)
++        if (before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
++                after.st_size, after.st_mtime_ns, after.st_ctime_ns):
++            raise ValueError('Source changed during hashing')
++        return before.st_size, digest
++    finally:
++        os.close(fd)
++
++
++def reusable_payloads(system, listed, expected):
++    """Find matching payloads only in verified versions of this system."""
++    found = {}
++    for version in listed:
++        try:
++            manifest = version_manifest(system, version, verify_payloads=False)
++            matching = [key for key, (size, digest) in expected.items()
++                        if key not in found and manifest.get(key) != 'none'
++                        and manifest.get(key + '_size') == str(size)
++                        and manifest.get(key + '_sha256') == digest]
++            if not matching:
++                continue
++            # Verify real bytes, paths and all companion files before reusing
++            # anything. A broken old entry must not infect a new generation.
++            version_manifest(system, version)
++        except (OSError, ValueError):
++            continue
++        for key in matching:
++            found[key] = system/'versions'/version/manifest[key]
++        if len(found) == len(expected):
++            break
++    return found
++
++
++def link_payload(source, dest, kind, expected):
++    # Callers hold the system update lock. Never overwrite or chmod a shared
++    # inode: every published version treats its payloads as immutable.
++    if payload_digest(source, kind) != expected:
++        raise ValueError('Reusable payload changed before linking')
++    os.link(source, dest, follow_symlinks=False)
++    if payload_digest(dest, kind) != expected:
++        raise ValueError('Linked payload failed verification')
++    return expected
++
++
++def publish(args, boot, *, reuse_payloads=False):
+     system_id, boot_id = identifier(args.system), identifier(args.version)
+     title = plain(args.title, 96)
+     release = plain(args.kernel_release, 128)
+@@ -271,15 +330,26 @@
+         sources = [('image', args.image, 'Image'), ('dtb', args.dtb, 'board.dtb')]
+         if args.initrd:
+             sources.append(('initrd', args.initrd, 'initramfs.img'))
+-        required = sum(p.stat().st_size for _, p, _ in sources)
+-        if required > TOTAL_MAX or shutil.disk_usage(boot).free < required + 8*1024*1024:
++        expected = ({key: payload_digest(source, key) for key, source, _ in sources}
++                    if reuse_payloads else {})
++        reused = reusable_payloads(system, old['versions'] if old else [], expected) if expected else {}
++        total = sum(p.stat().st_size for _, p, _ in sources)
++        required = sum(p.stat().st_size for key, p, _ in sources if key not in reused)
++        if total > TOTAL_MAX or shutil.disk_usage(boot).free < required + 8*1024*1024:
+             raise ValueError('Insufficient boot space / total payload limit exceeded')
+         temporary = Path(tempfile.mkdtemp(prefix='.version-', dir=store))
+         try:
+             fields = dict(format='1', system_id=system_id, title=title, boot_id=boot_id,
+                           kernel_release=release, device='oneplus,opd2413')
+             for key, source, name in sources:
+-                size, sha = copy_file(source, temporary/name, key)
++                if key in reused:
++                    if payload_digest(source, key) != expected[key]:
++                        raise ValueError('Incoming payload changed before linking')
++                    size, sha = link_payload(reused[key], temporary/name, key, expected[key])
++                else:
++                    size, sha = copy_file(source, temporary/name, key)
++                    if expected and (size, sha) != expected[key]:
++                        raise ValueError('Incoming payload changed during publication')
+                 fields.update({key: name, key+'_size': str(size), key+'_sha256': sha})
+             # Image.image_size includes runtime BSS and can exceed the file
+             # length. Match the loader's total memory admission before making
+@@ -308,7 +378,7 @@
+                 shutil.rmtree(temporary)
+     return {'system': system_id, 'current': boot_id, 'previous': previous,
+             'versions': listed,
+-            'android_boot_written': False}
++            'android_boot_written': False, 'reused_payloads': sorted(reused)}
+ 
+ 
+ def configure(args, boot):

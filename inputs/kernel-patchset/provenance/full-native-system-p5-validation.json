@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-11-14T04:46:29.885515+00:00",
+  "system": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "boot_tree": "/nix/store/4bi3rjygqmh1wdy1y3sww21qy4nnwq1i-nixos-kshim-boot-tree",
+  "boot_id": "nixos-9bfa09ddd760960fdd359c52b6b842ce",
+  "release": "7.3.4-erhai-p5",
+  "boot_manifest_and_payload_hashes": "passed",
+  "kernel_module_directory": "matched release",
+  "initrd_entries": 2134,
+  "initrd_mailbox_module": "present",
+  "initrd_usb_management": "present",
+  "initrd_wifi_and_bluetooth_firmware": "present",
+  "payloads": [
+    {
+      "path": "/nix/store/86xqz15ad8sdd27fhxk8nkg0swqwcha5-linux-erhai-7.3.4/Image",
+      "size": 54635008,
+      "sha256": "10f2445b52aa251c4681e6ce75cf501bfa47a1d467724a08138d4e780e2deb76"
+    },
+    {
+      "path": "/nix/store/i230mkjmcrif2br3fw4azm2ws8h8pz61-erhai-kshim-device-tree/qcom/sm8750-erhai.dtb",
+      "size": 193956,
+      "sha256": "4d069f620fcf6b09f258683a0ab23dcd819e415585b637ec1da4a4a86b790178"
+    },
+    {
+      "path": "/nix/store/cyxyl2w6b0xg8bv08406kqnh8033vcgr-initrd-linux-erhai-7.3.4/initrd",
+      "size": 50429073,
+      "sha256": "118d363f17b6f18de3207f3137d2924573166d5f5659dc79b9cfde39358162f4"
+    }
+  ],
+  "hardware_verified": false,
+  "normal_kernel_params": true,
+  "cmdline_bytes": 179,
+  "vddio_constraint_uV": {
+    "regulator-min-microvolt": 1896000,
+    "regulator-max-microvolt": 1896000
+  },
+  "adsp_heap": {
+    "consumer": "/soc@0/remoteproc@6800000/glink-edge/fastrpc",
+    "pool": "/reserved-memory/adsp-rpc-remote-heap",
+    "exclusive_reservation": true
+  },
+  "vmlinux_arch": "AArch64",
+  "vmlinux_btf": "present",
+  "sample_vermagic": "7.3.4-erhai-p5 SMP preempt mod_unload aarch64",
+  "boot_mount_options": "ro,noatime",
+  "kernel_build_architecture": "physical native ARM64 on tablet",
+  "native_build_unit": {
+    "LoadState": "loaded",
+    "ActiveState": "active",
+    "SubState": "exited",
+    "MainPID": "0",
+    "Result": "success",
+    "ExecMainExitTimestamp": "Sat 2026-11-14 12:45:07 CST",
+    "ExecMainStatus": "0"
+  },
+  "native_build_boot_uuid": "b7df2be7-cc70-4592-ad3c-3bd67cf15eb5",
+  "complete_native_kernel_built": true,
+  "patch_head": "4a4041f5921c6cbe29946bf36a1035b601ff3400",
+  "publication": {
+    "boot_id": "nixos-9bfa09ddd760960fdd359c52b6b842ce",
+    "backup": "/var/lib/erhai-patchset/20261114-124721-candidate",
+    "original_current_preserved": true,
+    "original_profile_preserved": true,
+    "boot_readonly_after_publish": true,
+    "native_hardware_boot": "pending user cold boot"
+  }
+}

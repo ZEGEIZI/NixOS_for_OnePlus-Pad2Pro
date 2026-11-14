@@ -1,0 +1,240 @@
+{
+  "timestamp": "2026-11-14T06:28:26.506581+00:00",
+  "device": "OnePlus Pad 2 Pro OPD2413 / OP615EL1",
+  "android_version": "16",
+  "android_fingerprint": "OnePlus/OPD2413/OP615EL1:16/AP3A.240617.008/V.54cdc84-304c441-307540c:user/release-keys",
+  "android_kernel": "6.6.118-android15-8-g2e6b9c3812c5-ab15114928-4k",
+  "access": "user-authorized ADB KernelSU root; read-only device-tree/sysfs and partition capture; no regulator writes",
+  "active_slot": "_a",
+  "selected_dtb_index": 6,
+  "selected_dtbo_index": 4,
+  "panel_selection": {
+    "active_display": "/soc/qcom,dsi-display-primary",
+    "default_panel_before_bootarg_override": "/soc/qcom,mdss_mdp@ae00000/qcom,mdss_dsi_vtdr6130_fhd_plus_vid",
+    "selection_method": "msm_drm.dsi_display0 boot argument overrides qcom,dsi-default-panel",
+    "bootarg_panel_selector": "qcom,mdss_dsi_panel_XN242_P_D_A0024_vid",
+    "selected_panel": "/soc/qcom,mdss_mdp@ae00000/qcom,mdss_dsi_panel_XN242_P_D_A0024_vid",
+    "selected_panel_name": [
+      "XN242 p d dsc video mode panel"
+    ],
+    "panel_power_properties": {
+      "oplus,panel-power-off-sequence": [
+        "5",
+        "vddio",
+        "0"
+      ],
+      "oplus,panel-power-on-sequence": [
+        "0",
+        "vddio",
+        "2"
+      ],
+      "qcom,panel_voltage_vddi": [
+        0,
+        1800000,
+        1800000,
+        1800000
+      ],
+      "qcom,panel_voltage_vddi_name": [
+        "vddio"
+      ],
+      "qcom,panel-supply-entries": [
+        2107
+      ],
+      "qcom,mdss-dsi-bllp-power-mode": [],
+      "qcom,mdss-dsi-bllp-eof-power-mode": []
+    },
+    "supply_group": "/soc/oplus_dsi_panel_custom_pwr_supply",
+    "supply_entries": {
+      "/soc/oplus_dsi_panel_custom_pwr_supply/qcom,panel-supply-entry@0": {
+        "qcom,supply-pre-off-sleep": [
+          2
+        ],
+        "qcom,supply-post-on-sleep": [
+          2
+        ],
+        "qcom,supply-disable-load": [
+          8000
+        ],
+        "qcom,supply-enable-load": [
+          220000
+        ],
+        "qcom,supply-max-voltage": [
+          1900000
+        ],
+        "qcom,supply-min-voltage": [
+          1900000
+        ],
+        "qcom,supply-name": [
+          "vddio"
+        ],
+        "reg": [
+          0
+        ]
+      }
+    },
+    "display_supply_links": {
+      "tvdd-supply": "/soc/rsc@16500000/drv@2/rpmh-regulator-ldob4/regulator-pm-humu-l4",
+      "vdd-supply": "/soc/rsc@16500000/drv@2/rpmh-regulator-ldob11/regulator-pm-humu-l11",
+      "vci-supply": "/soc/rsc@16500000/drv@2/rpmh-regulator-ldob13/regulator-pm-humu-l13",
+      "vddio-supply": "/soc/rsc@16500000/drv@2/rpmh-regulator-ldob12/regulator-pm-humu-l12"
+    },
+    "ldob12": {
+      "/soc/rsc@16500000/drv@2/rpmh-regulator-ldob12": {
+        "compatible": [
+          "qcom,rpmh-vrm-regulator"
+        ],
+        "qcom,resource-name": [
+          "ldob12"
+        ],
+        "qcom,regulator-type": [
+          "pmic5-ldo"
+        ],
+        "qcom,supported-modes": [
+          2,
+          4
+        ],
+        "qcom,mode-threshold-currents": [
+          0,
+          30000
+        ],
+        "proxy-supply": [
+          61
+        ]
+      },
+      "/soc/rsc@16500000/drv@2/rpmh-regulator-ldob12/regulator-pm-humu-l12": {
+        "regulator-name": [
+          "pm_humu_l12"
+        ],
+        "qcom,set": [
+          3
+        ],
+        "regulator-min-microvolt": [
+          1200000
+        ],
+        "regulator-max-microvolt": [
+          1900000
+        ],
+        "qcom,init-voltage": [
+          1900000
+        ],
+        "qcom,init-mode": [
+          4
+        ],
+        "qcom,proxy-consumer-enable": [],
+        "phandle": [
+          61
+        ]
+      }
+    }
+  },
+  "factory_panel_request_uV": {
+    "min": 1900000,
+    "max": 1900000
+  },
+  "factory_regulator_initial_uV": 1900000,
+  "factory_regulator_constraint_uV": {
+    "min": 1200000,
+    "max": 1900000
+  },
+  "android_lit_display_observation": {
+    "regulator": "pm_humu_l12",
+    "rpmh_resource": "ldob12",
+    "sysfs": "/sys/class/regulator/regulator.36",
+    "microvolts": 1900000,
+    "state": "enabled",
+    "num_users": 1,
+    "brightness": 668,
+    "max_brightness": 2047
+  },
+  "static_partition_runtime_cross_check": {
+    "base_count": 13,
+    "overlay_count": 16,
+    "selected_base_index": 6,
+    "selected_overlay_index": 4,
+    "base": {
+      "index": 6,
+      "offset": 3106184,
+      "size": 552879,
+      "sha256": "eef0e1db6beb18d0273f6a363f63f9f1732e358717b229057600ada9618c60e7"
+    },
+    "overlay": {
+      "index": 4,
+      "offset": 5018444,
+      "size": 1252754,
+      "id": 0,
+      "rev": 0,
+      "custom": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "sha256": "0b1c440c082390760a5a37da95db3cb8a150f96ebe504efedc788a8219b56d61"
+    },
+    "overlay_returncode": 0,
+    "overlay_stderr": "",
+    "relevant_properties_compared": 21,
+    "static_partition_matches_runtime_voltage_properties": true
+  },
+  "mainline_model": {
+    "driver": "drivers/regulator/qcom-rpmh-regulator.c",
+    "model": "pmic5_nldo515",
+    "min_uV": 320000,
+    "step_uV": 8000,
+    "stock_nominal_selector": 197.5,
+    "lower_selector": 197,
+    "lower_uV": 1896000,
+    "upper_selector": 198,
+    "upper_uV": 1904000,
+    "p5_selected_uV": 1896000,
+    "difference_from_factory_request_uV": -4000,
+    "difference_percent": -0.21052631578947367
+  },
+  "interpretation": [
+    "1.900 V is confirmed as the factory panel consumer request, regulator initialization value and lit-display driver report on this exact device.",
+    "1.896 V originated from the previous mainline Erhai DTS lower bound and its nldo515 8 mV model; the migration constrained that previously working lower selector after a controlled modeset experiment.",
+    "The Android consumer requests exactly 1.900 V. The mainline setting differs by -4 mV; it is a validated port setting, not an OEM-certified exact voltage.",
+    "Kernel regulator/RPMh reports are software state, not an independent physical voltage measurement.",
+    "The old controlled experiment did not isolate physical overvoltage from initialization/readback/voltage-vote effects, so it does not prove that physical 1.904 V alone caused the resets.",
+    "No kernel or regulator setting was changed by this reference collection. Further alignment to the nominal request requires checking the PMIC voltage model and initial RPMh readback semantics."
+  ],
+  "evidence": {
+    "partition-capture.json": {
+      "bytes": 949,
+      "sha256": "8acd6ee44770447a610059ae1164fcd3b076ef22f5dc4b442ea407f7283a1984",
+      "captured_or_derived_at_utc": "2026-11-14T06:10:13.782059+00:00"
+    },
+    "android-runtime.dtb": {
+      "bytes": 1600420,
+      "sha256": "4261cbe19d65cb241db648653b8eca7106d0e48a9d00f34ff3827b19b53d92bb",
+      "captured_or_derived_at_utc": "2026-11-14T06:15:49.240973+00:00"
+    },
+    "android-properties.txt": {
+      "bytes": 404,
+      "sha256": "6fafb67e969d3582939bb6d577e013665d228288780ccb4ff079b6d112142ae0",
+      "captured_or_derived_at_utc": "2026-11-14T06:15:49.485976+00:00"
+    },
+    "android-runtime-panel-supplies.json": {
+      "bytes": 2886,
+      "sha256": "4efa8672ee09c7f685fb70f05d01bbf6ba70f5c6b1420d84da89d4cb1a46d084",
+      "captured_or_derived_at_utc": "2026-11-14T06:30:13.409656+00:00"
+    },
+    "android-ldob12-sysfs.txt": {
+      "bytes": 743,
+      "sha256": "513b84e22e5a63996e9b43f47de2b7446f569614803d33b837bc9649dbeb38e1",
+      "captured_or_derived_at_utc": "2026-11-14T06:18:04.043945+00:00"
+    },
+    "android-selected-panel.txt": {
+      "bytes": 1448,
+      "sha256": "dbcb7a8103cb37ff59a604d8300ec9ad9902bcb5bb00fe0f7477716acd0d2fa4",
+      "captured_or_derived_at_utc": "2026-11-14T06:19:28.765987+00:00"
+    },
+    "stock-static-runtime-comparison.json": {
+      "bytes": 660,
+      "sha256": "c5bd6c3307c3d17d0f0b9893fe1e73efcd93d9d96bb4f3fe5efa47f1f38566d1",
+      "captured_or_derived_at_utc": "2026-11-14T06:23:44.795919+00:00"
+    }
+  },
+  "raw_evidence_directory": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/stock-panel-reference-20261114",
+  "raw_blob_policy": "Device blobs and full boot arguments remain in ignored local evidence; only relevant non-personal supply properties are recorded here."
+}

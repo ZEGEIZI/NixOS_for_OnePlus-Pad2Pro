@@ -1,0 +1,10 @@
+{
+  "scope": "QEMU virt/cortex-a76 generic ARM64 boot only; no physical SM8750 coverage",
+  "images": [
+    "existing running 7.2.15 artifact",
+    "7.3.4-erhai-p1"
+  ],
+  "result": "Both reached Linux initialization and the expected no-rootfs VFS panic. No initrd/rootfs was supplied.",
+  "logs": "NixOS workspace .work/patchset-qemu-{old,7.3.4-p1}.log",
+  "hardware_verified": false
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-11-13T18:26:39.089512+00:00",
+  "release": "7.3.4-erhai-p2",
+  "system": "/nix/store/msl5jns711wlji6pzix8j9hg6zfphfns-nixos-system-pad2pro-erhai-p2-scm-trace",
+  "boot_id": "nixos-60aadb6082b357e8521f6c90614a45ce",
+  "user_report": "仍然立即重启，已回原 current",
+  "recovery_boot_id": "76fd9898-d74e-4b6c-a8ba-486f7ecb87b7",
+  "pstore": {
+    "bytes": 262128,
+    "sha256": "fdf17464cde56db668ac57a34acf314321c78dd07f632f9010d4035d60a9ec5b",
+    "corrupted": true,
+    "nul_bytes": 980,
+    "local_path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-scm-trace-recovery/var/lib/systemd/pstore/console-ramoops-0"
+  },
+  "readable_evidence": [
+    "GPU register initialization svc 0x28 cmd 0x01 returned success around 0.8657s.",
+    "Zap shader PAS ID 0x0d metadata init (svc 0x02 cmd 0x01), memory setup (cmd 0x02), and auth/reset (cmd 0x05) each have a readable completion.",
+    "Last surviving completion is PAS auth/reset around 0.902638s, with ret=0 and res0=0."
+  ],
+  "interpretation": "A readable completion follows the GPU PAS authentication call. This does not yet prove the containing Zap helper returned; its remaining memunmap/release_firmware and the later secure-mode switch still need finer probes. Corruption prevents exhaustive global request/return matching.",
+  "next": "Use built-in kprobe_event + tp_printk for Zap helper returns, ring flush/idle/fenced writes and GPU init completion; validate definitions on the existing p2 Image before device use.",
+  "hardware_accepted": false
+}

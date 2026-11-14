@@ -1,0 +1,28 @@
+From 021332dc18a6df653521d132f344dfded5291d11 Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Fri, 13 Nov 2026 22:25:48 +0800
+Subject: [PATCH] ASoC: qcom: merge the upstream and Erhai TDM slot
+ configuration
+
+---
+ sound/soc/qcom/common.h | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/sound/soc/qcom/common.h b/sound/soc/qcom/common.h
+index 28e06a636..2ad1ba202 100644
+--- a/sound/soc/qcom/common.h
++++ b/sound/soc/qcom/common.h
+@@ -9,13 +9,6 @@
+ 
+ #define LPASS_MAX_PORT			(LPI_MI2S_TX_6 + 1)
+ 
+-struct qcom_snd_tdm_slot_cfg {
+-	unsigned int tx_mask;
+-	unsigned int rx_mask;
+-	unsigned int slots;
+-	unsigned int slot_width;
+-};
+-
+ struct qcom_snd_tdm_slot_cfg {
+ 	unsigned int tx_mask;
+ 	unsigned int rx_mask;

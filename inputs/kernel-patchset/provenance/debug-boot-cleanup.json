@@ -1,0 +1,26 @@
+{
+  "status": "ok",
+  "current": "nixos-b2b0bfb7071b917422b5034591a85c15",
+  "previous": "nixos-8a13fae19c084a7a9f2965b6f6027b15",
+  "retained": [
+    "nixos-b2b0bfb7071b917422b5034591a85c15",
+    "nixos-8a13fae19c084a7a9f2965b6f6027b15",
+    "nixos-e536371cb687e281dc6847531d0926a3"
+  ],
+  "removed": [
+    "nixos-4742c23932d680f2cae292d4b128aa4a",
+    "nixos-5616666963163da5e7d024d8ee9b3afb",
+    "nixos-60aadb6082b357e8521f6c90614a45ce",
+    "nixos-85fbb14e4aefdb0f873f474661b69756",
+    "nixos-8d9fce5af2f85880e32598b607964523",
+    "nixos-af6d9449383d9354b06708ee397f65e1"
+  ],
+  "backup": "/var/lib/erhai-patchset/20261114-023641-debug-cleanup/backup/prune-i4ca3t01",
+  "boot_used_before_bytes": 364589056,
+  "boot_used_after_bytes": 209043456,
+  "system_profiles_changed": false,
+  "store_gc_run": false,
+  "boot_readonly": false,
+  "boot_readonly_after_protection": true,
+  "bytes_reclaimed": 155545600
+}

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-11-13T16:49:22.336977+00:00",
+  "release": "7.3.4-erhai-p2",
+  "patch_head": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+  "hypothesis": "A new unconditional PDC IRQ_PARAM MMIO read is unnecessary in SM8750 pass-through mode and may explain the reset before a console appears. Hardware cause remains unconfirmed.",
+  "code_evidence": [
+    "IRQ_PARAM was not read by the running 7.2.15 driver.",
+    "All semantic uses of num_spis are guarded by PDC_SECONDARY_MODE.",
+    "SM8750 uses pass-through mode; secondary mode is selected only for the X1E firmware fallback."
+  ],
+  "change": "Read IRQ_PARAM only in secondary mode; short-circuit the mapping loop on that mode. Keep the new upstream descriptor and GPIO secondary-mode implementation.",
+  "hardware_result": "failed: p2 also resets immediately; PDC hypothesis did not resolve boot failure",
+  "fallback": "Original NixOS is running; global default nixos/current restored and original current alias retained."
+}

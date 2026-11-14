@@ -1,0 +1,939 @@
+From 54ca8fcdca22c7dc0843df0fb91dfdebe628a584 Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Fri, 13 Nov 2026 21:41:35 +0800
+Subject: [PATCH] erhai: port hardware-config to Linux 7.3
+
+Source: https://github.com/ZEGEIZI/linux-sm8750-erhai/commit/efc39b9d972665c270adc4e4ec2c46685792ffda
+Extraction-group: 489b87ae5cb9aec330244aa596bc86c808272e1b
+
+Generated subsystem aggregation; original author and license notices are
+preserved in source. See patchset provenance/source-commits.tsv and
+provenance/port-7.3.json for historical sources and upstream equivalents.
+Upstream-status: downstream; hardware acceptance pending
+---
+ arch/arm64/configs/erhai-firstboot.config    | 391 +++++++++++++++++++
+ arch/arm64/configs/sm8750-netfilter.config   | 185 +++++++++
+ arch/arm64/configs/sm8750-peripherals.config | 238 +++++++++++
+ arch/arm64/configs/sm8750-snap.config        |   6 +
+ arch/arm64/configs/sm8750-virt.config        |  16 +
+ arch/arm64/configs/sm8750-waydroid.config    |  40 ++
+ 6 files changed, 876 insertions(+)
+ create mode 100644 arch/arm64/configs/erhai-firstboot.config
+ create mode 100644 arch/arm64/configs/sm8750-netfilter.config
+ create mode 100644 arch/arm64/configs/sm8750-peripherals.config
+ create mode 100644 arch/arm64/configs/sm8750-snap.config
+ create mode 100644 arch/arm64/configs/sm8750-virt.config
+ create mode 100644 arch/arm64/configs/sm8750-waydroid.config
+
+diff --git a/arch/arm64/configs/erhai-firstboot.config b/arch/arm64/configs/erhai-firstboot.config
+new file mode 100644
+index 000000000..02a67a16e
+--- /dev/null
++++ b/arch/arm64/configs/erhai-firstboot.config
+@@ -0,0 +1,391 @@
++# SPDX-License-Identifier: GPL-2.0-only
++# SM8750 platform build and RAM diagnostics, not an erhai board definition.
++# Merge on top of arm64 defconfig. VEXPRESS retains QEMU virt smoke coverage.
++# CONFIG_ARCH_ACTIONS is not set
++# CONFIG_ARCH_AIROHA is not set
++# CONFIG_ARCH_SUNXI is not set
++# CONFIG_ARCH_ALPINE is not set
++# CONFIG_ARCH_APPLE is not set
++# CONFIG_ARCH_ARTPEC is not set
++# CONFIG_ARCH_ASPEED is not set
++# CONFIG_ARCH_AXIADO is not set
++# CONFIG_ARCH_BCM is not set
++# CONFIG_ARCH_BCM2835 is not set
++# CONFIG_ARCH_BCM_IPROC is not set
++# CONFIG_ARCH_BCMBCA is not set
++# CONFIG_ARCH_BRCMSTB is not set
++# CONFIG_ARCH_BERLIN is not set
++# CONFIG_ARCH_BLAIZE is not set
++# CONFIG_ARCH_BST is not set
++# CONFIG_ARCH_CIX is not set
++# CONFIG_ARCH_EXYNOS is not set
++# CONFIG_ARCH_K3 is not set
++# CONFIG_ARCH_LG1K is not set
++# CONFIG_ARCH_HISI is not set
++# CONFIG_ARCH_KEEMBAY is not set
++# CONFIG_ARCH_MEDIATEK is not set
++# CONFIG_ARCH_MESON is not set
++# CONFIG_ARCH_MICROCHIP is not set
++# CONFIG_ARCH_SPARX5 is not set
++# CONFIG_ARCH_MVEBU is not set
++# CONFIG_ARCH_NXP is not set
++# CONFIG_ARCH_LAYERSCAPE is not set
++# CONFIG_ARCH_MXC is not set
++# CONFIG_ARCH_S32 is not set
++# CONFIG_ARCH_MA35 is not set
++# CONFIG_ARCH_NPCM is not set
++# CONFIG_ARCH_REALTEK is not set
++# CONFIG_ARCH_RENESAS is not set
++# CONFIG_ARCH_ROCKCHIP is not set
++# CONFIG_ARCH_SEATTLE is not set
++# CONFIG_ARCH_INTEL_SOCFPGA is not set
++# CONFIG_ARCH_SOPHGO is not set
++# CONFIG_ARCH_STM32 is not set
++# CONFIG_ARCH_SYNQUACER is not set
++# CONFIG_ARCH_TEGRA is not set
++# CONFIG_ARCH_TESLA_FSD is not set
++# CONFIG_ARCH_SPRD is not set
++# CONFIG_ARCH_THUNDER is not set
++# CONFIG_ARCH_THUNDER2 is not set
++# CONFIG_ARCH_UNIPHIER is not set
++# CONFIG_ARCH_VISCONTI is not set
++# CONFIG_ARCH_XGENE is not set
++# CONFIG_ARCH_ZYNQMP is not set
++CONFIG_ARCH_QCOM=y
++CONFIG_ARCH_VEXPRESS=y
++CONFIG_LOCALVERSION="-erhai-dev"
++# CONFIG_LOCALVERSION_AUTO is not set
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_RD_GZIP=y
++CONFIG_CONFIGFS_FS=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_CONFIGFS=y
++CONFIG_USB_CONFIGFS_ACM=y
++CONFIG_USB_DWC3=y
++CONFIG_USB_DWC3_DUAL_ROLE=y
++CONFIG_USB_DWC3_QCOM=y
++CONFIG_USB_ROLE_SWITCH=y
++# Removable storage uses upstream drivers loaded by the desktop's udev/udisks.
++# Keep these optional protocols and filesystems out of the early boot image.
++CONFIG_USB_UAS=m
++CONFIG_EXFAT_FS=m
++CONFIG_NTFS3_FS=m
++# NTFS3 uses the default NLS when desktop mounts omit iocharset.
++CONFIG_NLS_DEFAULT="utf8"
++CONFIG_NLS_UTF8=y
++# Legacy USB tethering devices which do not offer CDC Ethernet/NCM.
++CONFIG_USB_NET_RNDIS_HOST=m
++# Common USB UART adapters use the upstream usb-serial stack.
++CONFIG_USB_SERIAL_CH341=m
++# Standard HID peripheral batteries are consumed through power_supply/UPower.
++CONFIG_HID_BATTERY_STRENGTH=y
++# Required by CP2112, FT260 and Logitech DJ in sm8750-peripherals.config.
++CONFIG_HIDRAW=y
++CONFIG_PHY_QCOM_M31_EUSB=y
++CONFIG_PHY_QCOM_EUSB2_REPEATER=y
++CONFIG_PHY_QCOM_QMP=y
++CONFIG_PHY_QCOM_QMP_COMBO=y
++CONFIG_TYPEC=y
++CONFIG_SM_GCC_8750=y
++CONFIG_SM_TCSRCC_8750=y
++CONFIG_PINCTRL_SM8750=y
++CONFIG_REGULATOR_QCOM_RPMH=y
++CONFIG_QCOM_COMMAND_DB=y
++CONFIG_QCOM_RPMH=y
++CONFIG_QCOM_SMEM=y
++CONFIG_QCOM_RPMHPD=y
++CONFIG_INTERCONNECT_QCOM_SM8750=y
++CONFIG_SERIAL_QCOM_GENI=y
++CONFIG_SERIAL_QCOM_GENI_CONSOLE=y
++CONFIG_SERIAL_AMBA_PL011=y
++CONFIG_SERIAL_AMBA_PL011_CONSOLE=y
++CONFIG_DRM=y
++CONFIG_DRM_SIMPLEDRM=y
++CONFIG_FRAMEBUFFER_CONSOLE=y
++# Display chain: DPU/DSI, panel and external backlight, all built-in
++# QCOM_LLCC/OCMEM must be built-in or DRM_MSM is limited to =m
++CONFIG_QCOM_LLCC=y
++CONFIG_QCOM_OCMEM=y
++CONFIG_DRM_MSM=y
++CONFIG_SM_DISPCC_8750=y
++CONFIG_I2C_QCOM_GENI=y
++CONFIG_DRM_PANEL_NOVATEK_NT36536_ERHAI=y
++# Touch: NT36536 SPI TDDI behind spi4 (QUPv3 SE4), built-in like the panel
++CONFIG_SPI_QCOM_GENI=y
++# geni SPI needs the QUP GPI DMA engine at probe time; built-in, not a module
++CONFIG_QCOM_GPI_DMA=y
++CONFIG_TOUCHSCREEN_NT36536_SPI=y
++CONFIG_BACKLIGHT_CLASS_DEVICE=y
++CONFIG_BACKLIGHT_KTZ8866=y
++# Both KTZ8868 LED strings form the panel backlight through led-backlight
++CONFIG_BACKLIGHT_LED=y
++CONFIG_PSTORE=y
++CONFIG_PSTORE_RAM=y
++CONFIG_PSTORE_CONSOLE=y
++CONFIG_PSTORE_PMSG=y
++# Kernel log over the USB NCM debug link: the gadget interface only exists
++# once user space has configured it, so targets are created at runtime
++# through configfs rather than on the command line
++CONFIG_NETCONSOLE=y
++CONFIG_NETCONSOLE_DYNAMIC=y
++CONFIG_DEBUG_INFO_NONE=y
++# CONFIG_DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT is not set
++# CONFIG_DEBUG_INFO_REDUCED is not set
++# CONFIG_DEBUG_INFO_BTF is not set
++CONFIG_SCSI_UFSHCD=y
++CONFIG_SCSI_UFSHCD_PLATFORM=y
++CONFIG_SCSI_UFS_QCOM=y
++CONFIG_PHY_QCOM_QMP_UFS=y
++# ADSP remoteproc (pmic-glink transport, later audio), built-in for the module-less initramfs
++CONFIG_QCOM_Q6V5_PAS=y
++CONFIG_QCOM_SYSMON=y
++CONFIG_RPMSG_QCOM_GLINK_SMEM=y
++# sysmon QMI needs the QRTR core built in; =m leaves it absent in the initramfs
++# and qmi_handle_init fails the PAS probe in a defer loop
++CONFIG_QRTR=y
++# QRTR reaches the DSPs through the IPCRTR rpmsg channel served by the
++# (historically named) SMD transport; =m cuts all servreg/sysmon traffic
++CONFIG_QRTR_SMD=y
++# Type-C role/orientation events ride the ADSP glink channel; built-in so USB
++# host/device role switching works from the initramfs rig as well
++CONFIG_QCOM_PMIC_GLINK=y
++# the connector port is registered by ucsi_glink (aux device of pmic-glink);
++# the whole chain must be built in, =m pieces are absent in the initramfs
++CONFIG_TYPEC_UCSI=y
++CONFIG_UCSI_PMIC_GLINK=y
++# in-kernel protection-domain mapper: resolves the UCSI/charger services the
++# ADSP advertises; =m leaves pmic-glink clients waiting forever
++CONFIG_QCOM_PD_MAPPER=y
++# The battery and charger live on the ADSP as well and are read through the
++# same glink transport.  defconfig leaves this at =m, and nothing this port
++# boots carries a module tree, so the pmic_glink.power-supply aux device sat
++# there with no driver and the tablet had no battery at all.
++CONFIG_BATTERY_QCOM_BATTMGR=y
++# The WCD939x USB-C switch routes the SBU pins to the DisplayPort AUX lines.
++# Once it is in the connector graph, pmic_glink_altmode, the DisplayPort
++# bridge chain and with it the whole MDSS (panel included) wait for it; =m
++# would hold the display until the root filesystem can load it.
++CONFIG_TYPEC_MUX_WCD939X_USBSS=y
++# CONFIG_MMC is not set
++# CONFIG_MTD is not set
++# CONFIG_BLK_DEV_NVME is not set
++# CONFIG_KVM is not set
++# CONFIG_KUNIT is not set
++# CONFIG_WERROR is not set
++
++# The boot partition on this device is GKI v4: the bootloader hands the kernel
++# a bootconfig section appended after the ramdisk instead of putting everything
++# on the command line. Without this the kernel would take those trailing bytes
++# for part of the initramfs.
++CONFIG_BOOT_CONFIG=y
++
++# RAM-rooted desktop demo: fetch a zstd squashfs over the NCM link and mount
++# it with a writable overlay; both must be built in for the initramfs rig.
++# The installed system needs the rest of squashfs too: Ubuntu's casper layers
++# are xz and carry xattrs, and its snaps are xz/lzo images that systemd mounts
++# under /snap at every boot. Without xattr support file capabilities would be
++# dropped silently on anything read through squashfs.
++CONFIG_SQUASHFS_XATTR=y
++CONFIG_SQUASHFS_XZ=y
++CONFIG_SQUASHFS_LZO=y
++CONFIG_SQUASHFS_ZSTD=y
++CONFIG_OVERLAY_FS=y
++
++# ACM serves the attended console ramdisk; NCM is the unattended evidence channel.
++# CONFIG_USB_CONFIGFS_SERIAL is not set
++# CONFIG_USB_CONFIGFS_OBEX is not set
++CONFIG_USB_CONFIGFS_NCM=y
++# CONFIG_USB_CONFIGFS_ECM is not set
++# CONFIG_USB_CONFIGFS_ECM_SUBSET is not set
++# CONFIG_USB_CONFIGFS_RNDIS is not set
++# CONFIG_USB_CONFIGFS_EEM is not set
++# CONFIG_USB_CONFIGFS_MASS_STORAGE is not set
++# CONFIG_USB_CONFIGFS_F_FS is not set
++
++# Adreno 830: the GPU clock controller must be built in; the initramfs
++# has no module loader so a =m gpucc strands the whole GPU chain.
++CONFIG_SM_GPUCC_8750=y
++
++# WCN7860 WLAN on pcie0: built-in because the RAM desktop chain carries no
++# module tree; BT stays modular until the HCI UART is wired up.
++CONFIG_ATH12K=y
++CONFIG_PCI_PWRCTRL_PWRSEQ=y
++CONFIG_POWER_SEQUENCING_QCOM_WCN=y
++CONFIG_CFG80211=y
++CONFIG_MAC80211=y
++CONFIG_ATH12K=y
++# RFKILL=m caps CFG80211 (depends on RFKILL || !RFKILL) at =m.
++CONFIG_RFKILL=y
++
++# The WCN7860 is self-managed and starts in the world domain (00), whose 5 GHz
++# rules allow client connections but no access point. Let user space pass the
++# country the tablet is in; the device packages do not set one, so the tablet
++# stays in the world domain unless a user does.
++CONFIG_CFG80211_CERTIFICATION_ONUS=y
++CONFIG_ATH_REG_DYNAMIC_USER_REG_HINTS=y
++
++# PCIe PHY for the WCN7860 link; =m leaves pcie0 deferred forever.
++CONFIG_PHY_QCOM_QMP_PCIE=y
++
++# qcom-pon creates the pwrkey/resin child devices; =m with no module tree
++# leaves the power/volume keys unregistered (liuqin S2-11).
++CONFIG_POWER_RESET_QCOM_PON=y
++
++# Bluetooth (WCN7860) over uart14 serdev; the RAM desktop has no module tree.
++CONFIG_BT=y
++CONFIG_BT_HCIUART=y
++CONFIG_BT_HCIUART_QCA=y
++# The controller alone only scans. What the desktop connects over it needs:
++# LE (defconfig turns it off): LE links to keyboards and mice, and the ISO
++# socket that LE Audio uses. Default-on LE L2CAP ECRED comes with it.
++CONFIG_BT_LE=y
++# RFCOMM: HFP/HSP signalling and serial port profile.
++CONFIG_BT_RFCOMM=y
++CONFIG_BT_RFCOMM_TTY=y
++# BNEP: Bluetooth network tethering (PAN).
++CONFIG_BT_BNEP=y
++CONFIG_BT_BNEP_MC_FILTER=y
++CONFIG_BT_BNEP_PROTO_FILTER=y
++# uhid: BlueZ runs HID over GATT (LE keyboards and mice) through /dev/uhid,
++# and classic HID too when UserspaceHID is set. Built in like the rest of
++# the input path, so a keyboard works before any module could be loaded.
++CONFIG_UHID=y
++
++# reboot-mode: the erhai DTB carries a `reboot-mode { compatible =
++# "nvmem-reboot-mode"; mode-bootloader = <0x02>; }` node backed by a PMIC SDAM
++# cell, which is how this bootloader is told to stop in fastboot. As a module
++# it is never loaded -- neither the initramfs nor the installed root carries a
++# module tree for this kernel -- so `reboot bootloader` from Linux came back up
++# in Linux, and every experiment that writes the boot slot had to be recovered
++# from the host instead. Built in, Linux can hand the device back to fastboot
++# on its own. A plain reboot still writes nothing: the node declares no
++# mode-normal, so the notifier finds no magic and skips the nvmem write.
++CONFIG_NVMEM_REBOOT_MODE=y
++
++# ... and its nvmem supplier. The cell the reboot-mode node writes lives in a
++# PMIC SDAM, and with the SDAM driver modular the reboot-mode platform device
++# sat in deferred probe forever: "wait for supplier
++# /soc@0/spmi@c400000/pmic@0/nvram@7100/reboot-reason@48" (measured on the
++# tablet, 2026-09-21, with NVMEM_REBOOT_MODE already built in). A built-in
++# consumer whose provider is a module it cannot load is no better than the
++# module it replaced.
++CONFIG_NVMEM_SPMI_SDAM=y
++
++# Wall clock. The PMIC carries an RTC ("qcom,pmk8350-rtc" at 0x6100 in this
++# board's pmk8550), but RTC_DRV_PM8XXX was =m and this kernel ships no module
++# tree, so Ubuntu came up with no /dev/rtc0 at all: the system clock started
++# at whatever the root filesystem was built with (measured on the tablet,
++# 2026-09-21: 2026-04-15, 159 days behind), every file got that date and apt
++# had to be told -o Acquire::Check-Valid-Until=false to accept a Release file
++# from its own future. Built in, the RTC is there before userspace is, and
++# RTC_HCTOSYS (already set) seeds the system clock from it at registration.
++CONFIG_RTC_DRV_PM8XXX=y
++
++# Board thermistors use the PMK8550 SDAM interface and standard IIO channels.
++CONFIG_QCOM_SPMI_ADC5_GEN3=m
++# Threshold monitoring on those channels registers them as thermal zones; it is
++# an auxiliary driver of the ADC above and loads with it.
++CONFIG_QCOM_SPMI_ADC_TM5_GEN3=m
++
++# Amplifier support is staged before the board audio routes are enabled.
++CONFIG_SND_SOC_AW88261=m
++
++# Ubuntu's ALSA module loader requires snd-seq when loading snd. Without it,
++# the distribution's install hook fails before dependent codec modules load.
++CONFIG_SND_SEQUENCER=m
++
++# The idle blank and its wake path can only be proved from the debug channel by
++# feeding the seat a real input event: mutter wakes the screen on input, not on
++# a D-Bus poke, so without an injectable device the "does a key press bring the
++# desktop back" half of the test can only be answered by a person in the room.
++# uinput is what every desktop already uses for that (accessibility tools,
++# remote input, automation), and this kernel ships no module tree.
++CONFIG_INPUT_UINPUT=y
++
++# Suspend works on this tablet, and these are what let anybody say so.
++# pm_test asks the machine to suspend every device and resume immediately
++# without entering the low-power state, which is the one suspend experiment
++# that cannot end the session, and pm_debug_messages is what makes a failed
++# attempt name the device that failed instead of just stopping. Both cost
++# nothing while nothing asks for them, and this is a port where the next
++# driver to gain a suspend callback is the next one to get it wrong.
++CONFIG_PM_DEBUG=y
++CONFIG_PM_ADVANCED_DEBUG=y
++
++# A suspend that hangs in a driver's callback leaves the tablet with no
++# debug channel and no timer that can run: user space is frozen, and the
++# Gunyah watchdog stops across system sleep by design. The device
++# suspend/resume watchdog turns such a hang into a panic that names the
++# device and prints the stuck task, and panic= on the command line turns
++# the panic into a reboot. The warning comes first: ath12k alone may wait
++# 20 s for its firmware on resume. The option is only offered under EXPERT;
++# that also makes RESET_SIMPLE selectable, whose default would build a
++# reset driver this SoC does not use, so it is kept off as before.
++CONFIG_EXPERT=y
++CONFIG_DPM_WATCHDOG=y
++CONFIG_DPM_WATCHDOG_TIMEOUT=60
++CONFIG_DPM_WATCHDOG_WARNING_TIMEOUT=30
++# CONFIG_RESET_SIMPLE is not set
++
++# Report hung tasks, soft lockups and CPUs that stop taking interrupts.
++# The buddy detector needs another CPU to keep handling timer interrupts;
++# it cannot recover a machine where every CPU or the interconnect is stuck.
++# Normal boots report only. Debug sessions enable the panic sysctls and
++# nmi_watchdog=panic on the command line, with panic= to request a reboot.
++CONFIG_SOFTLOCKUP_DETECTOR=y
++CONFIG_DETECT_HUNG_TASK=y
++CONFIG_HARDLOCKUP_DETECTOR=y
++CONFIG_HARDLOCKUP_DETECTOR_BUDDY=y
++
++# The keyboard cover on the pogo pin connector. A module, like the other
++# optional devices: nothing before the root filesystem needs it.
++CONFIG_KEYBOARD_ONEPLUS_POGO=m
++
++# The watchdog: Linux runs as a Gunyah guest here, the stock devicetree gives
++# the HLOS no MMIO watchdog node, and the vendor kernel pets the hypervisor's
++# virtual watchdog instead. qcom_scm registers the upstream gunyah-wdt device
++# when it finds Gunyah and no MMIO watchdog node, so no devicetree change is
++# needed. Built in: the RAM boot initramfs carries no modules, and the
++# watchdog has to be usable before the root filesystem is. The sysfs view
++# lets its state and time left be read without opening, and so arming, it.
++CONFIG_GUNYAH_WATCHDOG=y
++CONFIG_WATCHDOG_SYSFS=y
++
++# Defer DMA IOTLB invalidations while retaining IOMMU translation.
++CONFIG_IOMMU_DEFAULT_DMA_LAZY=y
++
++# QCE holds an always-on bandwidth vote without runtime PM.
++# CONFIG_CRYPTO_DEV_QCE is not set
++
++# Permit native hotplug root ports to enter D3 during suspend.
++CONFIG_HOTPLUG_PCI_PCIE=y
++
++# The OnePlus battery manager drives the PPS charge pumps directly.
++CONFIG_CHARGER_SC8547A=y
++
++# Camera capture: the CAMSS pipeline, the board's sensors and lens actuator,
++# and the DMA-BUF heaps the capture buffers are allocated from.
++CONFIG_VIDEO_QCOM_CAMSS=m
++CONFIG_I2C_QCOM_CCI=m
++CONFIG_PHY_QCOM_MIPI_CSI2=m
++CONFIG_VIDEO_SC1300CS=m
++CONFIG_VIDEO_SC820CS=m
++CONFIG_VIDEO_CN3927=m
++CONFIG_UDMABUF=y
++CONFIG_DMABUF_HEAPS=y
++CONFIG_DMABUF_HEAPS_SYSTEM=y
++CONFIG_DMABUF_HEAPS_CMA=y
++CONFIG_PSI=y
++
++CONFIG_CHARGER_ERHAI_PPS=y
++CONFIG_CHARGER_CPS8601=m
++
++# Compressed RAM swap managed by systemd-zram-generator.
++CONFIG_ZRAM=m
++CONFIG_ZRAM_BACKEND_ZSTD=y
++CONFIG_ZRAM_DEF_COMP_ZSTD=y
++
++# Restore the board identity after the vendor ABL overlay.
++CONFIG_QCOM_ABL_ROOT_IDENTITY=y
+diff --git a/arch/arm64/configs/sm8750-netfilter.config b/arch/arm64/configs/sm8750-netfilter.config
+new file mode 100644
+index 000000000..ad067b6c7
+--- /dev/null
++++ b/arch/arm64/configs/sm8750-netfilter.config
+@@ -0,0 +1,185 @@
++# nftables and the xtables matches/targets that iptables-nft (ufw, Docker),
++# firewalld and NetworkManager connection sharing use: Ubuntu's netfilter
++# set without IPVS, ipset and the iptables/ebtables/arptables legacy tables.
++CONFIG_NETFILTER_NETLINK_HOOK=m
++CONFIG_NETFILTER_NETLINK_ACCT=m
++CONFIG_NETFILTER_NETLINK_QUEUE=m
++CONFIG_NETFILTER_NETLINK_LOG=m
++CONFIG_NETFILTER_NETLINK_OSF=m
++CONFIG_NF_CONNTRACK_MARK=y
++CONFIG_NF_CONNTRACK_ZONES=y
++CONFIG_NF_CONNTRACK_TIMEOUT=y
++CONFIG_NF_CONNTRACK_TIMESTAMP=y
++CONFIG_NF_CONNTRACK_LABELS=y
++CONFIG_NF_CONNTRACK_AMANDA=m
++CONFIG_NF_CONNTRACK_FTP=m
++CONFIG_NF_CONNTRACK_H323=m
++CONFIG_NF_CONNTRACK_IRC=m
++CONFIG_NF_CONNTRACK_NETBIOS_NS=m
++CONFIG_NF_CONNTRACK_SNMP=m
++CONFIG_NF_CONNTRACK_PPTP=m
++CONFIG_NF_CONNTRACK_SANE=m
++CONFIG_NF_CONNTRACK_SIP=m
++CONFIG_NF_CONNTRACK_TFTP=m
++CONFIG_NF_CT_NETLINK=m
++CONFIG_NF_CT_NETLINK_TIMEOUT=m
++CONFIG_NF_CT_NETLINK_HELPER=m
++CONFIG_NETFILTER_NETLINK_GLUE_CT=y
++CONFIG_NF_NAT=m
++CONFIG_NF_TABLES=m
++CONFIG_NF_TABLES_INET=y
++CONFIG_NF_TABLES_NETDEV=y
++CONFIG_NFT_NUMGEN=m
++CONFIG_NFT_CT=m
++CONFIG_NFT_FLOW_OFFLOAD=m
++CONFIG_NFT_CONNLIMIT=m
++CONFIG_NFT_LOG=m
++CONFIG_NFT_LIMIT=m
++CONFIG_NFT_MASQ=m
++CONFIG_NFT_REDIR=m
++CONFIG_NFT_NAT=m
++CONFIG_NFT_TUNNEL=m
++CONFIG_NFT_QUEUE=m
++CONFIG_NFT_QUOTA=m
++CONFIG_NFT_REJECT=m
++CONFIG_NFT_COMPAT=m
++CONFIG_NFT_HASH=m
++CONFIG_NFT_FIB_INET=m
++CONFIG_NFT_SOCKET=m
++CONFIG_NFT_OSF=m
++CONFIG_NFT_TPROXY=m
++CONFIG_NFT_SYNPROXY=m
++CONFIG_NF_DUP_NETDEV=m
++CONFIG_NFT_DUP_NETDEV=m
++CONFIG_NFT_FWD_NETDEV=m
++CONFIG_NFT_FIB_NETDEV=m
++CONFIG_NFT_REJECT_NETDEV=m
++CONFIG_NF_FLOW_TABLE_INET=m
++CONFIG_NF_FLOW_TABLE=m
++CONFIG_NETFILTER_XTABLES_COMPAT=y
++CONFIG_NETFILTER_XT_CONNMARK=m
++CONFIG_NETFILTER_XT_TARGET_AUDIT=m
++CONFIG_NETFILTER_XT_TARGET_CHECKSUM=m
++CONFIG_NETFILTER_XT_TARGET_CLASSIFY=m
++CONFIG_NETFILTER_XT_TARGET_CONNMARK=m
++CONFIG_NETFILTER_XT_TARGET_CT=m
++CONFIG_NETFILTER_XT_TARGET_DSCP=m
++CONFIG_NETFILTER_XT_TARGET_HL=m
++CONFIG_NETFILTER_XT_TARGET_HMARK=m
++CONFIG_NETFILTER_XT_TARGET_IDLETIMER=m
++CONFIG_NETFILTER_XT_TARGET_LED=m
++CONFIG_NETFILTER_XT_TARGET_MARK=m
++CONFIG_NETFILTER_XT_NAT=m
++CONFIG_NETFILTER_XT_TARGET_NETMAP=m
++CONFIG_NETFILTER_XT_TARGET_NFLOG=m
++CONFIG_NETFILTER_XT_TARGET_NFQUEUE=m
++CONFIG_NETFILTER_XT_TARGET_RATEEST=m
++CONFIG_NETFILTER_XT_TARGET_REDIRECT=m
++CONFIG_NETFILTER_XT_TARGET_MASQUERADE=m
++CONFIG_NETFILTER_XT_TARGET_TEE=m
++CONFIG_NETFILTER_XT_TARGET_TPROXY=m
++CONFIG_NETFILTER_XT_TARGET_TCPMSS=m
++CONFIG_NETFILTER_XT_TARGET_TCPOPTSTRIP=m
++CONFIG_NETFILTER_XT_MATCH_BPF=m
++CONFIG_NETFILTER_XT_MATCH_CGROUP=m
++CONFIG_NETFILTER_XT_MATCH_CLUSTER=m
++CONFIG_NETFILTER_XT_MATCH_COMMENT=m
++CONFIG_NETFILTER_XT_MATCH_CONNBYTES=m
++CONFIG_NETFILTER_XT_MATCH_CONNLABEL=m
++CONFIG_NETFILTER_XT_MATCH_CONNLIMIT=m
++CONFIG_NETFILTER_XT_MATCH_CONNMARK=m
++CONFIG_NETFILTER_XT_MATCH_CPU=m
++CONFIG_NETFILTER_XT_MATCH_DCCP=m
++CONFIG_NETFILTER_XT_MATCH_DEVGROUP=m
++CONFIG_NETFILTER_XT_MATCH_DSCP=m
++CONFIG_NETFILTER_XT_MATCH_ECN=m
++CONFIG_NETFILTER_XT_MATCH_ESP=m
++CONFIG_NETFILTER_XT_MATCH_HASHLIMIT=m
++CONFIG_NETFILTER_XT_MATCH_HELPER=m
++CONFIG_NETFILTER_XT_MATCH_HL=m
++CONFIG_NETFILTER_XT_MATCH_IPCOMP=m
++CONFIG_NETFILTER_XT_MATCH_IPRANGE=m
++CONFIG_NETFILTER_XT_MATCH_L2TP=m
++CONFIG_NETFILTER_XT_MATCH_LENGTH=m
++CONFIG_NETFILTER_XT_MATCH_LIMIT=m
++CONFIG_NETFILTER_XT_MATCH_MAC=m
++CONFIG_NETFILTER_XT_MATCH_MARK=m
++CONFIG_NETFILTER_XT_MATCH_MULTIPORT=m
++CONFIG_NETFILTER_XT_MATCH_NFACCT=m
++CONFIG_NETFILTER_XT_MATCH_OSF=m
++CONFIG_NETFILTER_XT_MATCH_OWNER=m
++CONFIG_NETFILTER_XT_MATCH_PHYSDEV=m
++CONFIG_NETFILTER_XT_MATCH_PKTTYPE=m
++CONFIG_NETFILTER_XT_MATCH_QUOTA=m
++CONFIG_NETFILTER_XT_MATCH_RATEEST=m
++CONFIG_NETFILTER_XT_MATCH_REALM=m
++CONFIG_NETFILTER_XT_MATCH_RECENT=m
++CONFIG_NETFILTER_XT_MATCH_SCTP=m
++CONFIG_NETFILTER_XT_MATCH_SOCKET=m
++CONFIG_NETFILTER_XT_MATCH_STATE=m
++CONFIG_NETFILTER_XT_MATCH_STATISTIC=m
++CONFIG_NETFILTER_XT_MATCH_STRING=m
++CONFIG_NETFILTER_XT_MATCH_TCPMSS=m
++CONFIG_NETFILTER_XT_MATCH_TIME=m
++CONFIG_NETFILTER_XT_MATCH_U32=m
++CONFIG_NF_SOCKET_IPV4=m
++CONFIG_NF_TPROXY_IPV4=m
++CONFIG_NF_TABLES_IPV4=y
++CONFIG_NFT_DUP_IPV4=m
++CONFIG_NFT_FIB_IPV4=m
++CONFIG_NF_TABLES_ARP=y
++CONFIG_NF_DUP_IPV4=m
++CONFIG_NF_LOG_ARP=m
++CONFIG_NF_LOG_IPV4=m
++CONFIG_NF_REJECT_IPV4=m
++CONFIG_NF_NAT_SNMP_BASIC=m
++CONFIG_IP_NF_MATCH_AH=m
++CONFIG_IP_NF_MATCH_ECN=m
++CONFIG_IP_NF_MATCH_RPFILTER=m
++CONFIG_IP_NF_MATCH_TTL=m
++CONFIG_IP_NF_TARGET_REJECT=m
++CONFIG_IP_NF_TARGET_SYNPROXY=m
++CONFIG_IP_NF_TARGET_ECN=m
++CONFIG_IP_NF_ARP_MANGLE=m
++CONFIG_NF_SOCKET_IPV6=m
++CONFIG_NF_TPROXY_IPV6=m
++CONFIG_NF_TABLES_IPV6=y
++CONFIG_NFT_DUP_IPV6=m
++CONFIG_NFT_FIB_IPV6=m
++CONFIG_NF_DUP_IPV6=m
++CONFIG_NF_REJECT_IPV6=m
++CONFIG_IP6_NF_MATCH_AH=m
++CONFIG_IP6_NF_MATCH_EUI64=m
++CONFIG_IP6_NF_MATCH_FRAG=m
++CONFIG_IP6_NF_MATCH_OPTS=m
++CONFIG_IP6_NF_MATCH_HL=m
++CONFIG_IP6_NF_MATCH_IPV6HEADER=m
++CONFIG_IP6_NF_MATCH_MH=m
++CONFIG_IP6_NF_MATCH_RPFILTER=m
++CONFIG_IP6_NF_MATCH_RT=m
++CONFIG_IP6_NF_MATCH_SRH=m
++CONFIG_IP6_NF_TARGET_REJECT=m
++CONFIG_IP6_NF_TARGET_SYNPROXY=m
++CONFIG_IP6_NF_TARGET_NPT=m
++CONFIG_NF_TABLES_BRIDGE=m
++CONFIG_NFT_BRIDGE_META=m
++CONFIG_NFT_BRIDGE_REJECT=m
++CONFIG_NF_CONNTRACK_BRIDGE=m
++CONFIG_BRIDGE_NF_EBTABLES=m
++CONFIG_BRIDGE_EBT_802_3=m
++CONFIG_BRIDGE_EBT_AMONG=m
++CONFIG_BRIDGE_EBT_ARP=m
++CONFIG_BRIDGE_EBT_IP=m
++CONFIG_BRIDGE_EBT_IP6=m
++CONFIG_BRIDGE_EBT_LIMIT=m
++CONFIG_BRIDGE_EBT_MARK=m
++CONFIG_BRIDGE_EBT_PKTTYPE=m
++CONFIG_BRIDGE_EBT_STP=m
++CONFIG_BRIDGE_EBT_VLAN=m
++CONFIG_BRIDGE_EBT_ARPREPLY=m
++CONFIG_BRIDGE_EBT_DNAT=m
++CONFIG_BRIDGE_EBT_MARK_T=m
++CONFIG_BRIDGE_EBT_REDIRECT=m
++CONFIG_BRIDGE_EBT_SNAT=m
++CONFIG_BRIDGE_EBT_LOG=m
++CONFIG_BRIDGE_EBT_NFLOG=m
+diff --git a/arch/arm64/configs/sm8750-peripherals.config b/arch/arm64/configs/sm8750-peripherals.config
+new file mode 100644
+index 000000000..f506eaa8e
+--- /dev/null
++++ b/arch/arm64/configs/sm8750-peripherals.config
+@@ -0,0 +1,238 @@
++# SPDX-License-Identifier: GPL-2.0
++# Peripheral drivers users plug into an SM8750 tablet: HID devices (Bluetooth and
++# USB mice, keyboards, game controllers, pens), USB serial adapters, USB network
++# adapters, printers, USB audio and common removable-media filesystems.
++# Generated from the Ubuntu 26.04 generic arm64 kernel configuration (7.0.0-42),
++# keeping only these classes and leaving out drivers for hardware a tablet cannot
++# have (HID sensor hubs, Hyper-V, laptop SPI touch, USB LCD panels, parallel ports). All of them are modules that
++# load only when a matching device appears.
++CONFIG_F2FS_FS=m
++CONFIG_HFSPLUS_FS=m
++CONFIG_HID_A4TECH=m
++CONFIG_HID_ACCUTOUCH=m
++CONFIG_HID_ACRUX=m
++CONFIG_HID_ACRUX_FF=y
++CONFIG_HID_ALPS=m
++CONFIG_HID_APPLE=m
++CONFIG_HID_APPLEIR=m
++CONFIG_HID_ASUS=m
++CONFIG_HID_AUREAL=m
++CONFIG_HID_BATTERY_STRENGTH=y
++CONFIG_HID_BELKIN=m
++CONFIG_HID_BETOP_FF=m
++CONFIG_HID_BIGBEN_FF=m
++CONFIG_HID_CHERRY=m
++CONFIG_HID_CHICONY=m
++CONFIG_HID_CMEDIA=m
++CONFIG_HID_CORSAIR=m
++CONFIG_HID_COUGAR=m
++CONFIG_HID_CP2112=m
++CONFIG_HID_CREATIVE_SB0540=m
++CONFIG_HID_CYPRESS=m
++CONFIG_HID_DRAGONRISE=m
++CONFIG_HID_ELAN=m
++CONFIG_HID_ELECOM=m
++CONFIG_HID_ELO=m
++CONFIG_HID_EMS_FF=m
++CONFIG_HID_EVISION=m
++CONFIG_HID_EZKEY=m
++CONFIG_HID_FT260=m
++CONFIG_HID_GEMBIRD=m
++CONFIG_HID_GENERIC=m
++CONFIG_HID_GFRM=m
++CONFIG_HID_GLORIOUS=m
++CONFIG_HID_GOOGLE_HAMMER=m
++CONFIG_HID_GOOGLE_STADIA_FF=m
++CONFIG_HID_GREENASIA=m
++CONFIG_HID_GT683R=m
++CONFIG_HID_GYRATION=m
++CONFIG_HID_HAPTIC=y
++CONFIG_HID_HOLTEK=m
++CONFIG_HID_ICADE=m
++CONFIG_HID_ITE=m
++CONFIG_HID_JABRA=m
++CONFIG_HID_KENSINGTON=m
++CONFIG_HID_KEYTOUCH=m
++CONFIG_HID_KYE=m
++CONFIG_HID_KYSONA=m
++CONFIG_HID_LCPOWER=m
++CONFIG_HID_LED=m
++CONFIG_HID_LENOVO=m
++CONFIG_HID_LETSKETCH=m
++CONFIG_HID_LOGITECH=m
++CONFIG_HID_LOGITECH_DJ=m
++CONFIG_HID_LOGITECH_HIDPP=m
++CONFIG_HID_MACALLY=m
++CONFIG_HID_MAGICMOUSE=m
++CONFIG_HID_MALTRON=m
++CONFIG_HID_MAYFLASH=m
++CONFIG_HID_MCP2200=m
++CONFIG_HID_MCP2221=m
++CONFIG_HID_MEGAWORLD_FF=m
++CONFIG_HID_MICROSOFT=m
++CONFIG_HID_MONTEREY=m
++CONFIG_HID_MULTITOUCH=m
++CONFIG_HID_NINTENDO=m
++CONFIG_HID_NTI=m
++CONFIG_HID_NTRIG=m
++CONFIG_HID_NVIDIA_SHIELD=m
++CONFIG_HID_ORTEK=m
++CONFIG_HID_PANTHERLORD=m
++CONFIG_HID_PENMOUNT=m
++CONFIG_HID_PETALYNX=m
++CONFIG_HID_PID=y
++CONFIG_HID_PLANTRONICS=m
++CONFIG_HID_PLAYSTATION=m
++CONFIG_HID_PRIMAX=m
++CONFIG_HID_PRODIKEYS=m
++CONFIG_HID_PXRC=m
++CONFIG_HID_RAPOO=m
++CONFIG_HID_RAZER=m
++CONFIG_HID_REDRAGON=m
++CONFIG_HID_RETRODE=m
++CONFIG_HID_RMI=m
++CONFIG_HID_ROCCAT=m
++CONFIG_HID_SAITEK=m
++CONFIG_HID_SAMSUNG=m
++CONFIG_HID_SEMITEK=m
++CONFIG_HID_SIGMAMICRO=m
++CONFIG_HID_SMARTJOYPLUS=m
++CONFIG_HID_SONY=m
++CONFIG_HID_SPEEDLINK=m
++CONFIG_HID_STEAM=m
++CONFIG_HID_STEELSERIES=m
++CONFIG_HID_SUNPLUS=m
++CONFIG_HID_SUPPORT=y
++CONFIG_HID_THINGM=m
++CONFIG_HID_THRUSTMASTER=m
++CONFIG_HID_TIVO=m
++CONFIG_HID_TOPRE=m
++CONFIG_HID_TOPSEED=m
++CONFIG_HID_TWINHAN=m
++CONFIG_HID_U2FZERO=m
++CONFIG_HID_UCLOGIC=m
++CONFIG_HID_UDRAW_PS3=m
++CONFIG_HID_UNIVERSAL_PIDFF=m
++CONFIG_HID_VIEWSONIC=m
++CONFIG_HID_VIVALDI=m
++CONFIG_HID_VIVALDI_COMMON=m
++CONFIG_HID_VRC2=m
++CONFIG_HID_WACOM=m
++CONFIG_HID_WALTOP=m
++CONFIG_HID_WIIMOTE=m
++CONFIG_HID_WINWING=m
++CONFIG_HID_XIAOMI=m
++CONFIG_HID_XINMO=m
++CONFIG_HID_ZEROPLUS=m
++CONFIG_HID_ZYDACRON=m
++CONFIG_INPUT_JOYSTICK=y
++CONFIG_INPUT_TABLET=y
++CONFIG_JOYSTICK_XPAD=m
++CONFIG_JOYSTICK_XPAD_FF=y
++CONFIG_JOYSTICK_XPAD_LEDS=y
++CONFIG_SND_USB=y
++CONFIG_SND_USB_6FIRE=m
++CONFIG_SND_USB_AUDIO=m
++CONFIG_SND_USB_AUDIO_MIDI_V2=y
++CONFIG_SND_USB_AUDIO_QMI=m
++CONFIG_SND_USB_AUDIO_USE_MEDIA_CONTROLLER=y
++CONFIG_SND_USB_CAIAQ=m
++CONFIG_SND_USB_CAIAQ_INPUT=y
++CONFIG_SND_USB_HIFACE=m
++CONFIG_SND_USB_LINE6=m
++CONFIG_SND_USB_POD=m
++CONFIG_SND_USB_PODHD=m
++CONFIG_SND_USB_TONEPORT=m
++CONFIG_SND_USB_UA101=m
++CONFIG_SND_USB_VARIAX=m
++CONFIG_TABLET_USB_ACECAD=m
++CONFIG_TABLET_USB_AIPTEK=m
++CONFIG_TABLET_USB_HANWANG=m
++CONFIG_TABLET_USB_KBTAB=m
++CONFIG_TABLET_USB_PEGASUS=m
++CONFIG_USB_LAN78XX=m
++CONFIG_USB_NET_AQC111=m
++CONFIG_USB_NET_AX88179_178A=m
++CONFIG_USB_NET_AX8817X=m
++CONFIG_USB_NET_CDCETHER=m
++CONFIG_USB_NET_CDC_EEM=m
++CONFIG_USB_NET_CDC_MBIM=m
++CONFIG_USB_NET_CDC_NCM=m
++CONFIG_USB_NET_CDC_SUBSET=m
++CONFIG_USB_NET_CDC_SUBSET_ENABLE=m
++CONFIG_USB_NET_CH9200=m
++CONFIG_USB_NET_CX82310_ETH=m
++CONFIG_USB_NET_DM9601=m
++CONFIG_USB_NET_DRIVERS=m
++CONFIG_USB_NET_GL620A=m
++CONFIG_USB_NET_HUAWEI_CDC_NCM=m
++CONFIG_USB_NET_INT51X1=m
++CONFIG_USB_NET_KALMIA=m
++CONFIG_USB_NET_MCS7830=m
++CONFIG_USB_NET_NET1080=m
++CONFIG_USB_NET_PLUSB=m
++CONFIG_USB_NET_QMI_WWAN=m
++CONFIG_USB_NET_RNDIS_HOST=m
++CONFIG_USB_NET_SMSC75XX=m
++CONFIG_USB_NET_SMSC95XX=m
++CONFIG_USB_NET_SR9700=m
++CONFIG_USB_NET_SR9800=m
++CONFIG_USB_NET_ZAURUS=m
++CONFIG_USB_PRINTER=m
++CONFIG_USB_RTL8152=m
++CONFIG_USB_SERIAL=m
++CONFIG_USB_SERIAL_AIRCABLE=m
++CONFIG_USB_SERIAL_ARK3116=m
++CONFIG_USB_SERIAL_BELKIN=m
++CONFIG_USB_SERIAL_CH341=m
++CONFIG_USB_SERIAL_CP210X=m
++CONFIG_USB_SERIAL_CYBERJACK=m
++CONFIG_USB_SERIAL_CYPRESS_M8=m
++CONFIG_USB_SERIAL_DEBUG=m
++CONFIG_USB_SERIAL_DIGI_ACCELEPORT=m
++CONFIG_USB_SERIAL_EDGEPORT=m
++CONFIG_USB_SERIAL_EDGEPORT_TI=m
++CONFIG_USB_SERIAL_EMPEG=m
++CONFIG_USB_SERIAL_F81232=m
++CONFIG_USB_SERIAL_F8153X=m
++CONFIG_USB_SERIAL_FTDI_SIO=m
++CONFIG_USB_SERIAL_GARMIN=m
++CONFIG_USB_SERIAL_GENERIC=y
++CONFIG_USB_SERIAL_IPAQ=m
++CONFIG_USB_SERIAL_IPW=m
++CONFIG_USB_SERIAL_IR=m
++CONFIG_USB_SERIAL_IUU=m
++CONFIG_USB_SERIAL_KEYSPAN=m
++CONFIG_USB_SERIAL_KEYSPAN_PDA=m
++CONFIG_USB_SERIAL_KLSI=m
++CONFIG_USB_SERIAL_KOBIL_SCT=m
++CONFIG_USB_SERIAL_MCT_U232=m
++CONFIG_USB_SERIAL_METRO=m
++CONFIG_USB_SERIAL_MOS7720=m
++CONFIG_USB_SERIAL_MOS7840=m
++CONFIG_USB_SERIAL_MXUPORT=m
++CONFIG_USB_SERIAL_NAVMAN=m
++CONFIG_USB_SERIAL_OMNINET=m
++CONFIG_USB_SERIAL_OPTICON=m
++CONFIG_USB_SERIAL_OPTION=m
++CONFIG_USB_SERIAL_OTI6858=m
++CONFIG_USB_SERIAL_PL2303=m
++CONFIG_USB_SERIAL_QCAUX=m
++CONFIG_USB_SERIAL_QT2=m
++CONFIG_USB_SERIAL_QUALCOMM=m
++CONFIG_USB_SERIAL_SAFE=m
++CONFIG_USB_SERIAL_SIERRAWIRELESS=m
++CONFIG_USB_SERIAL_SIMPLE=m
++CONFIG_USB_SERIAL_SPCP8X5=m
++CONFIG_USB_SERIAL_SSU100=m
++CONFIG_USB_SERIAL_SYMBOL=m
++CONFIG_USB_SERIAL_TI=m
++CONFIG_USB_SERIAL_UPD78F0730=m
++CONFIG_USB_SERIAL_VISOR=m
++CONFIG_USB_SERIAL_WHITEHEAT=m
++CONFIG_USB_SERIAL_WISHBONE=m
++CONFIG_USB_SERIAL_WWAN=m
++CONFIG_USB_SERIAL_XR=m
++CONFIG_USB_SERIAL_XSENS_MT=m
++CONFIG_USB_USBNET=m
++CONFIG_XFS_FS=m
+diff --git a/arch/arm64/configs/sm8750-snap.config b/arch/arm64/configs/sm8750-snap.config
+new file mode 100644
+index 000000000..fcaa91e67
+--- /dev/null
++++ b/arch/arm64/configs/sm8750-snap.config
+@@ -0,0 +1,6 @@
++# SPDX-License-Identifier: GPL-2.0-only
++# AppArmor mediation for strictly confined snapd applications.
++# defconfig already supplies audit, seccomp, namespaces and cgroup BPF.
++CONFIG_SECURITY_APPARMOR=y
++CONFIG_DEFAULT_SECURITY_APPARMOR=y
++CONFIG_LSM="landlock,lockdown,yama,loadpin,safesetid,apparmor,ipe,bpf"
+diff --git a/arch/arm64/configs/sm8750-virt.config b/arch/arm64/configs/sm8750-virt.config
+new file mode 100644
+index 000000000..ef3b0a6f8
+--- /dev/null
++++ b/arch/arm64/configs/sm8750-virt.config
+@@ -0,0 +1,16 @@
++# SPDX-License-Identifier: GPL-2.0-only
++# Optional product feature fragment; the release configuration owns the ABI.
++# Load Gunyah only after switch-root.
++CONFIG_GUNYAH=m
++CONFIG_GUNYAH_HYPERCALLS=m
++CONFIG_GUNYAH_TIMER=m
++CONFIG_GUNYAH_PLATFORM_HOOKS=m
++CONFIG_GUNYAH_IRQFD=m
++CONFIG_GUNYAH_IOEVENTFD=m
++# CONFIG_GUNYAH_QCOM_PLATFORM is not set
++# CONFIG_GUNYAH_QCOM_TRUSTED_VM is not set
++CONFIG_VHOST_NET=m
++CONFIG_VSOCKETS=m
++# CONFIG_VSOCKETS_DIAG is not set
++# CONFIG_VSOCKETS_LOOPBACK is not set
++CONFIG_VHOST_VSOCK=m
+diff --git a/arch/arm64/configs/sm8750-waydroid.config b/arch/arm64/configs/sm8750-waydroid.config
+new file mode 100644
+index 000000000..7c0eff371
+--- /dev/null
++++ b/arch/arm64/configs/sm8750-waydroid.config
+@@ -0,0 +1,40 @@
++# Waydroid runs an Android userspace in an LXC container on this kernel.
++#
++# Binder IPC through binderfs: Waydroid mounts binderfs and allocates the
++# binder, hwbinder and vndbinder nodes it hands to the container.  Binder
++# cannot be built as a module.
++CONFIG_ANDROID_BINDER_IPC=y
++CONFIG_ANDROID_BINDERFS=y
++# Android's netd installs the container's default route and DNS through IPv4
++# and IPv6 policy rules.  RouteController fails without either rule set and the
++# container keeps only its on-link route.
++CONFIG_IP_ADVANCED_ROUTER=y
++CONFIG_IP_MULTIPLE_TABLES=y
++CONFIG_IPV6_MULTIPLE_TABLES=y
++# Android's iptables only speaks the legacy x_tables interface: netd builds its
++# chains in the filter, mangle, raw and nat tables of both families.  Waydroid's
++# bridge script also prefers iptables-legacy for the container's DHCP and DNS
++# rules, its NAT and the DHCP checksum fix.
++CONFIG_NETFILTER_XTABLES_LEGACY=y
++CONFIG_IP_NF_IPTABLES_LEGACY=m
++CONFIG_IP_NF_FILTER=m
++CONFIG_IP_NF_NAT=m
++CONFIG_IP_NF_TARGET_MASQUERADE=m
++CONFIG_IP_NF_MANGLE=m
++CONFIG_IP_NF_RAW=m
++CONFIG_IP6_NF_IPTABLES_LEGACY=m
++CONFIG_IP6_NF_FILTER=m
++CONFIG_IP6_NF_NAT=m
++CONFIG_IP6_NF_TARGET_MASQUERADE=m
++CONFIG_IP6_NF_MANGLE=m
++CONFIG_IP6_NF_RAW=m
++# netd matches IPsec traffic with the policy match and configures IPsec
++# through XFRM netlink; TrafficController opens a PF_KEY socket to wait for an
++# RCU grace period when it swaps its statistics maps.  The same XFRM support
++# serves IPsec VPNs on the host.
++CONFIG_XFRM_USER=m
++CONFIG_NET_KEY=m
++CONFIG_INET_ESP=m
++CONFIG_INET6_ESP=m
++CONFIG_XFRM_INTERFACE=m
++CONFIG_NETFILTER_XT_MATCH_POLICY=m

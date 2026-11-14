@@ -1,0 +1,10 @@
+{
+  "release": "p1",
+  "manifest_verified": true,
+  "replayed": true,
+  "source_equivalent": true,
+  "hardware_verified": false,
+  "version": "7.3.3",
+  "tarball_sha256": "79c66dde66cd96877fcde8f7d36aec946b1f423d2b97b5a7b1751b75c764f3d1",
+  "source": "/zpool/storage_01/build/LinuxForOneplus/kernel-patchset-work/replay-7.3.3/linux-7.3.3"
+}

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-11-13T21:31:12.361027+00:00",
+  "release": "7.3.4-erhai-p4",
+  "patch_head": "bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb",
+  "fragment_checks": "both native and cross passed, including final release override",
+  "config_difference": {
+    "CONFIG_CC_VERSION_TEXT": {
+      "cross": "\"aarch64-unknown-linux-gnu-gcc (GCC) 16.2.0\"",
+      "native": "\"gcc (GCC) 16.2.0\""
+    }
+  },
+  "native_sha256": "c8c7a9bebab191c09e834449ba2d277d49b29b44930f97ea37d24b622a973b93",
+  "cross_sha256": "c2c7f056fb4c4b5f939a01b7b46bed8c4a085e3d45e3a6e486a7255a0b39f261",
+  "scope": "configuration preparation only; complete native ARM64 kernel and hardware acceptance remain pending",
+  "hardware_verified": false
+}

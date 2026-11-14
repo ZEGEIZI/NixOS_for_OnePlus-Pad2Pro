@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-11-13T17:14:35.190922+00:00",
+  "release": "7.3.4-erhai-p2",
+  "patch_head": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+  "user_report": "仍然立即重启",
+  "result": "failed; skipping the optional PDC read did not resolve the immediate reset",
+  "pstore": "No new Linux trace collected; Android was entered before recovery",
+  "hardware_accepted": false,
+  "next": "Recover existing current, restore its default, then collect an attempt without booting Android."
+}

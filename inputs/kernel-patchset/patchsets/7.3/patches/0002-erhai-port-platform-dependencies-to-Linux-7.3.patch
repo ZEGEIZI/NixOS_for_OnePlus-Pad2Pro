@@ -1,0 +1,2426 @@
+From 3bf8b72db4395cca113fc89698111b98ad793095 Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Fri, 13 Nov 2026 21:41:32 +0800
+Subject: [PATCH] erhai: port platform-dependencies to Linux 7.3
+
+Source: https://github.com/ZEGEIZI/linux-sm8750-erhai/commit/efc39b9d972665c270adc4e4ec2c46685792ffda
+Extraction-group: c13565e788eec6fd368d8a38da7412d26f5bca04
+
+Generated subsystem aggregation; original author and license notices are
+preserved in source. See patchset provenance/source-commits.tsv and
+provenance/port-7.3.json for historical sources and upstream equivalents.
+Upstream-status: downstream; hardware acceptance pending
+---
+ drivers/base/core.c                           |   5 +-
+ drivers/clk/clk.c                             |  73 +++-
+ drivers/clk/clk_test.c                        | 224 +++++++++++
+ drivers/clk/qcom/dispcc-sm8750.c              |   1 +
+ drivers/clk/qcom/gcc-sm8750.c                 |   2 +
+ drivers/firmware/qcom/qcom_scm_trace.h        |   1 -
+ drivers/firmware/qcom/qcom_tzmem.c            |   2 +-
+ drivers/pci/controller/dwc/pcie-qcom.c        |   3 +
+ drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c      |   5 +
+ drivers/phy/phy-core.c                        | 123 ++++--
+ drivers/phy/qualcomm/Kconfig                  |  15 +
+ drivers/phy/qualcomm/Makefile                 |   5 +
+ drivers/phy/qualcomm/phy-qcom-qmp-combo.c     |  35 +-
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      |  18 +
+ .../pinctrl/qcom/pinctrl-sm8650-lpass-lpi.c   |   1 +
+ drivers/pmdomain/core.c                       |  27 +-
+ drivers/power/sequencing/pwrseq-qcom-wcn.c    |  20 +
+ drivers/remoteproc/qcom_q6v5_pas.c            | 117 ++++++
+ drivers/rpmsg/qcom_glink_native.c             |  78 +++-
+ drivers/soc/qcom/Kconfig                      |  32 ++
+ drivers/soc/qcom/Makefile                     |   1 +
+ drivers/soc/qcom/abl_root_identity.c          | 114 ++++++
+ drivers/soc/qcom/abl_root_identity_test.c     | 116 ++++++
+ drivers/soc/qcom/apr.c                        |  14 +-
+ drivers/soc/qcom/llcc-qcom.c                  |   2 +-
+ drivers/soc/qcom/pmic_glink.c                 |  29 ++
+ drivers/soc/qcom/pmic_glink_altmode.c         |  54 ++-
+ drivers/soc/qcom/pmic_glink_altmode_test.c    | 353 ++++++++++++++++++
+ drivers/soc/qcom/qcom_pd_mapper.c             |   3 +
+ drivers/soc/qcom/ubwc_config.c                |   2 +
+ drivers/ufs/host/ufs-qcom.c                   |  47 ++-
+ drivers/ufs/host/ufs-qcom.h                   |   5 +-
+ drivers/virt/Kconfig                          |   1 +
+ drivers/virt/Makefile                         |   1 +
+ include/linux/phy/phy.h                       |  13 +
+ include/linux/soc/qcom/pmic_glink.h           |   2 +
+ 36 files changed, 1453 insertions(+), 91 deletions(-)
+ create mode 100644 drivers/soc/qcom/abl_root_identity.c
+ create mode 100644 drivers/soc/qcom/abl_root_identity_test.c
+ create mode 100644 drivers/soc/qcom/pmic_glink_altmode_test.c
+
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 5378a2579..1403298a5 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -4675,7 +4675,7 @@ int device_move(struct device *dev, struct device *new_parent,
+ {
+ 	int error;
+ 	struct device *old_parent;
+-	struct kobject *new_parent_kobj;
++	struct kobject *new_parent_kobj, *old_parent_kobj;
+ 
+ 	dev = get_device(dev);
+ 	if (!dev)
+@@ -4692,6 +4692,7 @@ int device_move(struct device *dev, struct device *new_parent,
+ 
+ 	pr_debug("device: '%s': %s: moving to '%s'\n", dev_name(dev),
+ 		 __func__, new_parent ? dev_name(new_parent) : "<NULL>");
++	old_parent_kobj = get_glue_dir(dev);
+ 	error = kobject_move(&dev->kobj, new_parent_kobj);
+ 	if (error) {
+ 		cleanup_glue_dir(dev, new_parent_kobj);
+@@ -4745,6 +4746,8 @@ int device_move(struct device *dev, struct device *new_parent,
+ 		break;
+ 	}
+ 
++	/* Drop the old reference acquired by get_device_parent(). */
++	cleanup_glue_dir(dev, old_parent_kobj);
+ 	put_device(old_parent);
+ out:
+ 	device_pm_unlock();
+diff --git a/drivers/clk/clk.c b/drivers/clk/clk.c
+index fef87167a..46a83fb09 100644
+--- a/drivers/clk/clk.c
++++ b/drivers/clk/clk.c
+@@ -3922,6 +3922,39 @@ static inline void clk_debug_unregister(struct clk_core *core)
+ }
+ #endif
+ 
++static int clk_core_reparent_orphan(struct clk_core *orphan,
++				  struct clk_core *parent)
++{
++	unsigned long flags;
++	int ret = 0;
++
++	lockdep_assert_held(&prepare_lock);
++
++	if (orphan->prepare_count) {
++		ret = clk_core_prepare(parent);
++		if (ret)
++			return ret;
++	}
++
++	/*
++	 * Only the software topology changes here; there is no set_parent()
++	 * operation needing CLK_OPS_PARENT_ENABLE. Transfer the active reference
++	 * while holding enable_lock so a concurrent enable/disable observes
++	 * either the old orphan or a parent with balanced references.
++	 */
++	flags = clk_enable_lock();
++	if (orphan->enable_count)
++		ret = clk_core_enable(parent);
++	if (!ret)
++		clk_reparent(orphan, parent);
++	clk_enable_unlock(flags);
++
++	if (ret)
++		clk_core_unprepare(parent);
++
++	return ret;
++}
++
+ static void clk_core_reparent_orphans_nolock(void)
+ {
+ 	struct clk_core *orphan;
+@@ -3935,15 +3968,13 @@ static void clk_core_reparent_orphans_nolock(void)
+ 		struct clk_core *parent = __clk_init_parent(orphan);
+ 
+ 		/*
+-		 * We need to use __clk_set_parent_before() and _after() to
+-		 * properly migrate any prepare/enable count of the orphan
+-		 * clock. This is important for CLK_IS_CRITICAL clocks, which
+-		 * are enabled during init but might not have a parent yet.
++		 * Migrate references before changing the topology. A parent may
++		 * not be ready to prepare yet; leave the orphan and its consumers'
++		 * references intact in that case.
+ 		 */
+ 		if (parent) {
+-			/* update the clk tree topology */
+-			__clk_set_parent_before(orphan, parent);
+-			__clk_set_parent_after(orphan, parent, NULL);
++			if (clk_core_reparent_orphan(orphan, parent))
++				continue;
+ 			__clk_recalc_accuracies(orphan);
+ 			__clk_recalc_rates(orphan, true, 0);
+ 
+@@ -3977,6 +4008,11 @@ static int __clk_core_init(struct clk_core *core)
+ 	unsigned long rate;
+ 	int phase;
+ 
++	/* Pin all registered providers before walking the global orphan list. */
++	ret = clk_pm_runtime_get_all();
++	if (ret)
++		return ret;
++
+ 	clk_prepare_lock();
+ 
+ 	/*
+@@ -3987,10 +4023,6 @@ static int __clk_core_init(struct clk_core *core)
+ 	 */
+ 	core->hw->core = core;
+ 
+-	ret = clk_pm_runtime_get(core);
+-	if (ret)
+-		goto unlock;
+-
+ 	/* check to see if a clock with this name is already registered */
+ 	if (clk_core_lookup(core->name)) {
+ 		pr_debug("%s: clk %s already initialized\n",
+@@ -4154,8 +4186,6 @@ static int __clk_core_init(struct clk_core *core)
+ 
+ 	clk_core_reparent_orphans_nolock();
+ out:
+-	clk_pm_runtime_put(core);
+-unlock:
+ 	if (ret) {
+ 		hash_del(&core->hashtable_node);
+ 		hlist_del_init(&core->child_node);
+@@ -4163,6 +4193,7 @@ static int __clk_core_init(struct clk_core *core)
+ 	}
+ 
+ 	clk_prepare_unlock();
++	clk_pm_runtime_put_all();
+ 
+ 	if (!ret)
+ 		clk_debug_register(core);
+@@ -5106,8 +5137,16 @@ int of_clk_add_provider(struct device_node *np,
+ 	mutex_unlock(&of_clk_mutex);
+ 	pr_debug("Added clock from %pOF\n", np);
+ 
++	ret = clk_pm_runtime_get_all();
++	if (ret) {
++		of_clk_del_provider(np);
++		return ret;
++	}
++
+ 	clk_core_reparent_orphans();
+ 
++	clk_pm_runtime_put_all();
++
+ 	ret = of_clk_set_defaults(np, true);
+ 	if (ret < 0)
+ 		of_clk_del_provider(np);
+@@ -5148,8 +5187,16 @@ int of_clk_add_hw_provider(struct device_node *np,
+ 	mutex_unlock(&of_clk_mutex);
+ 	pr_debug("Added clk_hw provider from %pOF\n", np);
+ 
++	ret = clk_pm_runtime_get_all();
++	if (ret) {
++		of_clk_del_provider(np);
++		return ret;
++	}
++
+ 	clk_core_reparent_orphans();
+ 
++	clk_pm_runtime_put_all();
++
+ 	ret = of_clk_set_defaults(np, true);
+ 	if (ret < 0)
+ 		of_clk_del_provider(np);
+diff --git a/drivers/clk/clk_test.c b/drivers/clk/clk_test.c
+index 1c5c8b7c1..651e138da 100644
+--- a/drivers/clk/clk_test.c
++++ b/drivers/clk/clk_test.c
+@@ -22,6 +22,229 @@
+ 
+ static const struct clk_ops empty_clk_ops = { };
+ 
++struct clk_orphan_adoption_ctx {
++	struct clk_hw child;
++	struct clk_hw parent;
++	struct clk *child_clk;
++	bool child_registered;
++	bool parent_registered;
++	unsigned int child_refs;
++	int prepare_error;
++	int enable_error;
++	int prepare_users;
++	int enable_users;
++	unsigned int prepare_calls;
++};
++
++static int clk_orphan_adoption_prepare(struct clk_hw *hw)
++{
++	struct clk_orphan_adoption_ctx *ctx =
++		container_of(hw, struct clk_orphan_adoption_ctx, parent);
++
++	ctx->prepare_calls++;
++	if (ctx->prepare_error)
++		return ctx->prepare_error;
++	ctx->prepare_users++;
++	return 0;
++}
++
++static void clk_orphan_adoption_unprepare(struct clk_hw *hw)
++{
++	struct clk_orphan_adoption_ctx *ctx =
++		container_of(hw, struct clk_orphan_adoption_ctx, parent);
++
++	ctx->prepare_users--;
++}
++
++static int clk_orphan_adoption_enable(struct clk_hw *hw)
++{
++	struct clk_orphan_adoption_ctx *ctx =
++		container_of(hw, struct clk_orphan_adoption_ctx, parent);
++
++	if (ctx->enable_error)
++		return ctx->enable_error;
++	ctx->enable_users++;
++	return 0;
++}
++
++static void clk_orphan_adoption_disable(struct clk_hw *hw)
++{
++	struct clk_orphan_adoption_ctx *ctx =
++		container_of(hw, struct clk_orphan_adoption_ctx, parent);
++
++	ctx->enable_users--;
++}
++
++static const struct clk_ops clk_orphan_adoption_parent_ops = {
++	.prepare = clk_orphan_adoption_prepare,
++	.unprepare = clk_orphan_adoption_unprepare,
++	.enable = clk_orphan_adoption_enable,
++	.disable = clk_orphan_adoption_disable,
++};
++
++static void clk_orphan_adoption_cleanup(void *data)
++{
++	struct clk_orphan_adoption_ctx *ctx = data;
++
++	while (ctx->child_refs) {
++		clk_disable_unprepare(ctx->child_clk);
++		ctx->child_refs--;
++	}
++	if (!IS_ERR_OR_NULL(ctx->child_clk))
++		clk_put(ctx->child_clk);
++	if (ctx->child_registered)
++		clk_hw_unregister(&ctx->child);
++	if (ctx->parent_registered)
++		clk_hw_unregister(&ctx->parent);
++}
++
++static void clk_orphan_adoption_setup(struct kunit *test)
++{
++	struct clk_orphan_adoption_ctx *ctx;
++	unsigned long flags = *(const unsigned long *)test->param_value;
++
++	ctx = kunit_kzalloc(test, sizeof(*ctx), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, ctx);
++	test->priv = ctx;
++	KUNIT_ASSERT_EQ(test, 0,
++		kunit_add_action_or_reset(test, clk_orphan_adoption_cleanup, ctx));
++	ctx->child.init = CLK_HW_INIT("adoption-child", "adoption-parent",
++				     &empty_clk_ops, flags);
++	KUNIT_ASSERT_EQ(test, 0, clk_hw_register(NULL, &ctx->child));
++	ctx->child_registered = true;
++	ctx->child_clk = clk_hw_get_clk(&ctx->child, NULL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx->child_clk);
++}
++
++static void clk_orphan_adoption_register_parent(struct kunit *test)
++{
++	struct clk_orphan_adoption_ctx *ctx = test->priv;
++
++	ctx->parent.init = CLK_HW_INIT_NO_PARENT("adoption-parent",
++					      &clk_orphan_adoption_parent_ops, 0);
++	KUNIT_ASSERT_EQ(test, 0, clk_hw_register(NULL, &ctx->parent));
++	ctx->parent_registered = true;
++}
++
++static void clk_orphan_adoption_get_twice(struct kunit *test)
++{
++	struct clk_orphan_adoption_ctx *ctx = test->priv;
++	unsigned int i;
++
++	for (i = 0; i < 2; i++) {
++		KUNIT_ASSERT_EQ(test, 0, clk_prepare_enable(ctx->child_clk));
++		ctx->child_refs++;
++	}
++}
++
++static void clk_orphan_adoption_put_twice(struct kunit *test)
++{
++	struct clk_orphan_adoption_ctx *ctx = test->priv;
++
++	while (ctx->child_refs) {
++		clk_disable_unprepare(ctx->child_clk);
++		ctx->child_refs--;
++	}
++	KUNIT_EXPECT_EQ(test, ctx->prepare_users, 0);
++	KUNIT_EXPECT_EQ(test, ctx->enable_users, 0);
++	KUNIT_EXPECT_FALSE(test, clk_hw_is_prepared(&ctx->parent));
++	KUNIT_EXPECT_EQ(test, __clk_get_enable_count(ctx->parent.clk), 0U);
++}
++
++/* Discovering a hardware parent is not a hardware mux operation. */
++static void clk_orphan_adoption_inactive(struct kunit *test)
++{
++	struct clk_orphan_adoption_ctx *ctx;
++
++	clk_orphan_adoption_setup(test);
++	ctx = test->priv;
++	ctx->prepare_error = -EAGAIN;
++	clk_orphan_adoption_register_parent(test);
++	KUNIT_EXPECT_PTR_EQ(test, clk_hw_get_parent(&ctx->child), &ctx->parent);
++	KUNIT_EXPECT_EQ(test, ctx->prepare_calls, 0U);
++	KUNIT_EXPECT_EQ(test, ctx->prepare_users, 0);
++}
++
++/* A failed prepare must not create a parent link without a reference. */
++static void clk_orphan_adoption_prepare_failure(struct kunit *test)
++{
++	struct clk_orphan_adoption_ctx *ctx;
++
++	clk_orphan_adoption_setup(test);
++	ctx = test->priv;
++	clk_orphan_adoption_get_twice(test);
++	ctx->prepare_error = -EAGAIN;
++	clk_orphan_adoption_register_parent(test);
++	KUNIT_EXPECT_PTR_EQ(test, clk_hw_get_parent(&ctx->child), NULL);
++	KUNIT_EXPECT_EQ(test, __clk_get_enable_count(ctx->child_clk), 2U);
++	KUNIT_EXPECT_EQ(test, ctx->prepare_calls, 1U);
++	clk_orphan_adoption_put_twice(test);
++}
++
++/* A failed enable must also release the prepare reference just acquired. */
++static void clk_orphan_adoption_enable_failure(struct kunit *test)
++{
++	struct clk_orphan_adoption_ctx *ctx;
++
++	clk_orphan_adoption_setup(test);
++	ctx = test->priv;
++	clk_orphan_adoption_get_twice(test);
++	ctx->enable_error = -EIO;
++	clk_orphan_adoption_register_parent(test);
++	KUNIT_EXPECT_PTR_EQ(test, clk_hw_get_parent(&ctx->child), NULL);
++	KUNIT_EXPECT_EQ(test, __clk_get_enable_count(ctx->child_clk), 2U);
++	clk_orphan_adoption_put_twice(test);
++}
++
++/* A later normal reparent must adopt the live references exactly once. */
++static void clk_orphan_adoption_later_parent(struct kunit *test)
++{
++	struct clk_orphan_adoption_ctx *ctx;
++	struct clk *parent_clk;
++
++	clk_orphan_adoption_setup(test);
++	ctx = test->priv;
++	clk_orphan_adoption_get_twice(test);
++	ctx->prepare_error = -EAGAIN;
++	clk_orphan_adoption_register_parent(test);
++	KUNIT_EXPECT_PTR_EQ(test, clk_hw_get_parent(&ctx->child), NULL);
++	ctx->prepare_error = 0;
++	parent_clk = clk_hw_get_clk_kunit(test, &ctx->parent, NULL);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, parent_clk);
++	KUNIT_ASSERT_EQ(test, clk_set_parent(ctx->child_clk, parent_clk), 0);
++	KUNIT_EXPECT_PTR_EQ(test, clk_hw_get_parent(&ctx->child), &ctx->parent);
++	KUNIT_EXPECT_EQ(test, __clk_get_enable_count(ctx->child_clk), 2U);
++	KUNIT_EXPECT_EQ(test, __clk_get_enable_count(parent_clk), 1U);
++	KUNIT_EXPECT_EQ(test, ctx->prepare_users, 1);
++	KUNIT_EXPECT_EQ(test, ctx->enable_users, 1);
++	clk_orphan_adoption_put_twice(test);
++}
++
++static const unsigned long clk_orphan_adoption_flags[] = {
++	0, CLK_OPS_PARENT_ENABLE,
++};
++
++static void clk_orphan_adoption_desc(const unsigned long *flags, char *desc)
++{
++	snprintf(desc, KUNIT_PARAM_DESC_SIZE, "parent_enable_%u", !!*flags);
++}
++
++KUNIT_ARRAY_PARAM(clk_orphan_adoption, clk_orphan_adoption_flags,
++		  clk_orphan_adoption_desc)
++
++static struct kunit_case clk_orphan_adoption_cases[] = {
++	KUNIT_CASE_PARAM(clk_orphan_adoption_inactive, clk_orphan_adoption_gen_params),
++	KUNIT_CASE_PARAM(clk_orphan_adoption_prepare_failure, clk_orphan_adoption_gen_params),
++	KUNIT_CASE_PARAM(clk_orphan_adoption_enable_failure, clk_orphan_adoption_gen_params),
++	KUNIT_CASE_PARAM(clk_orphan_adoption_later_parent, clk_orphan_adoption_gen_params),
++	{}
++};
++
++static struct kunit_suite clk_orphan_adoption_suite = {
++	.name = "clk-orphan-adoption",
++	.test_cases = clk_orphan_adoption_cases,
++};
++
+ #define DUMMY_CLOCK_INIT_RATE		(42 * HZ_PER_MHZ)
+ #define DUMMY_CLOCK_RATE_1		(142 * HZ_PER_MHZ)
+ #define DUMMY_CLOCK_RATE_2		(242 * HZ_PER_MHZ)
+@@ -3740,6 +3963,7 @@ static struct kunit_suite clk_hw_get_dev_of_node_test_suite = {
+ 
+ 
+ kunit_test_suites(
++	&clk_orphan_adoption_suite,
+ 	&clk_assigned_rates_suite,
+ 	&clk_assigned_sscs_suite,
+ 	&clk_hw_get_dev_of_node_test_suite,
+diff --git a/drivers/clk/qcom/dispcc-sm8750.c b/drivers/clk/qcom/dispcc-sm8750.c
+index 18e86b80e..63b2b3b17 100644
+--- a/drivers/clk/qcom/dispcc-sm8750.c
++++ b/drivers/clk/qcom/dispcc-sm8750.c
+@@ -677,6 +677,7 @@ static const struct freq_tbl ftbl_disp_cc_mdss_mdp_clk_src[] = {
+ 	F(417000000, P_DISP_CC_PLL0_OUT_MAIN, 3, 0, 0),
+ 	F(532000000, P_DISP_CC_PLL0_OUT_MAIN, 3, 0, 0),
+ 	F(575000000, P_DISP_CC_PLL0_OUT_MAIN, 3, 0, 0),
++	F(862500000, P_DISP_CC_PLL0_OUT_MAIN, 2, 0, 0),
+ 	{ }
+ };
+ 
+diff --git a/drivers/clk/qcom/gcc-sm8750.c b/drivers/clk/qcom/gcc-sm8750.c
+index 6cfe90122..7a52d55ad 100644
+--- a/drivers/clk/qcom/gcc-sm8750.c
++++ b/drivers/clk/qcom/gcc-sm8750.c
+@@ -2889,6 +2889,7 @@ static struct gdsc gcc_pcie_0_gdsc = {
+ 	.collapse_mask = BIT(0),
+ 	.pd = {
+ 		.name = "gcc_pcie_0_gdsc",
++		.flags = GENPD_FLAG_ACTIVE_WAKEUP,
+ 	},
+ 	.pwrsts = PWRSTS_OFF_ON,
+ 	.flags = POLL_CFG_GDSCR | RETAIN_FF_ENABLE | VOTABLE,
+@@ -2903,6 +2904,7 @@ static struct gdsc gcc_pcie_0_phy_gdsc = {
+ 	.collapse_mask = BIT(2),
+ 	.pd = {
+ 		.name = "gcc_pcie_0_phy_gdsc",
++		.flags = GENPD_FLAG_ACTIVE_WAKEUP,
+ 	},
+ 	.pwrsts = PWRSTS_OFF_ON,
+ 	.flags = POLL_CFG_GDSCR | RETAIN_FF_ENABLE | VOTABLE,
+diff --git a/drivers/firmware/qcom/qcom_scm_trace.h b/drivers/firmware/qcom/qcom_scm_trace.h
+index 6c911124f..5a9ef57aa 100644
+--- a/drivers/firmware/qcom/qcom_scm_trace.h
++++ b/drivers/firmware/qcom/qcom_scm_trace.h
+@@ -140,4 +140,3 @@ TRACE_EVENT(scm_smc_done,
+ #define TRACE_INCLUDE_FILE qcom_scm_trace
+ 
+ #include <trace/define_trace.h>
+-
+diff --git a/drivers/firmware/qcom/qcom_tzmem.c b/drivers/firmware/qcom/qcom_tzmem.c
+index f926c1f64..9fca7d302 100644
+--- a/drivers/firmware/qcom/qcom_tzmem.c
++++ b/drivers/firmware/qcom/qcom_tzmem.c
+@@ -516,7 +516,7 @@ int qcom_tzmem_enable(struct device *dev)
+ 	static int result;
+ 
+ 	qcom_tzmem_dev = dev;
+-	DO_ONCE(qcom_tzmem_do_init, &result);
++	DO_ONCE_SLEEPABLE(qcom_tzmem_do_init, &result);
+ 	return result;
+ }
+ EXPORT_SYMBOL_GPL(qcom_tzmem_enable);
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 89a476c37..6e1f54fd2 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -2365,6 +2365,9 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
+ 		if (pcie->use_pm_opp)
+ 			dev_pm_opp_set_opp(pcie->pci->dev, NULL);
+ 	} else {
++		/* The active controller still needs its power domain. */
++		device_set_awake_path(dev);
++
+ 		/*
+ 		 * Set minimum bandwidth required to keep data path
+ 		 * functional during suspend.
+diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+index c5ced8794..17fbf29ef 100644
+--- a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
++++ b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
+@@ -122,6 +122,11 @@ static const struct of_device_id pwrseq_pwrctrl_of_match[] = {
+ 		.compatible = "pci17cb,1107",
+ 		.data = &pwrseq_pwrctrl_qcom_wcn_pdata,
+ 	},
++	{
++		/* ATH12K in WCN7860 package. */
++		.compatible = "pci17cb,110e",
++		.data = &pwrseq_pwrctrl_qcom_wcn_pdata,
++	},
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, pwrseq_pwrctrl_of_match);
+diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+index 89addd732..597e6b234 100644
+--- a/drivers/phy/phy-core.c
++++ b/drivers/phy/phy-core.c
+@@ -606,12 +606,44 @@ int phy_validate(struct phy *phy, enum phy_mode mode, int submode,
+ }
+ EXPORT_SYMBOL_GPL(phy_validate);
+ 
++/**
++ * _of_phy_get_with_args() - lookup and obtain a reference to a phy by of_phandle_args
++ * @args: of_phandle_args to the phy
++ *
++ * Returns: the phy from the provider's of_xlate, -ENODEV if disabled,
++ * -EPROBE_DEFER if the provider is not yet registered.
++ */
++static struct phy *_of_phy_get_with_args(struct of_phandle_args *args)
++{
++	struct phy *phy;
++	struct phy_provider *phy_provider;
++
++	lockdep_assert_held(&phy_provider_mutex);
++
++	phy_provider = of_phy_provider_lookup(args->np);
++	if (IS_ERR(phy_provider) || !try_module_get(phy_provider->owner))
++		return ERR_PTR(-EPROBE_DEFER);
++
++	if (!of_device_is_available(args->np)) {
++		dev_warn(phy_provider->dev, "Requested PHY is disabled\n");
++		phy = ERR_PTR(-ENODEV);
++		goto out_put_module;
++	}
++
++	phy = phy_provider->of_xlate(phy_provider->dev, args);
++
++out_put_module:
++	module_put(phy_provider->owner);
++
++	return phy;
++}
++
+ /**
+  * _of_phy_get() - lookup and obtain a reference to a phy by phandle
+  * @np: device_node for which to get the phy
+  * @index: the index of the phy
+  *
+- * Returns the phy associated with the given phandle value,
++ * Returns: the phy associated with the given phandle value,
+  * after getting a refcount to it or -ENODEV if there is no such phy or
+  * -EPROBE_DEFER if there is a phandle to the phy, but the device is
+  * not yet loaded. This function uses of_xlate call back function provided
+@@ -620,8 +652,7 @@ EXPORT_SYMBOL_GPL(phy_validate);
+ static struct phy *_of_phy_get(struct device_node *np, int index)
+ {
+ 	int ret;
+-	struct phy_provider *phy_provider;
+-	struct phy *phy = NULL;
++	struct phy *phy;
+ 	struct of_phandle_args args;
+ 
+ 	lockdep_assert_held(&phy_provider_mutex);
+@@ -637,22 +668,7 @@ static struct phy *_of_phy_get(struct device_node *np, int index)
+ 		goto out_put_node;
+ 	}
+ 
+-	phy_provider = of_phy_provider_lookup(args.np);
+-	if (IS_ERR(phy_provider) || !try_module_get(phy_provider->owner)) {
+-		phy = ERR_PTR(-EPROBE_DEFER);
+-		goto out_put_node;
+-	}
+-
+-	if (!of_device_is_available(args.np)) {
+-		dev_warn(phy_provider->dev, "Requested PHY is disabled\n");
+-		phy = ERR_PTR(-ENODEV);
+-		goto out_put_module;
+-	}
+-
+-	phy = phy_provider->of_xlate(phy_provider->dev, &args);
+-
+-out_put_module:
+-	module_put(phy_provider->owner);
++	phy = _of_phy_get_with_args(&args);
+ 
+ out_put_node:
+ 	of_node_put(args.np);
+@@ -665,7 +681,7 @@ static struct phy *_of_phy_get(struct device_node *np, int index)
+  * @np: device_node for which to get the phy
+  * @con_id: name of the phy from device's point of view
+  *
+- * Returns the phy driver, after getting a refcount to it; or
++ * Returns: the phy driver, after getting a refcount to it; or
+  * -ENODEV if there is no such phy. The caller is responsible for
+  * calling of_phy_put() to release that count.
+  */
+@@ -781,7 +797,7 @@ EXPORT_SYMBOL_GPL(of_phy_simple_xlate);
+  * @string: the phy name as given in the dt data or the name of the controller
+  * port for non-dt case
+  *
+- * Returns the phy driver, after getting a refcount to it; or
++ * Returns: the phy driver, after getting a refcount to it; or
+  * -ENODEV if there is no such phy.  The caller is responsible for
+  * calling phy_put() to release that count.
+  */
+@@ -1001,6 +1017,71 @@ struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
+ }
+ EXPORT_SYMBOL_GPL(devm_of_phy_get_by_index);
+ 
++/**
++ * phy_get_by_of_node() - lookup and obtain a reference to a phy by device_node
++ * @np: node containing the phy
++ *
++ * Returns: the phy associated with the device node or ERR_PTR.
++ */
++struct phy *phy_get_by_of_node(struct device_node *np)
++{
++	struct of_phandle_args args = { .np = np, .args_count = 0 };
++	struct phy *phy;
++
++	mutex_lock(&phy_provider_mutex);
++
++	phy = _of_phy_get_with_args(&args);
++	if (IS_ERR(phy))
++		goto out_unlock;
++
++	if (!try_module_get(phy->ops->owner)) {
++		phy = ERR_PTR(-EPROBE_DEFER);
++		goto out_unlock;
++	}
++
++	get_device(&phy->dev);
++
++out_unlock:
++	mutex_unlock(&phy_provider_mutex);
++
++	return phy;
++}
++EXPORT_SYMBOL_GPL(phy_get_by_of_node);
++
++/**
++ * devm_phy_get_by_of_node() - devm managed lookup and obtain phy reference by device node
++ * @dev: device requesting the PHY
++ * @np: device_node of the PHY provider
++ *
++ * Returns: phy associated with the device_node or ERR_PTR. devres manages
++ * releasing resources.
++ */
++struct phy *devm_phy_get_by_of_node(struct device *dev, struct device_node *np)
++{
++	struct phy **ptr, *phy;
++	struct device_link *link;
++
++	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), GFP_KERNEL);
++	if (!ptr)
++		return ERR_PTR(-ENOMEM);
++
++	phy = phy_get_by_of_node(np);
++	if (IS_ERR(phy)) {
++		devres_free(ptr);
++		return phy;
++	}
++
++	*ptr = phy;
++	devres_add(dev, ptr);
++	link = device_link_add(dev, &phy->dev, DL_FLAG_STATELESS);
++	if (!link)
++		dev_dbg(dev, "failed to create device link to %s\n",
++			dev_name(phy->dev.parent));
++
++	return phy;
++}
++EXPORT_SYMBOL_GPL(devm_phy_get_by_of_node);
++
+ /**
+  * phy_create() - create a new phy
+  * @dev: device that is creating the new phy
+diff --git a/drivers/phy/qualcomm/Kconfig b/drivers/phy/qualcomm/Kconfig
+index d910a5d1a..d802e63ad 100644
+--- a/drivers/phy/qualcomm/Kconfig
++++ b/drivers/phy/qualcomm/Kconfig
+@@ -28,6 +28,21 @@ config PHY_QCOM_EDP
+ 	  Enable this driver to support the Qualcomm eDP PHY found in various
+ 	  Qualcomm chipsets.
+ 
++config PHY_QCOM_MIPI_CSI2
++	tristate "Qualcomm MIPI CSI2 PHY driver"
++	depends on ARCH_QCOM || COMPILE_TEST
++	depends on OF
++	depends on PM
++	depends on PM_OPP
++	depends on COMMON_CLK
++	select GENERIC_PHY
++	select GENERIC_PHY_MIPI_DPHY
++	help
++	  Enable this to support the MIPI CSI2 PHY driver found in various
++	  Qualcomm chipsets. This PHY is used to connect MIPI CSI2
++	  camera sensors to the CSI Decoder in the Qualcomm Camera Subsystem
++	  CAMSS.
++
+ config PHY_QCOM_IPQ4019_USB
+ 	tristate "Qualcomm IPQ4019 USB PHY driver"
+ 	depends on OF && (ARCH_QCOM || COMPILE_TEST)
+diff --git a/drivers/phy/qualcomm/Makefile b/drivers/phy/qualcomm/Makefile
+index 8bf887d58..4b5e6640a 100644
+--- a/drivers/phy/qualcomm/Makefile
++++ b/drivers/phy/qualcomm/Makefile
+@@ -6,6 +6,11 @@ obj-$(CONFIG_PHY_QCOM_IPQ4019_USB)	+= phy-qcom-ipq4019-usb.o
+ obj-$(CONFIG_PHY_QCOM_IPQ806X_SATA)	+= phy-qcom-ipq806x-sata.o
+ obj-$(CONFIG_PHY_QCOM_M31_USB)		+= phy-qcom-m31.o
+ obj-$(CONFIG_PHY_QCOM_M31_EUSB)		+= phy-qcom-m31-eusb2.o
++
++phy-qcom-mipi-csi2-objs			+= phy-qcom-mipi-csi2-core.o \
++					   phy-qcom-mipi-csi2-3ph-dphy.o
++obj-$(CONFIG_PHY_QCOM_MIPI_CSI2)	+= phy-qcom-mipi-csi2.o
++
+ obj-$(CONFIG_PHY_QCOM_PCIE2)		+= phy-qcom-pcie2.o
+ 
+ obj-$(CONFIG_PHY_QCOM_QMP_COMBO)	+= phy-qcom-qmp-combo.o phy-qcom-qmp-usbc.o
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-combo.c b/drivers/phy/qualcomm/phy-qcom-qmp-combo.c
+index c39ced168..cc5ca8fc2 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-combo.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-combo.c
+@@ -2587,6 +2587,7 @@ struct qmp_combo {
+ 	struct mutex phy_mutex;
+ 	int init_count;
+ 	enum qmpphy_mode qmpphy_mode;
++	bool qmpphy_mode_committed;
+ 
+ 	struct phy *usb_phy;
+ 	enum phy_mode phy_mode;
+@@ -4104,6 +4105,9 @@ static int qmp_combo_com_init(struct qmp_combo *qmp, bool force)
+ 	qphy_setbits(qmp->pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL],
+ 			SW_PWRDN);
+ 
++	/* com_init() just programmed registers from qmp->qmpphy_mode. */
++	qmp->qmpphy_mode_committed = true;
++
+ 	return 0;
+ 
+ err_disable_clocks:
+@@ -4229,6 +4233,9 @@ static int qmp_combo_usb_power_on(struct phy *phy)
+ 	unsigned int val;
+ 	int ret;
+ 
++	/* The common block can stay initialized while USB PCS is powered off. */
++	qphy_setbits(pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL], SW_PWRDN);
++
+ 	qmp_configure(qmp->dev, serdes, cfg->serdes_tbl, cfg->serdes_tbl_num);
+ 
+ 	/* Tx, Rx, and PCS configurations */
+@@ -4260,15 +4267,10 @@ static int qmp_combo_usb_power_on(struct phy *phy)
+ 			PHY_INIT_COMPLETE_TIMEOUT);
+ 	if (ret) {
+ 		dev_err(qmp->dev, "phy initialization timed-out\n");
+-		goto err_disable_pipe_clk;
++		return ret;
+ 	}
+ 
+ 	return 0;
+-
+-err_disable_pipe_clk:
+-	clk_disable_unprepare(qmp->pipe_clk);
+-
+-	return ret;
+ }
+ 
+ static int qmp_combo_usb_power_off(struct phy *phy)
+@@ -4837,9 +4839,22 @@ static int qmp_combo_typec_mux_set(struct typec_mux_dev *mux, struct typec_mux_s
+ 		new_mode = QMPPHY_MODE_USB3_ONLY;
+ 	}
+ 
++	/*
++	 * Fast-path bail only when the cached mode is also known to be
++	 * committed to hardware. The cache may be ahead of the hardware
++	 * if a typec_mux_set arrived while the PHY had not yet been
++	 * initialised (init_count == 0); in that case the cache update
++	 * below was the only thing that ran, and we still need to drive
++	 * the registers when the PHY does come up.
++	 */
+ 	if (new_mode == qmp->qmpphy_mode) {
+-		dev_dbg(qmp->dev, "typec_mux_set: same qmpphy mode, bail out\n");
+-		return 0;
++		if (qmp->qmpphy_mode_committed) {
++			dev_dbg(qmp->dev,
++				"typec_mux_set: same qmpphy mode (committed), bail out\n");
++			return 0;
++		}
++		dev_dbg(qmp->dev,
++			"typec_mux_set: same qmpphy mode but uncommitted; reprogramming\n");
+ 	}
+ 
+ 	if (qmp->qmpphy_mode != QMPPHY_MODE_USB3_ONLY && qmp->dp_powered_on) {
+@@ -4851,6 +4866,7 @@ static int qmp_combo_typec_mux_set(struct typec_mux_dev *mux, struct typec_mux_s
+ 		qmp->qmpphy_mode, new_mode);
+ 
+ 	qmp->qmpphy_mode = new_mode;
++	qmp->qmpphy_mode_committed = false;
+ 
+ 	if (qmp->init_count) {
+ 		if (qmp->usb_init_count)
+@@ -4879,6 +4895,9 @@ static int qmp_combo_typec_mux_set(struct typec_mux_dev *mux, struct typec_mux_s
+ 			if (qmp->dp_init_count)
+ 				cfg->dp_aux_init(qmp);
+ 		}
++
++		/* Reprogram complete; cache now reflects hardware. */
++		qmp->qmpphy_mode_committed = true;
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
+index da83358c9..13601dcbb 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
+@@ -17,6 +17,7 @@
+ #include <linux/phy/pcie.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_wakeup.h>
+ #include <linux/regmap.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/reset.h>
+@@ -6299,6 +6300,7 @@ static int qmp_pcie_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	qmp->dev = dev;
++	dev_set_drvdata(dev, qmp);
+ 
+ 	qmp->cfg = of_device_get_match_data(dev);
+ 	if (!qmp->cfg)
+@@ -6509,11 +6511,27 @@ static const struct of_device_id qmp_pcie_of_match_table[] = {
+ };
+ MODULE_DEVICE_TABLE(of, qmp_pcie_of_match_table);
+ 
++static int qmp_pcie_suspend_noirq(struct device *dev)
++{
++	struct qmp_pcie *qmp = dev_get_drvdata(dev);
++
++	/* A retained link still needs its PHY power domain. */
++	if (qmp->phy->power_count)
++		device_set_awake_path(dev);
++
++	return 0;
++}
++
++static const struct dev_pm_ops qmp_pcie_pm_ops = {
++	.suspend_noirq = qmp_pcie_suspend_noirq,
++};
++
+ static struct platform_driver qmp_pcie_driver = {
+ 	.probe		= qmp_pcie_probe,
+ 	.driver = {
+ 		.name	= "qcom-qmp-pcie-phy",
+ 		.of_match_table = qmp_pcie_of_match_table,
++		.pm = pm_ptr(&qmp_pcie_pm_ops),
+ 	},
+ };
+ 
+diff --git a/drivers/pinctrl/qcom/pinctrl-sm8650-lpass-lpi.c b/drivers/pinctrl/qcom/pinctrl-sm8650-lpass-lpi.c
+index bc7889c99..e33d4360c 100644
+--- a/drivers/pinctrl/qcom/pinctrl-sm8650-lpass-lpi.c
++++ b/drivers/pinctrl/qcom/pinctrl-sm8650-lpass-lpi.c
+@@ -220,6 +220,7 @@ static const struct of_device_id lpi_pinctrl_of_match[] = {
+ MODULE_DEVICE_TABLE(of, lpi_pinctrl_of_match);
+ 
+ static const struct dev_pm_ops lpi_pinctrl_pm_ops = {
++	SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend, pm_runtime_force_resume)
+ 	RUNTIME_PM_OPS(pm_clk_suspend, pm_clk_resume, NULL)
+ };
+ 
+diff --git a/drivers/pmdomain/core.c b/drivers/pmdomain/core.c
+index 052ec478d..fa46f59c6 100644
+--- a/drivers/pmdomain/core.c
++++ b/drivers/pmdomain/core.c
+@@ -535,11 +535,13 @@ static int genpd_drop_performance_state(struct device *dev)
+ 	return 0;
+ }
+ 
+-static void genpd_restore_performance_state(struct device *dev,
+-					    unsigned int state)
++static int genpd_restore_performance_state(struct device *dev,
++					   unsigned int state)
+ {
+ 	if (state)
+-		genpd_set_performance_state(dev, state);
++		return genpd_set_performance_state(dev, state);
++
++	return 0;
+ }
+ 
+ static int genpd_dev_pm_set_performance_state(struct device *dev,
+@@ -1306,8 +1308,12 @@ static int genpd_runtime_resume(struct device *dev)
+ 		goto out;
+ 
+ 	genpd_lock(genpd);
+-	genpd_restore_performance_state(dev, gpd_data->rpm_pstate);
+-	ret = genpd_power_on(genpd, 0);
++	ret = genpd_restore_performance_state(dev, gpd_data->rpm_pstate);
++	if (!ret) {
++		ret = genpd_power_on(genpd, 0);
++		if (ret)
++			genpd_drop_performance_state(dev);
++	}
+ 	genpd_unlock(genpd);
+ 
+ 	if (ret)
+@@ -3346,9 +3352,14 @@ static int genpd_set_required_opp(struct device *dev, unsigned int index)
+ 		ret = pstate;
+ 		goto err;
+ 	} else if (pstate > 0) {
+-		ret = dev_pm_genpd_set_performance_state(dev, pstate);
+-		if (ret)
+-			goto err;
++		/* Virtual devices start suspended with runtime PM still disabled. */
++		if (dev->bus == &genpd_bus_type) {
++			dev_gpd_data(dev)->rpm_pstate = pstate;
++		} else {
++			ret = dev_pm_genpd_set_performance_state(dev, pstate);
++			if (ret)
++				goto err;
++		}
+ 		dev_gpd_data(dev)->default_pstate = pstate;
+ 	}
+ 
+diff --git a/drivers/power/sequencing/pwrseq-qcom-wcn.c b/drivers/power/sequencing/pwrseq-qcom-wcn.c
+index 34146d637..97692c4de 100644
+--- a/drivers/power/sequencing/pwrseq-qcom-wcn.c
++++ b/drivers/power/sequencing/pwrseq-qcom-wcn.c
+@@ -401,6 +401,22 @@ static const struct pwrseq_qcom_wcn_pdata pwrseq_wcn7850_of_data = {
+ 	.targets = pwrseq_qcom_wcn_targets,
+ };
+ 
++static const char *const pwrseq_wcn7860_vregs[] = {
++	"vddio",
++	"vddio1p2",
++	"vddaon",
++	"vdddig",
++	"vddrfa1p2",
++	"vddrfa1p8",
++};
++
++static const struct pwrseq_qcom_wcn_pdata pwrseq_wcn7860_of_data = {
++	.vregs = pwrseq_wcn7860_vregs,
++	.num_vregs = ARRAY_SIZE(pwrseq_wcn7860_vregs),
++	.pwup_delay_ms = 50,
++	.targets = pwrseq_qcom_wcn_targets,
++};
++
+ static int pwrseq_qcom_wcn_match_regulator(struct pwrseq_device *pwrseq,
+ 					   struct device *dev,
+ 					   const char *name)
+@@ -562,6 +578,10 @@ static const struct of_device_id pwrseq_qcom_wcn_of_match[] = {
+ 		.compatible = "qcom,wcn7850-pmu",
+ 		.data = &pwrseq_wcn7850_of_data,
+ 	},
++	{
++		.compatible = "qcom,wcn7860-pmu",
++		.data = &pwrseq_wcn7860_of_data,
++	},
+ 	{
+ 		.compatible = "qcom,wcn6750-pmu",
+ 		.data = &pwrseq_wcn6750_of_data,
+diff --git a/drivers/remoteproc/qcom_q6v5_pas.c b/drivers/remoteproc/qcom_q6v5_pas.c
+index a005546c2..f4a0207b4 100644
+--- a/drivers/remoteproc/qcom_q6v5_pas.c
++++ b/drivers/remoteproc/qcom_q6v5_pas.c
+@@ -10,9 +10,11 @@
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/firmware.h>
++#include <linux/interconnect.h>
+ #include <linux/interrupt.h>
+ #include <linux/iommu.h>
+ #include <linux/kernel.h>
++#include <linux/mfd/syscon.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+@@ -22,6 +24,7 @@
+ #include <linux/pm_domain.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/firmware/qcom/qcom_pas.h>
++#include <linux/regmap.h>
+ #include <linux/firmware/qcom/qcom_scm.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/remoteproc.h>
+@@ -64,6 +67,7 @@ struct qcom_pas_data {
+ 	int region_assign_vmid;
+ 	bool early_boot;
+ 	bool needs_tzmem;
++	bool boot_bus_vote;
+ };
+ 
+ struct qcom_pas {
+@@ -123,6 +127,12 @@ struct qcom_pas {
+ 
+ 	struct qcom_pas_context *pas_ctx;
+ 	struct qcom_pas_context *dtb_pas_ctx;
++
++	/* Bus vote for an image the bootloader left running, see boot_bus_vote */
++	struct icc_path *boot_path;
++	struct regmap *dstate;
++	u32 dstate_reg;
++	bool boot_voted;
+ };
+ 
+ static void qcom_pas_segment_dump(struct rproc *rproc,
+@@ -388,10 +398,72 @@ static int qcom_pas_start(struct rproc *rproc)
+ 	return ret;
+ }
+ 
++#define SOCCP_DSTATE_D3		BIT(3)
++#define SOCCP_BOOT_KBPS		1200
++#define SOCCP_D3_POLL_US		(10 * USEC_PER_MSEC)
++
++/*
++ * The SM8750 bootloader leaves an early SoCCP image running. It stays in D0,
++ * ignores SMP2P and has no bus vote of its own, and the SoC hangs on wake
++ * from a full power collapse unless the system NoC is kept on for it. Vote
++ * the SoCCP's path to DDR on its behalf, in every RPMh set, until the image
++ * loaded here has parked itself in D3. Without that image, or without the
++ * D-state register, the vote is simply kept.
++ */
++static int qcom_pas_boot_vote(struct qcom_pas *pas)
++{
++	struct device *dev = pas->dev;
++	int ret;
++
++	pas->boot_path = devm_of_icc_get(dev, NULL);
++	if (IS_ERR(pas->boot_path))
++		return dev_err_probe(dev, PTR_ERR(pas->boot_path),
++				     "failed to acquire the boot interconnect path\n");
++
++	pas->dstate = syscon_regmap_lookup_by_phandle_args(dev->of_node, "qcom,soccp-dstate",
++							   1, &pas->dstate_reg);
++	if (IS_ERR(pas->dstate)) {
++		dev_warn(dev, "no D-state register, the boot bus vote stays\n");
++		pas->dstate = NULL;
++	}
++
++	ret = icc_set_bw(pas->boot_path, SOCCP_BOOT_KBPS, SOCCP_BOOT_KBPS);
++	if (ret)
++		return dev_err_probe(dev, ret, "failed to vote the boot interconnect path\n");
++
++	pas->boot_voted = true;
++
++	return 0;
++}
++
++/* Drop the boot vote once the D-state register shows D3; true when dropped */
++static bool qcom_pas_boot_vote_release(struct qcom_pas *pas)
++{
++	u32 val = 0;
++
++	if (!pas->boot_voted)
++		return true;
++
++	if (!pas->dstate)
++		return false;
++
++	if (regmap_read_poll_timeout(pas->dstate, pas->dstate_reg, val,
++				     val & SOCCP_DSTATE_D3, 200, SOCCP_D3_POLL_US))
++		return false;
++
++	icc_set_bw(pas->boot_path, 0, 0);
++	pas->boot_voted = false;
++	dev_info(pas->dev, "in D3, boot bus vote dropped\n");
++
++	return true;
++}
++
+ static void qcom_pas_handover(struct qcom_q6v5 *q6v5)
+ {
+ 	struct qcom_pas *pas = container_of(q6v5, struct qcom_pas, q6v5);
+ 
++	qcom_pas_boot_vote_release(pas);
++
+ 	if (pas->px_supply)
+ 		regulator_disable(pas->px_supply);
+ 	if (pas->cx_supply)
+@@ -908,6 +980,12 @@ static int qcom_pas_probe(struct platform_device *pdev)
+ 		goto unassign_mem;
+ 	pas->proxy_pd_count = ret;
+ 
++	if (desc->boot_bus_vote) {
++		ret = qcom_pas_boot_vote(pas);
++		if (ret)
++			goto detach_proxy_pds;
++	}
++
+ 	ret = qcom_q6v5_init(&pas->q6v5, pdev, rproc, desc->crash_reason_smem,
+ 			     desc->load_state, qcom_pas_handover);
+ 	if (ret)
+@@ -979,6 +1057,24 @@ static void qcom_pas_remove(struct platform_device *pdev)
+ 	device_init_wakeup(pas->dev, false);
+ }
+ 
++/*
++ * An image that parks itself only after the handover is caught here, before
++ * the sleep set is flushed.
++ */
++static int qcom_pas_pm_prepare(struct device *dev)
++{
++	struct qcom_pas *pas = dev_get_drvdata(dev);
++
++	if (!qcom_pas_boot_vote_release(pas) && pas->rproc->state == RPROC_RUNNING)
++		dev_warn_once(dev, "not in D3, keeping the boot bus vote\n");
++
++	return 0;
++}
++
++static const struct dev_pm_ops qcom_pas_pm_ops = {
++	.prepare = pm_sleep_ptr(qcom_pas_pm_prepare),
++};
++
+ static const struct qcom_pas_data adsp_resource_init = {
+ 	.crash_reason_smem = 423,
+ 	.firmware_name = "adsp.mdt",
+@@ -1241,6 +1337,25 @@ static const struct qcom_pas_data sc8280xp_nsp1_resource = {
+ 	.ssctl_id = 0x20,
+ };
+ 
++/*
++ * Started by the bootloader with an early image that Linux cannot manage;
++ * loading soccp.mbn replaces it. See qcom_pas_boot_vote().
++ */
++static const struct qcom_pas_data sm8750_soccp_resource = {
++	.crash_reason_smem = 656,
++	.firmware_name = "soccp.mbn",
++	.pas_id = 51,
++	.proxy_pd_names = (char*[]){
++		"cx",
++		"mx",
++		NULL
++	},
++	.ssr_name = "soccp",
++	.sysmon_name = "soccp",
++	.auto_boot = true,
++	.boot_bus_vote = true,
++};
++
+ static const struct qcom_pas_data x1e80100_adsp_resource = {
+ 	.crash_reason_smem = 423,
+ 	.firmware_name = "adsp.mdt",
+@@ -1906,6 +2021,7 @@ static const struct of_device_id qcom_pas_of_match[] = {
+ 	{ .compatible = "qcom,sm8650-cdsp-pas", .data = &sm8650_cdsp_resource },
+ 	{ .compatible = "qcom,sm8650-mpss-pas", .data = &sm8650_mpss_resource },
+ 	{ .compatible = "qcom,sm8750-mpss-pas", .data = &sm8750_mpss_resource },
++	{ .compatible = "qcom,sm8750-soccp-pas", .data = &sm8750_soccp_resource },
+ 	{ .compatible = "qcom,x1e80100-adsp-pas", .data = &x1e80100_adsp_resource },
+ 	{ .compatible = "qcom,x1e80100-cdsp-pas", .data = &x1e80100_cdsp_resource },
+ 	{ },
+@@ -1918,6 +2034,7 @@ static struct platform_driver qcom_pas_driver = {
+ 	.driver = {
+ 		.name = "qcom_q6v5_pas",
+ 		.of_match_table = qcom_pas_of_match,
++		.pm = pm_sleep_ptr(&qcom_pas_pm_ops),
+ 	},
+ };
+ 
+diff --git a/drivers/rpmsg/qcom_glink_native.c b/drivers/rpmsg/qcom_glink_native.c
+index 55793fc18..e4ca8d9ff 100644
+--- a/drivers/rpmsg/qcom_glink_native.c
++++ b/drivers/rpmsg/qcom_glink_native.c
+@@ -153,6 +153,7 @@ enum {
+  * @buf:	receive buffer, for gathering fragments
+  * @buf_offset:	write offset in @buf
+  * @buf_size:	size of current @buf
++ * @pending_rx:	received messages held until the endpoint can take them
+  * @open_ack:	completed once remote has acked the open-request
+  * @open_req:	completed once open-request has been received
+  * @intent_req_lock: Synchronises multiple intent requests
+@@ -184,6 +185,8 @@ struct glink_channel {
+ 	int buf_offset;
+ 	int buf_size;
+ 
++	struct list_head pending_rx;
++
+ 	struct completion open_ack;
+ 	struct completion open_req;
+ 
+@@ -248,6 +251,7 @@ static struct glink_channel *qcom_glink_alloc_channel(struct qcom_glink *glink,
+ 	init_waitqueue_head(&channel->intent_req_wq);
+ 
+ 	INIT_LIST_HEAD(&channel->done_intents);
++	INIT_LIST_HEAD(&channel->pending_rx);
+ 	INIT_WORK(&channel->intent_work, qcom_glink_rx_done_work);
+ 
+ 	idr_init(&channel->liids);
+@@ -269,6 +273,15 @@ static void qcom_glink_channel_release(struct kref *ref)
+ 	/* cancel pending rx_done work */
+ 	cancel_work_sync(&channel->intent_work);
+ 
++	/* Held messages of intentless channels own their buffer */
++	if (channel->glink->intentless) {
++		list_for_each_entry_safe(intent, tmp, &channel->pending_rx, node) {
++			list_del(&intent->node);
++			kfree(intent->data);
++			kfree(intent);
++		}
++	}
++
+ 	spin_lock_irqsave(&channel->intent_lock, flags);
+ 	/* Free all non-reuse intents pending rx_done work */
+ 	list_for_each_entry_safe(intent, tmp, &channel->done_intents, node) {
+@@ -895,6 +908,37 @@ static int qcom_glink_rx_defer(struct qcom_glink *glink, size_t extra)
+ 	return 0;
+ }
+ 
++/*
++ * Deliver the messages held on @channel in arrival order. A message is held
++ * when it arrives before the endpoint has a callback, or when the callback
++ * returns -EAGAIN because its driver has not finished probing: the remote may
++ * send as soon as it has been granted an intent, which can be before
++ * qcom_glink_create_ept() sets the callback and before the rpmsg driver's
++ * probe returns. The intent is only returned to the remote once the message
++ * has been delivered. Called with channel->recv_lock held.
++ */
++static void qcom_glink_deliver_pending(struct qcom_glink *glink,
++				       struct glink_channel *channel)
++{
++	struct glink_core_rx_intent *intent, *tmp;
++	int ret;
++
++	list_for_each_entry_safe(intent, tmp, &channel->pending_rx, node) {
++		if (!channel->ept.cb)
++			return;
++
++		ret = channel->ept.cb(channel->ept.rpdev, intent->data,
++				      intent->offset, channel->ept.priv,
++				      RPMSG_ADDR_ANY);
++		if (ret == -EAGAIN)
++			return;
++
++		list_del(&intent->node);
++		intent->offset = 0;
++		qcom_glink_rx_done(glink, channel, intent);
++	}
++}
++
+ static int qcom_glink_rx_data(struct qcom_glink *glink, size_t avail)
+ {
+ 	struct glink_core_rx_intent *intent;
+@@ -991,20 +1035,12 @@ static int qcom_glink_rx_data(struct qcom_glink *glink, size_t avail)
+ 
+ 	/* Handle message when no fragments remain to be received */
+ 	if (!left_size) {
+-		spin_lock(&channel->recv_lock);
+-		if (channel->ept.cb) {
+-			channel->ept.cb(channel->ept.rpdev,
+-					intent->data,
+-					intent->offset,
+-					channel->ept.priv,
+-					RPMSG_ADDR_ANY);
+-		}
+-		spin_unlock(&channel->recv_lock);
+-
+-		intent->offset = 0;
+ 		channel->buf = NULL;
+ 
+-		qcom_glink_rx_done(glink, channel, intent);
++		spin_lock(&channel->recv_lock);
++		list_add_tail(&intent->node, &channel->pending_rx);
++		qcom_glink_deliver_pending(glink, channel);
++		spin_unlock(&channel->recv_lock);
+ 	}
+ 
+ advance_rx:
+@@ -1350,10 +1386,14 @@ static struct rpmsg_endpoint *qcom_glink_create_ept(struct rpmsg_device *rpdev,
+ 
+ 	ept = &channel->ept;
+ 	ept->rpdev = rpdev;
+-	ept->cb = cb;
+ 	ept->priv = priv;
+ 	ept->ops = &glink_endpoint_ops;
+ 
++	spin_lock_irqsave(&channel->recv_lock, flags);
++	ept->cb = cb;
++	qcom_glink_deliver_pending(glink, channel);
++	spin_unlock_irqrestore(&channel->recv_lock, flags);
++
+ 	return ept;
+ }
+ 
+@@ -1368,8 +1408,14 @@ static int qcom_glink_announce_create(struct rpmsg_device *rpdev)
+ 	int num_intents;
+ 	int num_groups = 1;
+ 	__be32 *val = defaults;
++	unsigned long flags;
+ 	int size;
+ 
++	/* The driver has probed; deliver what it could not take before */
++	spin_lock_irqsave(&channel->recv_lock, flags);
++	qcom_glink_deliver_pending(glink, channel);
++	spin_unlock_irqrestore(&channel->recv_lock, flags);
++
+ 	if (glink->intentless || !completion_done(&channel->open_ack))
+ 		return 0;
+ 
+@@ -1412,10 +1458,16 @@ static void qcom_glink_destroy_ept(struct rpmsg_endpoint *ept)
+ {
+ 	struct glink_channel *channel = to_glink_channel(ept);
+ 	struct qcom_glink *glink = channel->glink;
++	struct glink_core_rx_intent *intent, *tmp;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&channel->recv_lock, flags);
+ 	channel->ept.cb = NULL;
++	list_for_each_entry_safe(intent, tmp, &channel->pending_rx, node) {
++		list_del(&intent->node);
++		intent->offset = 0;
++		qcom_glink_rx_done(glink, channel, intent);
++	}
+ 	spin_unlock_irqrestore(&channel->recv_lock, flags);
+ 
+ 	qcom_glink_send_close_req(glink, channel);
+diff --git a/drivers/soc/qcom/Kconfig b/drivers/soc/qcom/Kconfig
+index 2b524154d..c38cd4f3f 100644
+--- a/drivers/soc/qcom/Kconfig
++++ b/drivers/soc/qcom/Kconfig
+@@ -15,6 +15,28 @@ menuconfig QCOM_SOC
+ 
+ if QCOM_SOC
+ 
++config QCOM_ABL_ROOT_IDENTITY
++	bool "Restore the DT root identity replaced by Qualcomm ABL"
++	depends on ARCH_QCOM || COMPILE_TEST
++	depends on OF
++	help
++	  Some Qualcomm ABL builds copy the root "model" and "compatible" of
++	  the vendor DTBO they apply over those of the booted DTB, so root
++	  match tables no longer recognise the SoC. If the DTB keeps its own
++	  values in the root properties "qcom,mainline-model" and
++	  "qcom,mainline-compatible", put them back before core initcalls.
++	  The older "xiaomi,mainline-*" properties remain supported.
++	  DTBs without those properties are left alone.
++
++config QCOM_ABL_ROOT_IDENTITY_KUNIT_TEST
++	bool "ABL root identity restore tests" if !KUNIT_ALL_TESTS
++	depends on KUNIT=y && QCOM_ABL_ROOT_IDENTITY
++	default KUNIT_ALL_TESTS
++	help
++	  Check the restore decision on synthetic, unattached nodes: replaced,
++	  missing, matching, absent and malformed values. The live tree is
++	  not modified.
++
+ config QCOM_AOSS_QMP
+ 	tristate "Qualcomm AOSS Driver"
+ 	depends on MAILBOX
+@@ -122,6 +144,16 @@ config QCOM_PMIC_GLINK
+ 	  Say yes here to support USB-C and battery status on modern Qualcomm
+ 	  platforms.
+ 
++config QCOM_PMIC_GLINK_ALTMODE_KUNIT_TEST
++	bool "PMIC GLINK DisplayPort notification tests" if !KUNIT_ALL_TESTS
++	depends on KUNIT=y && QCOM_PMIC_GLINK=y
++	default KUNIT_ALL_TESTS
++	help
++	  Test the DP state sent by the real AltMode helper to Type-C mux
++	  and retimer consumers registered on synthetic software nodes.
++	  Cover pin assignments, status bits, invalid inputs and errors.
++	  No PMIC GLINK transport or physical connector is accessed.
++
+ config QCOM_RAMP_CTRL
+ 	tristate "Qualcomm Ramp Controller driver"
+ 	help
+diff --git a/drivers/soc/qcom/Makefile b/drivers/soc/qcom/Makefile
+index 798643be3..3c94a9aff 100644
+--- a/drivers/soc/qcom/Makefile
++++ b/drivers/soc/qcom/Makefile
+@@ -1,6 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ CFLAGS_rpmh-rsc.o := -I$(src)
+ CFLAGS_qcom_aoss.o := -I$(src)
++obj-$(CONFIG_QCOM_ABL_ROOT_IDENTITY) += abl_root_identity.o
+ obj-$(CONFIG_QCOM_AOSS_QMP) +=	qcom_aoss.o
+ obj-$(CONFIG_QCOM_GENI_SE) +=	qcom-geni-se.o
+ obj-$(CONFIG_QCOM_COMMAND_DB) += cmd-db.o
+diff --git a/drivers/soc/qcom/abl_root_identity.c b/drivers/soc/qcom/abl_root_identity.c
+new file mode 100644
+index 000000000..8dafcac65
+--- /dev/null
++++ b/drivers/soc/qcom/abl_root_identity.c
+@@ -0,0 +1,114 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Restore the device tree root identity replaced by Qualcomm ABL.
++ *
++ * Some ABL builds copy the root "model" and "compatible" of the vendor DTBO
++ * they apply over those of the booted DTB. Root match tables (PD mapper, UBWC
++ * configuration, ...) then no longer recognise the SoC. A DTB that keeps its
++ * own identity in root properties the DTBO does not carry gets it back here,
++ * before the first core initcall. /sys/firmware/fdt keeps the ABL values.
++ */
++
++#define pr_fmt(fmt) "abl-root-identity: " fmt
++
++#include <linux/array_size.h>
++#include <linux/init.h>
++#include <linux/of.h>
++#include <linux/printk.h>
++#include <linux/string.h>
++
++struct abl_root_identity {
++	const char *saved;
++	const char *fallback;
++	struct property prop;
++};
++
++/* Linked into the live root node, so not __initdata. */
++static struct abl_root_identity abl_root_identity[] = {
++	{ .saved = "qcom,mainline-model",
++	  .fallback = "xiaomi,mainline-model", .prop.name = "model" },
++	{ .saved = "qcom,mainline-compatible",
++	  .fallback = "xiaomi,mainline-compatible", .prop.name = "compatible" },
++};
++
++/*
++ * Point @id->prop at the saved copy in @np. Returns 1 if it differs from the
++ * live property, 0 if they are equal, -ENOENT without a saved copy and another
++ * negative errno if the saved copy is not a non-empty string list.
++ */
++static int abl_root_identity_prepare(const struct device_node *np,
++				     struct abl_root_identity *id)
++{
++	const struct property *saved, *live;
++	const char *name = id->saved;
++	int ret;
++
++	saved = of_find_property(np, name, NULL);
++	if (!saved && id->fallback) {
++		name = id->fallback;
++		saved = of_find_property(np, name, NULL);
++	}
++	if (!saved)
++		return -ENOENT;
++
++	ret = of_property_count_strings(np, name);
++	if (ret < 0)
++		return ret;
++
++	live = of_find_property(np, id->prop.name, NULL);
++	if (live && live->length == saved->length &&
++	    !memcmp(live->value, saved->value, saved->length))
++		return 0;
++
++	id->prop.value = saved->value;
++	id->prop.length = saved->length;
++	return 1;
++}
++
++static int __init abl_root_identity_init(void)
++{
++	struct device_node *root __free(device_node) = of_find_node_by_path("/");
++	const char *model = "", *compatible = "";
++	unsigned int saved = 0, restored = 0;
++	int i, ret;
++
++	if (!root)
++		return 0;
++
++	/* Replaced properties stay on the node's deadprops list. */
++	of_property_read_string(root, "model", &model);
++	of_property_read_string(root, "compatible", &compatible);
++
++	for (i = 0; i < ARRAY_SIZE(abl_root_identity); i++) {
++		struct abl_root_identity *id = &abl_root_identity[i];
++
++		ret = abl_root_identity_prepare(root, id);
++		if (ret == -ENOENT)
++			continue;
++		if (ret < 0) {
++			pr_err("ignoring invalid %s: %d\n", id->saved, ret);
++			continue;
++		}
++		saved++;
++		if (ret && !of_update_property(root, &id->prop))
++			restored++;
++	}
++
++	if (restored) {
++		const char *new_model = "", *new_compatible = "";
++
++		of_property_read_string(root, "model", &new_model);
++		of_property_read_string(root, "compatible", &new_compatible);
++		pr_info("restored model \"%s\" -> \"%s\", compatible \"%s\" -> \"%s\"\n",
++			model, new_model, compatible, new_compatible);
++	} else if (saved) {
++		pr_info("root identity already matches the saved copy\n");
++	}
++
++	return 0;
++}
++early_initcall(abl_root_identity_init);
++
++#if IS_ENABLED(CONFIG_QCOM_ABL_ROOT_IDENTITY_KUNIT_TEST)
++#include "abl_root_identity_test.c"
++#endif
+diff --git a/drivers/soc/qcom/abl_root_identity_test.c b/drivers/soc/qcom/abl_root_identity_test.c
+new file mode 100644
+index 000000000..e1e798e32
+--- /dev/null
++++ b/drivers/soc/qcom/abl_root_identity_test.c
+@@ -0,0 +1,116 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Included by abl_root_identity.c. Uses unattached synthetic nodes; the
++ * of_update_property() step on the live root is left to boot testing.
++ */
++#include <kunit/test.h>
++
++static const char abl_test_stock[] = "qcom,sun-mtp\0qcom,sun\0qcom,mtp";
++static const char abl_test_mainline[] = "xiaomi,piano\0qcom,sm8750";
++
++static void abl_test_add(struct kunit *test, struct device_node *np,
++			 const char *name, const void *value, int length)
++{
++	struct property *prop = kunit_kzalloc(test, sizeof(*prop), GFP_KERNEL);
++
++	KUNIT_ASSERT_NOT_NULL(test, prop);
++	prop->name = (char *)name;
++	prop->value = (void *)value;
++	prop->length = length;
++	prop->next = np->properties;
++	np->properties = prop;
++}
++
++static struct abl_root_identity abl_test_compatible(void)
++{
++	return (struct abl_root_identity) {
++		.saved = "xiaomi,mainline-compatible",
++		.prop.name = "compatible",
++	};
++}
++
++static void abl_test_restore_replaced(struct kunit *test)
++{
++	struct abl_root_identity id = abl_test_compatible();
++	struct device_node np = {};
++
++	abl_test_add(test, &np, "compatible", abl_test_stock, sizeof(abl_test_stock));
++	abl_test_add(test, &np, id.saved, abl_test_mainline, sizeof(abl_test_mainline));
++
++	KUNIT_EXPECT_EQ(test, abl_root_identity_prepare(&np, &id), 1);
++	KUNIT_EXPECT_PTR_EQ(test, id.prop.value, (void *)abl_test_mainline);
++	KUNIT_EXPECT_EQ(test, id.prop.length, (int)sizeof(abl_test_mainline));
++	KUNIT_EXPECT_STREQ(test, id.prop.name, "compatible");
++}
++
++static void abl_test_restore_missing_live(struct kunit *test)
++{
++	struct abl_root_identity id = {
++		.saved = "xiaomi,mainline-model",
++		.prop.name = "model",
++	};
++	static const char model[] = "Xiaomi Pad 8 Pro";
++	struct device_node np = {};
++
++	abl_test_add(test, &np, id.saved, model, sizeof(model));
++
++	KUNIT_EXPECT_EQ(test, abl_root_identity_prepare(&np, &id), 1);
++	KUNIT_EXPECT_PTR_EQ(test, id.prop.value, (void *)model);
++}
++
++static void abl_test_keep_matching(struct kunit *test)
++{
++	struct abl_root_identity id = abl_test_compatible();
++	static const char copy[] = "xiaomi,piano\0qcom,sm8750";
++	struct device_node np = {};
++
++	abl_test_add(test, &np, "compatible", copy, sizeof(copy));
++	abl_test_add(test, &np, id.saved, abl_test_mainline, sizeof(abl_test_mainline));
++
++	KUNIT_EXPECT_EQ(test, abl_root_identity_prepare(&np, &id), 0);
++	KUNIT_EXPECT_NULL(test, id.prop.value);
++}
++
++static void abl_test_no_saved_copy(struct kunit *test)
++{
++	struct abl_root_identity id = abl_test_compatible();
++	struct device_node np = {};
++
++	abl_test_add(test, &np, "compatible", abl_test_stock, sizeof(abl_test_stock));
++
++	KUNIT_EXPECT_EQ(test, abl_root_identity_prepare(&np, &id), -ENOENT);
++	KUNIT_EXPECT_NULL(test, id.prop.value);
++}
++
++static void abl_test_reject_invalid(struct kunit *test)
++{
++	struct abl_root_identity id = abl_test_compatible();
++	static const char unterminated[] = { 'x', 'i', 'a', 'o', 'm', 'i' };
++	struct device_node np = {};
++
++	abl_test_add(test, &np, "compatible", abl_test_stock, sizeof(abl_test_stock));
++	abl_test_add(test, &np, id.saved, unterminated, sizeof(unterminated));
++	KUNIT_EXPECT_EQ(test, abl_root_identity_prepare(&np, &id), -EILSEQ);
++	KUNIT_EXPECT_NULL(test, id.prop.value);
++
++	np.properties = NULL;
++	abl_test_add(test, &np, "compatible", abl_test_stock, sizeof(abl_test_stock));
++	abl_test_add(test, &np, id.saved, abl_test_mainline, 0);
++	KUNIT_EXPECT_EQ(test, abl_root_identity_prepare(&np, &id), -ENODATA);
++	KUNIT_EXPECT_NULL(test, id.prop.value);
++}
++
++static struct kunit_case abl_root_identity_cases[] = {
++	KUNIT_CASE(abl_test_restore_replaced),
++	KUNIT_CASE(abl_test_restore_missing_live),
++	KUNIT_CASE(abl_test_keep_matching),
++	KUNIT_CASE(abl_test_no_saved_copy),
++	KUNIT_CASE(abl_test_reject_invalid),
++	{}
++};
++
++static struct kunit_suite abl_root_identity_suite = {
++	.name = "qcom-abl-root-identity",
++	.test_cases = abl_root_identity_cases,
++};
++kunit_test_suite(abl_root_identity_suite);
+diff --git a/drivers/soc/qcom/apr.c b/drivers/soc/qcom/apr.c
+index ea7f83916..8fe72daa2 100644
+--- a/drivers/soc/qcom/apr.c
++++ b/drivers/soc/qcom/apr.c
+@@ -367,9 +367,19 @@ static int apr_device_probe(struct device *dev)
+ 	struct apr_driver *adrv = to_apr_driver(dev->driver);
+ 	int ret;
+ 
++	/*
++	 * Install the response callback before probing. A driver may issue a
++	 * synchronous request from its own probe - q6apm asks the DSP for the
++	 * SPF state - and the reply can arrive while probe is still running.
++	 * gpr_do_rx_callback() drops packets for a service with no callback,
++	 * so setting it afterwards loses that reply and the request always
++	 * times out, no matter how long it waits.
++	 */
++	adev->svc.callback = adrv->gpr_callback;
++
+ 	ret = adrv->probe(adev);
+-	if (!ret)
+-		adev->svc.callback = adrv->gpr_callback;
++	if (ret)
++		adev->svc.callback = NULL;
+ 
+ 	return ret;
+ }
+diff --git a/drivers/soc/qcom/llcc-qcom.c b/drivers/soc/qcom/llcc-qcom.c
+index 733999867..40e5d57c6 100644
+--- a/drivers/soc/qcom/llcc-qcom.c
++++ b/drivers/soc/qcom/llcc-qcom.c
+@@ -3761,7 +3761,7 @@ static const struct llcc_slice_config sm8750_data[] = {
+ 		.max_cap = 7936,
+ 		.priority = 7,
+ 		.fixed_size = true,
+-		.bonus_ways = 0x7fffffff,
++		.res_ways = 0x7fffffff,
+ 	}, {
+ 		.usecase_id = LLCC_DISP_WB,
+ 		.slice_id = 23,
+diff --git a/drivers/soc/qcom/pmic_glink.c b/drivers/soc/qcom/pmic_glink.c
+index 304226157..a98b67835 100644
+--- a/drivers/soc/qcom/pmic_glink.c
++++ b/drivers/soc/qcom/pmic_glink.c
+@@ -103,6 +103,35 @@ struct pmic_glink_client *devm_pmic_glink_client_alloc(struct device *dev,
+ }
+ EXPORT_SYMBOL_GPL(devm_pmic_glink_client_alloc);
+ 
++static void pmic_glink_noop_cb(const void *data, size_t len, void *priv) {}
++static void pmic_glink_noop_pdr(void *priv, int state) {}
++
++/* Park a client's callbacks on no-ops: pmic_glink has no unregister API,
++ * so a client whose owner module is about to unload must stop pointing
++ * into soon-to-be-freed module text.  The client stays registered. */
++void pmic_glink_client_neuter(struct pmic_glink_client *client)
++{
++	struct pmic_glink *pg = client->pg;
++	unsigned long flags;
++
++	/* client->pg comes from the parent device's drvdata, which is only a
++	 * pmic_glink when the client really was allocated through
++	 * devm_pmic_glink_client_alloc().  A caller that reached us any other
++	 * way would hand us garbage here; stay harmless instead of writing
++	 * through it. */
++	if (!pg)
++		return;
++
++	/* The dispatch path reads these three fields under pg->client_lock,
++	 * so the teardown has to take the same lock or the two race. */
++	spin_lock_irqsave(&pg->client_lock, flags);
++	client->cb = pmic_glink_noop_cb;
++	client->pdr_notify = pmic_glink_noop_pdr;
++	client->priv = NULL;
++	spin_unlock_irqrestore(&pg->client_lock, flags);
++}
++EXPORT_SYMBOL_GPL(pmic_glink_client_neuter);
++
+ void pmic_glink_client_register(struct pmic_glink_client *client)
+ {
+ 	struct pmic_glink *pg = client->pg;
+diff --git a/drivers/soc/qcom/pmic_glink_altmode.c b/drivers/soc/qcom/pmic_glink_altmode.c
+index 465e5d231..2f35801b2 100644
+--- a/drivers/soc/qcom/pmic_glink_altmode.c
++++ b/drivers/soc/qcom/pmic_glink_altmode.c
+@@ -23,6 +23,10 @@
+ 
+ #include <linux/soc/qcom/pmic_glink.h>
+ 
++#if IS_ENABLED(CONFIG_QCOM_PMIC_GLINK_ALTMODE_KUNIT_TEST)
++#include <kunit/static_stub.h>
++#endif
++
+ #define PMIC_GLINK_MAX_PORTS	3
+ 
+ #define USBC_SC8180X_NOTIFY_IND	0x13
+@@ -147,6 +151,10 @@ static int pmic_glink_altmode_request(struct pmic_glink_altmode *altmode, u32 cm
+ 	unsigned long left;
+ 	int ret;
+ 
++#if IS_ENABLED(CONFIG_QCOM_PMIC_GLINK_ALTMODE_KUNIT_TEST)
++	KUNIT_STATIC_STUB_REDIRECT(pmic_glink_altmode_request, altmode, cmd, arg);
++#endif
++
+ 	/*
+ 	 * The USBC_CMD_WRITE_REQ ack doesn't identify the request, so wait for
+ 	 * one ack at a time.
+@@ -174,28 +182,34 @@ static int pmic_glink_altmode_request(struct pmic_glink_altmode *altmode, u32 cm
+ 	return 0;
+ }
+ 
+-static void pmic_glink_altmode_enable_dp(struct pmic_glink_altmode *altmode,
+-					 struct pmic_glink_altmode_port *port,
+-					 u8 mode, bool hpd_state,
+-					 bool hpd_irq)
++static int pmic_glink_altmode_enable_dp(struct pmic_glink_altmode *altmode,
++				      struct pmic_glink_altmode_port *port,
++				      u8 mode, bool hpd_state, bool hpd_irq)
+ {
+ 	struct typec_displayport_data dp_data = {};
+ 	int ret;
+ 
++	if (mode > DP_PIN_ASSIGN_F) {
++		dev_err(altmode->dev, "invalid DP pin assignment index: %u\n", mode);
++		return -EINVAL;
++	}
++
+ 	dp_data.status = DP_STATUS_ENABLED;
+ 	if (hpd_state)
+ 		dp_data.status |= DP_STATUS_HPD_STATE;
+ 	if (hpd_irq)
+ 		dp_data.status |= DP_STATUS_IRQ_HPD;
+-	dp_data.conf = DP_CONF_SET_PIN_ASSIGN(mode);
++	dp_data.conf = DP_CONF_SET_PIN_ASSIGN(BIT(mode));
+ 
+ 	port->state.alt = &port->dp_alt;
+ 	port->state.data = &dp_data;
+ 	port->state.mode = TYPEC_MODAL_STATE(mode);
+ 
+ 	ret = typec_mux_set(port->typec_mux, &port->state);
+-	if (ret)
++	if (ret) {
+ 		dev_err(altmode->dev, "failed to switch mux to DP: %d\n", ret);
++		return ret;
++	}
+ 
+ 	port->retimer_state.alt = &port->dp_alt;
+ 	port->retimer_state.data = &dp_data;
+@@ -204,6 +218,8 @@ static void pmic_glink_altmode_enable_dp(struct pmic_glink_altmode *altmode,
+ 	ret = typec_retimer_set(port->typec_retimer, &port->retimer_state);
+ 	if (ret)
+ 		dev_err(altmode->dev, "failed to setup retimer to DP: %d\n", ret);
++
++	return ret;
+ }
+ 
+ static void pmic_glink_altmode_enable_tbt(struct pmic_glink_altmode *altmode,
+@@ -351,8 +367,11 @@ static void pmic_glink_altmode_worker(struct work_struct *work)
+ 	struct pmic_glink_altmode_port *alt_port = work_to_altmode_port(work);
+ 	struct pmic_glink_altmode *altmode = alt_port->altmode;
+ 	enum drm_connector_status conn_status;
++	int ret;
+ 
+-	typec_switch_set(alt_port->typec_switch, alt_port->orientation);
++	ret = typec_switch_set(alt_port->typec_switch, alt_port->orientation);
++	if (ret)
++		dev_err(altmode->dev, "failed to set orientation: %d\n", ret);
+ 
+ 	/*
+ 	 * MUX_CTRL_STATE_DP4LN/USB3_DP may only be set if SVID=DP, but we need
+@@ -362,19 +381,25 @@ static void pmic_glink_altmode_worker(struct work_struct *work)
+ 	if (alt_port->svid == USB_TYPEC_DP_SID) {
+ 		if (alt_port->mux_ctrl == MUX_CTRL_STATE_NO_CONN) {
+ 			pmic_glink_altmode_safe(altmode, alt_port);
+-		} else {
+-			pmic_glink_altmode_enable_dp(altmode, alt_port,
+-						     alt_port->mode,
+-						     alt_port->hpd_state,
+-						     alt_port->hpd_irq);
++		} else if (!ret) {
++			ret = pmic_glink_altmode_enable_dp(altmode, alt_port,
++							 alt_port->mode,
++							 alt_port->hpd_state,
++							 alt_port->hpd_irq);
+ 		}
+ 
++		/* Preserve disconnect notification even if routing cleanup failed. */
++		if (ret && alt_port->hpd_state)
++			goto out_ack;
++
+ 		if (alt_port->hpd_state)
+ 			conn_status = connector_status_connected;
+ 		else
+ 			conn_status = connector_status_disconnected;
+ 
+ 		drm_aux_hpd_bridge_notify(&alt_port->bridge->dev, conn_status);
++	} else if (ret) {
++		goto out_ack;
+ 	} else if (alt_port->mux_ctrl == MUX_CTRL_STATE_TUNNELING) {
+ 		if (alt_port->svid == USB_TYPEC_TBT_SID)
+ 			pmic_glink_altmode_enable_tbt(altmode, alt_port);
+@@ -390,6 +415,7 @@ static void pmic_glink_altmode_worker(struct work_struct *work)
+ 		pmic_glink_altmode_safe(altmode, alt_port);
+ 	}
+ 
++out_ack:
+ 	pmic_glink_altmode_request(altmode, ALTMODE_PAN_ACK, alt_port->index);
+ }
+ 
+@@ -716,3 +742,7 @@ module_auxiliary_driver(pmic_glink_altmode_driver);
+ 
+ MODULE_DESCRIPTION("Qualcomm PMIC GLINK Altmode driver");
+ MODULE_LICENSE("GPL");
++
++#if IS_ENABLED(CONFIG_QCOM_PMIC_GLINK_ALTMODE_KUNIT_TEST)
++#include "pmic_glink_altmode_test.c"
++#endif
+diff --git a/drivers/soc/qcom/pmic_glink_altmode_test.c b/drivers/soc/qcom/pmic_glink_altmode_test.c
+new file mode 100644
+index 000000000..1f07e4a89
+--- /dev/null
++++ b/drivers/soc/qcom/pmic_glink_altmode_test.c
+@@ -0,0 +1,353 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/* Included with the private helper; consumers use the real Type-C APIs. */
++#include <kunit/device.h>
++#include <kunit/test.h>
++#include <drm/drm_bridge.h>
++
++struct altmode_test_observation {
++	unsigned long mode;
++	u16 svid;
++	struct typec_displayport_data data;
++	unsigned int calls;
++};
++
++struct altmode_test_ctx {
++	struct pmic_glink_altmode altmode;
++	struct pmic_glink_altmode_port port;
++	struct device_node bridge_node;
++	struct drm_bridge *bridge;
++	struct typec_switch_dev *sw;
++	struct typec_mux_dev *mux;
++	struct typec_retimer *retimer;
++	struct altmode_test_observation mux_seen;
++	struct altmode_test_observation retimer_seen;
++	int mux_error;
++	int switch_error;
++	int retimer_error;
++	unsigned int switch_calls;
++	unsigned int hpd_calls;
++	unsigned int ack_calls;
++	enum drm_connector_status hpd_status;
++};
++
++static const struct property_entry altmode_test_sink_props[] = {
++	PROPERTY_ENTRY_BOOL("orientation-switch"),
++	PROPERTY_ENTRY_BOOL("mode-switch"),
++	PROPERTY_ENTRY_BOOL("retimer-switch"),
++	{ }
++};
++
++static const struct software_node altmode_test_sink = {
++	.name = "pmic-glink-dp-test-sink",
++	.properties = altmode_test_sink_props,
++};
++
++static const struct property_entry altmode_test_port_props[] = {
++	PROPERTY_ENTRY_REF("orientation-switch", &altmode_test_sink),
++	PROPERTY_ENTRY_REF("mode-switch", &altmode_test_sink),
++	PROPERTY_ENTRY_REF("retimer-switch", &altmode_test_sink),
++	{ }
++};
++
++static const struct software_node altmode_test_port_node = {
++	.name = "pmic-glink-dp-test-port",
++	.properties = altmode_test_port_props,
++};
++
++static const struct software_node * const altmode_test_nodes[] = {
++	&altmode_test_sink, &altmode_test_port_node, NULL,
++};
++
++static int altmode_test_mux_set(struct typec_mux_dev *mux, struct typec_mux_state *state)
++{
++	struct altmode_test_ctx *ctx = typec_mux_get_drvdata(mux);
++
++	ctx->mux_seen.mode = state->mode;
++	ctx->mux_seen.svid = state->alt ? state->alt->svid : 0;
++	if (state->data)
++		ctx->mux_seen.data = *(struct typec_displayport_data *)state->data;
++	ctx->mux_seen.calls++;
++	return ctx->mux_error;
++}
++
++static int altmode_test_retimer_set(struct typec_retimer *retimer,
++				  struct typec_retimer_state *state)
++{
++	struct altmode_test_ctx *ctx = typec_retimer_get_drvdata(retimer);
++
++	ctx->retimer_seen.mode = state->mode;
++	ctx->retimer_seen.svid = state->alt ? state->alt->svid : 0;
++	if (state->data)
++		ctx->retimer_seen.data = *(struct typec_displayport_data *)state->data;
++	ctx->retimer_seen.calls++;
++	return ctx->retimer_error;
++}
++
++static int altmode_test_switch_set(struct typec_switch_dev *sw,
++				   enum typec_orientation orientation)
++{
++	struct altmode_test_ctx *ctx = typec_switch_get_drvdata(sw);
++
++	ctx->switch_calls++;
++	return ctx->switch_error;
++}
++
++static int altmode_test_ack(struct pmic_glink_altmode *altmode, u32 cmd, u32 arg)
++{
++	struct altmode_test_ctx *ctx = container_of(altmode, struct altmode_test_ctx, altmode);
++
++	KUNIT_EXPECT_EQ(kunit_get_current_test(), cmd, ALTMODE_PAN_ACK);
++	KUNIT_EXPECT_EQ(kunit_get_current_test(), arg, ctx->port.index);
++	ctx->ack_calls++;
++	return 0;
++}
++
++static void altmode_test_hpd(void *data, enum drm_connector_status status)
++{
++	struct altmode_test_ctx *ctx = data;
++
++	ctx->hpd_calls++;
++	ctx->hpd_status = status;
++}
++
++static void altmode_test_put_node(void *node)
++{
++	of_node_put(node);
++}
++
++static void altmode_test_put_bridge(void *bridge)
++{
++	drm_bridge_hpd_disable(bridge);
++	drm_bridge_put(bridge);
++}
++
++static void altmode_test_remove_switch(void *sw)
++{
++	typec_switch_unregister(sw);
++}
++
++static void altmode_test_remove_nodes(void *unused)
++{
++	software_node_unregister_node_group(altmode_test_nodes);
++}
++
++static void altmode_test_remove_mux(void *mux)
++{
++	typec_mux_unregister(mux);
++}
++
++static void altmode_test_remove_retimer(void *retimer)
++{
++	typec_retimer_unregister(retimer);
++}
++
++static void altmode_test_put_handles(void *data)
++{
++	struct altmode_test_ctx *ctx = data;
++
++	typec_retimer_put(ctx->port.typec_retimer);
++	typec_mux_put(ctx->port.typec_mux);
++	typec_switch_put(ctx->port.typec_switch);
++}
++
++static int altmode_test_init(struct kunit *test)
++{
++	struct typec_mux_desc mux_desc = { .set = altmode_test_mux_set };
++	struct typec_retimer_desc retimer_desc = { .set = altmode_test_retimer_set };
++	struct typec_switch_desc switch_desc = { .set = altmode_test_switch_set };
++	struct altmode_test_ctx *ctx;
++	struct device *dev;
++	int ret;
++
++	ctx = kunit_kzalloc(test, sizeof(*ctx), GFP_KERNEL);
++	KUNIT_ASSERT_NOT_NULL(test, ctx);
++	test->priv = ctx;
++	/* Unattached identity node; no hardware tree is modified. */
++	of_node_init(&ctx->bridge_node);
++	ctx->bridge_node.full_name = "/kunit-pmic-glink-dp";
++	kunit_add_action_or_reset(test, altmode_test_put_node, &ctx->bridge_node);
++	dev = kunit_device_register(test, "pmic-glink-dp-test");
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, dev);
++	ctx->altmode.dev = dev;
++	ctx->port.altmode = &ctx->altmode;
++	ctx->port.dp_alt.svid = USB_TYPEC_DP_SID;
++	ctx->port.svid = USB_TYPEC_DP_SID;
++	ctx->port.mode = DP_PIN_ASSIGN_C;
++	ctx->port.mux_ctrl = MUX_CTRL_STATE_DP4LN;
++	ctx->port.orientation = TYPEC_ORIENTATION_NORMAL;
++	ctx->port.hpd_state = 1;
++	kunit_activate_static_stub(test, pmic_glink_altmode_request, altmode_test_ack);
++	ctx->port.bridge = devm_drm_dp_hpd_bridge_alloc(dev, &ctx->bridge_node);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx->port.bridge);
++	ret = devm_drm_dp_hpd_bridge_add(dev, ctx->port.bridge);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	ctx->bridge = of_drm_find_and_get_bridge(&ctx->bridge_node);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx->bridge);
++	drm_bridge_hpd_enable(ctx->bridge, altmode_test_hpd, ctx);
++	kunit_add_action_or_reset(test, altmode_test_put_bridge, ctx->bridge);
++	ret = software_node_register_node_group(altmode_test_nodes);
++	KUNIT_ASSERT_EQ(test, ret, 0);
++	kunit_add_action_or_reset(test, altmode_test_remove_nodes, NULL);
++	mux_desc.fwnode = software_node_fwnode(&altmode_test_sink);
++	mux_desc.drvdata = ctx;
++	switch_desc.fwnode = mux_desc.fwnode;
++	switch_desc.drvdata = ctx;
++	ctx->sw = typec_switch_register(dev, &switch_desc);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx->sw);
++	kunit_add_action_or_reset(test, altmode_test_remove_switch, ctx->sw);
++	ctx->mux = typec_mux_register(dev, &mux_desc);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx->mux);
++	kunit_add_action_or_reset(test, altmode_test_remove_mux, ctx->mux);
++	retimer_desc.fwnode = mux_desc.fwnode;
++	retimer_desc.drvdata = ctx;
++	ctx->retimer = typec_retimer_register(dev, &retimer_desc);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx->retimer);
++	kunit_add_action_or_reset(test, altmode_test_remove_retimer, ctx->retimer);
++	ctx->port.typec_mux = fwnode_typec_mux_get(software_node_fwnode(&altmode_test_port_node));
++	kunit_add_action_or_reset(test, altmode_test_put_handles, ctx);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx->port.typec_mux);
++	ctx->port.typec_retimer =
++		fwnode_typec_retimer_get(software_node_fwnode(&altmode_test_port_node));
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx->port.typec_retimer);
++	ctx->port.typec_switch =
++		fwnode_typec_switch_get(software_node_fwnode(&altmode_test_port_node));
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx->port.typec_switch);
++	return 0;
++}
++
++struct altmode_test_pin {
++	const char *name;
++	u8 pin;
++	unsigned long mode;
++	u32 conf;
++};
++
++/* The published Configure VDO carries one bit per pin assignment, not its index. */
++static const struct altmode_test_pin altmode_test_pins[] = {
++	{ "A", DP_PIN_ASSIGN_A, TYPEC_DP_STATE_A, 0x0100 },
++	{ "B", DP_PIN_ASSIGN_B, TYPEC_DP_STATE_B, 0x0200 },
++	{ "C", DP_PIN_ASSIGN_C, TYPEC_DP_STATE_C, 0x0400 },
++	{ "D", DP_PIN_ASSIGN_D, TYPEC_DP_STATE_D, 0x0800 },
++	{ "E", DP_PIN_ASSIGN_E, TYPEC_DP_STATE_E, 0x1000 },
++	{ "F", DP_PIN_ASSIGN_F, TYPEC_DP_STATE_F, 0x2000 },
++};
++
++static void altmode_test_pin_desc(const struct altmode_test_pin *pin, char *desc)
++{
++	snprintf(desc, KUNIT_PARAM_DESC_SIZE, "%s", pin->name);
++}
++KUNIT_ARRAY_PARAM(altmode_test_pin, altmode_test_pins, altmode_test_pin_desc);
++
++static void altmode_test_dp_notification(struct kunit *test)
++{
++	struct altmode_test_ctx *ctx = test->priv;
++	const struct altmode_test_pin *pin = test->param_value;
++	struct altmode_test_observation *seen[] = { &ctx->mux_seen, &ctx->retimer_seen };
++	unsigned int i;
++
++	pmic_glink_altmode_enable_dp(&ctx->altmode, &ctx->port, pin->pin, true, true);
++	for (i = 0; i < ARRAY_SIZE(seen); i++) {
++		KUNIT_EXPECT_EQ(test, seen[i]->calls, 1);
++		KUNIT_EXPECT_EQ(test, seen[i]->svid, USB_TYPEC_DP_SID);
++		KUNIT_EXPECT_EQ(test, seen[i]->mode, pin->mode);
++		KUNIT_EXPECT_EQ(test, seen[i]->data.conf, pin->conf);
++		KUNIT_EXPECT_EQ(test, seen[i]->data.status,
++				DP_STATUS_ENABLED | DP_STATUS_HPD_STATE | DP_STATUS_IRQ_HPD);
++	}
++}
++
++static void altmode_test_invalid_pins(struct kunit *test)
++{
++	struct altmode_test_ctx *ctx = test->priv;
++
++	pmic_glink_altmode_enable_dp(&ctx->altmode, &ctx->port, 6, false, false);
++	pmic_glink_altmode_enable_dp(&ctx->altmode, &ctx->port, 255, false, false);
++	KUNIT_EXPECT_EQ(test, ctx->mux_seen.calls, 0);
++	KUNIT_EXPECT_EQ(test, ctx->retimer_seen.calls, 0);
++}
++
++static void altmode_test_mux_error(struct kunit *test)
++{
++	struct altmode_test_ctx *ctx = test->priv;
++
++	ctx->mux_error = -EIO;
++	pmic_glink_altmode_enable_dp(&ctx->altmode, &ctx->port, DP_PIN_ASSIGN_C, true, false);
++	KUNIT_EXPECT_EQ(test, ctx->mux_seen.calls, 1);
++	KUNIT_EXPECT_EQ(test, ctx->retimer_seen.calls, 0);
++}
++
++static void altmode_test_worker_connected(struct kunit *test)
++{
++	struct altmode_test_ctx *ctx = test->priv;
++
++	pmic_glink_altmode_worker(&ctx->port.work);
++	KUNIT_EXPECT_EQ(test, ctx->hpd_calls, 1);
++	KUNIT_EXPECT_EQ(test, ctx->hpd_status, connector_status_connected);
++	KUNIT_EXPECT_EQ(test, ctx->ack_calls, 1);
++}
++
++static void altmode_test_worker_switch_error(struct kunit *test)
++{
++	struct altmode_test_ctx *ctx = test->priv;
++
++	ctx->switch_error = -EIO;
++	pmic_glink_altmode_worker(&ctx->port.work);
++	KUNIT_EXPECT_EQ(test, ctx->mux_seen.calls, 0);
++	KUNIT_EXPECT_EQ(test, ctx->retimer_seen.calls, 0);
++	KUNIT_EXPECT_EQ(test, ctx->hpd_calls, 0);
++	KUNIT_EXPECT_EQ(test, ctx->ack_calls, 1);
++}
++
++static void altmode_test_worker_mux_error(struct kunit *test)
++{
++	struct altmode_test_ctx *ctx = test->priv;
++
++	ctx->mux_error = -EIO;
++	pmic_glink_altmode_worker(&ctx->port.work);
++	KUNIT_EXPECT_EQ(test, ctx->retimer_seen.calls, 0);
++	KUNIT_EXPECT_EQ(test, ctx->hpd_calls, 0);
++	KUNIT_EXPECT_EQ(test, ctx->ack_calls, 1);
++}
++
++static void altmode_test_worker_retimer_error(struct kunit *test)
++{
++	struct altmode_test_ctx *ctx = test->priv;
++
++	ctx->retimer_error = -EIO;
++	pmic_glink_altmode_worker(&ctx->port.work);
++	KUNIT_EXPECT_EQ(test, ctx->hpd_calls, 0);
++	KUNIT_EXPECT_EQ(test, ctx->ack_calls, 1);
++}
++
++static void altmode_test_disconnect_with_error(struct kunit *test)
++{
++	struct altmode_test_ctx *ctx = test->priv;
++
++	ctx->switch_error = -EIO;
++	ctx->mux_error = -EIO;
++	ctx->port.hpd_state = 0;
++	ctx->port.mux_ctrl = MUX_CTRL_STATE_NO_CONN;
++	pmic_glink_altmode_worker(&ctx->port.work);
++	KUNIT_EXPECT_EQ(test, ctx->hpd_calls, 1);
++	KUNIT_EXPECT_EQ(test, ctx->hpd_status, connector_status_disconnected);
++	KUNIT_EXPECT_EQ(test, ctx->ack_calls, 1);
++}
++
++static struct kunit_case altmode_test_cases[] = {
++	KUNIT_CASE_PARAM(altmode_test_dp_notification, altmode_test_pin_gen_params),
++	KUNIT_CASE(altmode_test_invalid_pins),
++	KUNIT_CASE(altmode_test_mux_error),
++	KUNIT_CASE(altmode_test_worker_connected),
++	KUNIT_CASE(altmode_test_worker_switch_error),
++	KUNIT_CASE(altmode_test_worker_mux_error),
++	KUNIT_CASE(altmode_test_worker_retimer_error),
++	KUNIT_CASE(altmode_test_disconnect_with_error),
++	{ }
++};
++
++static struct kunit_suite altmode_test_suite = {
++	.name = "pmic-glink-dp-notification",
++	.init = altmode_test_init,
++	.test_cases = altmode_test_cases,
++};
++kunit_test_suite(altmode_test_suite);
+diff --git a/drivers/soc/qcom/qcom_pd_mapper.c b/drivers/soc/qcom/qcom_pd_mapper.c
+index 64ca99d7f..60f00c51a 100644
+--- a/drivers/soc/qcom/qcom_pd_mapper.c
++++ b/drivers/soc/qcom/qcom_pd_mapper.c
+@@ -661,6 +661,9 @@ static const struct of_device_id qcom_pdm_domains[] __maybe_unused = {
+ 	{ .compatible = "qcom,sm8350", .data = sm8350_domains, },
+ 	{ .compatible = "qcom,sm8450", .data = sm8350_domains, },
+ 	{ .compatible = "qcom,sm8550", .data = sm8550_domains, },
++	{ .compatible = "qcom,sm8750", .data = sm8550_domains, },
++	/* ABL-booted SM8750 devices report the codename compatibles instead */
++	{ .compatible = "qcom,sun", .data = sm8550_domains, },
+ 	{ .compatible = "qcom,sm8650", .data = sm8550_domains, },
+ 	{ .compatible = "qcom,sm8750", .data = sm8550_domains, },
+ 	{ .compatible = "qcom,x1e80100", .data = x1e80100_domains, },
+diff --git a/drivers/soc/qcom/ubwc_config.c b/drivers/soc/qcom/ubwc_config.c
+index 23901a4c5..5bd3b6865 100644
+--- a/drivers/soc/qcom/ubwc_config.c
++++ b/drivers/soc/qcom/ubwc_config.c
+@@ -164,6 +164,8 @@ static const struct of_device_id qcom_ubwc_configs[] __maybe_unused = {
+ 	{ .compatible = "qcom,sm8550", .data = &ubwc_4_0_hbb16, },
+ 	{ .compatible = "qcom,sm8650", .data = &ubwc_4_0_hbb16, },
+ 	{ .compatible = "qcom,sm8750", .data = &ubwc_5_0_hbb16, },
++	{ .compatible = "qcom,sun", .data = &ubwc_5_0_hbb16, },
++	{ .compatible = "qcom,sunp", .data = &ubwc_5_0_hbb16, },
+ 	{ .compatible = "qcom,x1e80100", .data = &ubwc_4_0_hbb16, },
+ 	{ .compatible = "qcom,x1p42100", .data = &ubwc_4_0_hbb16, },
+ 	{ }
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 954be9343..a132b2f99 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -347,7 +347,9 @@ static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+ 	if (!host->is_lane_clks_enabled)
+ 		return;
+ 
+-	clk_bulk_disable_unprepare(host->num_clks, host->clks);
++	clk_disable_unprepare(host->rx_lane1_sync_clk);
++	clk_disable_unprepare(host->rx_lane0_sync_clk);
++	clk_disable_unprepare(host->tx_lane0_sync_clk);
+ 
+ 	host->is_lane_clks_enabled = false;
+ }
+@@ -356,28 +358,57 @@ static int ufs_qcom_enable_lane_clks(struct ufs_qcom_host *host)
+ {
+ 	int err;
+ 
+-	err = clk_bulk_prepare_enable(host->num_clks, host->clks);
++	if (host->is_lane_clks_enabled)
++		return 0;
++
++	err = clk_prepare_enable(host->tx_lane0_sync_clk);
+ 	if (err)
+-		return err;
++		goto out;
++
++	err = clk_prepare_enable(host->rx_lane0_sync_clk);
++	if (err)
++		goto out_disable_tx_lane0;
++
++	err = clk_prepare_enable(host->rx_lane1_sync_clk);
++	if (err)
++		goto out_disable_rx_lane0;
+ 
+ 	host->is_lane_clks_enabled = true;
+ 
+ 	return 0;
++
++out_disable_rx_lane0:
++	clk_disable_unprepare(host->rx_lane0_sync_clk);
++out_disable_tx_lane0:
++	clk_disable_unprepare(host->tx_lane0_sync_clk);
++out:
++	return err;
+ }
+ 
+ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
+ {
+-	int err;
+ 	struct device *dev = host->hba->dev;
+ 
+ 	if (has_acpi_companion(dev))
+ 		return 0;
+ 
+-	err = devm_clk_bulk_get_all(dev, &host->clks);
+-	if (err <= 0)
+-		return err;
++	host->tx_lane0_sync_clk = devm_clk_get(dev, "tx_lane0_sync_clk");
++	if (IS_ERR(host->tx_lane0_sync_clk))
++		return dev_err_probe(dev, PTR_ERR(host->tx_lane0_sync_clk),
++				     "failed to get tx_lane0_sync_clk\n");
++
++	host->rx_lane0_sync_clk = devm_clk_get(dev, "rx_lane0_sync_clk");
++	if (IS_ERR(host->rx_lane0_sync_clk))
++		return dev_err_probe(dev, PTR_ERR(host->rx_lane0_sync_clk),
++				     "failed to get rx_lane0_sync_clk\n");
+ 
+-	host->num_clks = err;
++	/* In case of single lane per direction, don't read lane1 clocks */
++	if (host->hba->lanes_per_direction > 1) {
++		host->rx_lane1_sync_clk = devm_clk_get(dev, "rx_lane1_sync_clk");
++		if (IS_ERR(host->rx_lane1_sync_clk))
++			return dev_err_probe(dev, PTR_ERR(host->rx_lane1_sync_clk),
++					     "failed to get rx_lane1_sync_clk\n");
++	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index a5ad5ce44..944b2e532 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -330,8 +330,9 @@ struct ufs_qcom_host {
+ 	struct phy *generic_phy;
+ 	struct ufs_hba *hba;
+ 	struct ufs_pa_layer_attr dev_req_params;
+-	struct clk_bulk_data *clks;
+-	u32 num_clks;
++	struct clk *tx_lane0_sync_clk;
++	struct clk *rx_lane0_sync_clk;
++	struct clk *rx_lane1_sync_clk;
+ 	bool is_lane_clks_enabled;
+ 
+ 	struct icc_path *icc_ddr;
+diff --git a/drivers/virt/Kconfig b/drivers/virt/Kconfig
+index 52eb7e4ba..e10e5db3f 100644
+--- a/drivers/virt/Kconfig
++++ b/drivers/virt/Kconfig
+@@ -50,3 +50,4 @@ source "drivers/virt/acrn/Kconfig"
+ endif
+ 
+ source "drivers/virt/coco/Kconfig"
++source "drivers/virt/gunyah/Kconfig"
+diff --git a/drivers/virt/Makefile b/drivers/virt/Makefile
+index f29901bd7..ef6a3835d 100644
+--- a/drivers/virt/Makefile
++++ b/drivers/virt/Makefile
+@@ -10,3 +10,4 @@ obj-y				+= vboxguest/
+ obj-$(CONFIG_NITRO_ENCLAVES)	+= nitro_enclaves/
+ obj-$(CONFIG_ACRN_HSM)		+= acrn/
+ obj-y				+= coco/
++obj-y				+= gunyah/
+diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+index ea47975e2..14b924a88 100644
+--- a/include/linux/phy/phy.h
++++ b/include/linux/phy/phy.h
+@@ -284,6 +284,8 @@ struct phy *devm_of_phy_optional_get(struct device *dev, struct device_node *np,
+ 				     const char *con_id);
+ struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
+ 				     int index);
++struct phy *phy_get_by_of_node(struct device_node *np);
++struct phy *devm_phy_get_by_of_node(struct device *dev, struct device_node *np);
+ void of_phy_put(struct phy *phy);
+ void phy_put(struct device *dev, struct phy *phy);
+ void devm_phy_put(struct device *dev, struct phy *phy);
+@@ -493,6 +495,17 @@ static inline struct phy *devm_of_phy_get_by_index(struct device *dev,
+ 	return ERR_PTR(-ENOSYS);
+ }
+ 
++static inline struct phy *phy_get_by_of_node(struct device_node *np)
++{
++	return ERR_PTR(-ENOSYS);
++}
++
++static inline struct phy *devm_phy_get_by_of_node(struct device *dev,
++						  struct device_node *np)
++{
++	return ERR_PTR(-ENOSYS);
++}
++
+ static inline void of_phy_put(struct phy *phy)
+ {
+ }
+diff --git a/include/linux/soc/qcom/pmic_glink.h b/include/linux/soc/qcom/pmic_glink.h
+index 7cddf1027..b4b51a71b 100644
+--- a/include/linux/soc/qcom/pmic_glink.h
++++ b/include/linux/soc/qcom/pmic_glink.h
+@@ -28,6 +28,8 @@ struct pmic_glink_client *devm_pmic_glink_client_alloc(struct device *dev,
+ 						       void (*cb)(const void *, size_t, void *),
+ 						       void (*pdr)(void *, int),
+ 						       void *priv);
++void pmic_glink_client_neuter(struct pmic_glink_client *client);
++
+ void pmic_glink_client_register(struct pmic_glink_client *client);
+ 
+ #endif

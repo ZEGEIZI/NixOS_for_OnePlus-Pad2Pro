@@ -1,0 +1,9 @@
+{
+  "origin": "NixOS_for_OnePlus-Pad2Pro working tree, 2026-11-13; unchanged generic driver tests moved into the shared patchset",
+  "files": {
+    "tools/check-cps8601-firmware.py": "612e8756bddb42b9c099ad5b6b1ea96af45d60a35588a2290e2a1501b74a0c48",
+    "tools/check-wifi-firmware.py": "fec6fac14bd0f1b5cb4e3f3c3acaaf2b09b5ead08a2d3eebc1c60e3666356c83",
+    "tests/cps8601_firmware.c": "3c61dfbea979af44f9f5bcba70f4214cc1552452de151b9201de46d38a5e33fe",
+    "tests/wifi_firmware_path.c": "265dbff5bf5dfd04010f5bdc6157d4da6e49b7debcdb9604f3b0deb26349eac4"
+  }
+}

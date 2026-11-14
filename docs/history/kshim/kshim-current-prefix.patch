@@ -1,0 +1,86 @@
+diff --git a/boot/vendor/kshim/src/core/boot_files_menu.c b/boot/vendor/kshim/src/core/boot_files_menu.c
+index 94310f7..fa33676 100644
+--- a/boot/vendor/kshim/src/core/boot_files_menu.c
++++ b/boot/vendor/kshim/src/core/boot_files_menu.c
+@@ -28,7 +28,7 @@ int kshim_boot_choose(const struct kshim_boot_catalog *catalog,
+         return KSHIM_STORAGE_ARG;
+     *entry = SIZE_MAX;
+     const char *names[1+KSHIM_BOOT_VERSIONS_MAX], *descriptions[1+KSHIM_BOOT_VERSIONS_MAX];
+-    char labels[1+KSHIM_BOOT_VERSIONS_MAX][160];
++    char labels[1+KSHIM_BOOT_VERSIONS_MAX][176];
+     char details[1+KSHIM_BOOT_VERSIONS_MAX][192];
+     size_t indexes[1+KSHIM_BOOT_VERSIONS_MAX];
+     size_t system_initial = 0;
+@@ -67,13 +67,15 @@ int kshim_boot_choose(const struct kshim_boot_catalog *catalog,
+             const struct kshim_boot_entry *e = &catalog->entries[i];
+             if (strcmp(catalog->systems[system],e->system)) continue;
+             if (count > KSHIM_BOOT_VERSIONS_MAX) return KSHIM_STORAGE_OVERFLOW;
+-            const char *mark = catalog->current[i] ? " (current)" :
+-                               catalog->previous[i] ? " (previous)" : "";
++            /* LVGL ellipsizes long rows on the right. Keep selector state at
++             * the front, including entries with a damaged manifest. */
++            const char *mark = catalog->current[i] ? "(current) " :
++                               catalog->previous[i] ? "(previous) " : "";
+             if (catalog->errors[i])
+-                snprintf(labels[count],sizeof(labels[0]),"%.90s [%.63s]",e->title,e->version);
++                snprintf(labels[count],sizeof(labels[0]),"%s%.90s [%.63s]",mark,e->title,e->version);
+             else
+-                snprintf(labels[count],sizeof(labels[0]),"%.63s [%.63s]%s",e->release,e->version,mark);
+-            snprintf(details[count],sizeof(details[0]),"%.95s | %.63s",e->title,e->version);
++                snprintf(labels[count],sizeof(labels[0]),"%s%.63s [%.63s]",mark,e->release,e->version);
++            snprintf(details[count],sizeof(details[0]),"%s%.95s | %.63s",mark,e->title,e->version);
+             names[count] = labels[count]; descriptions[count] = details[count];
+             indexes[count] = i;
+             if (catalog->current[i] && !has_system_default) initial = count;
+diff --git a/tests/boot_files_menu_test.c b/tests/boot_files_menu_test.c
+index f74d468..f38be92 100644
+--- a/tests/boot_files_menu_test.c
++++ b/tests/boot_files_menu_test.c
+@@ -19,6 +19,17 @@ static int select_menu(void *opaque, const char *const *names,
+     assert(script->cursor < script->count);
+     const struct step *step=&script->steps[script->cursor++];
+     assert(count == step->count && initial == step->initial && timeout == step->timeout);
++    for (size_t i=0; i<count; ++i) {
++        const char *marks[]={"(current) ","(previous) "};
++        for (size_t m=0; m<2; ++m) {
++            /* A right-ellipsized row must retain its selector marker. */
++            const char *mark=strstr(names[i],marks[m]);
++            if (mark) {
++                assert(mark == names[i]);
++                assert(!strncmp(descriptions[i],marks[m],strlen(marks[m])));
++            }
++        }
++    }
+     *selected=step->selected == SIZE_MAX ? initial : step->selected;
+     if (step->label) assert(strstr(names[*selected],step->label));
+     if (step->detail) assert(strstr(descriptions[*selected],step->detail));
+@@ -79,6 +90,29 @@ int main(void)
+     script.cursor=0; script.error=KSHIM_STORAGE_IO;
+     assert(kshim_boot_choose(&catalog,select_menu,&script,&selected) == KSHIM_STORAGE_IO);
+     assert(selected == SIZE_MAX);
++
++    /* NixOS IDs and releases can fill the protocol fields. Exercise both
++     * aliases and a broken current manifest without shortening the ID. */
++    for (unsigned i=0; i<2; ++i) {
++        struct kshim_boot_entry *e=&catalog.entries[i];
++        memset(e->release,'r',sizeof(e->release)-1);
++        e->release[sizeof(e->release)-1]='\0';
++        memset(e->version,'v',sizeof(e->version)-1);
++        e->version[0]='0'+i; e->version[sizeof(e->version)-1]='\0';
++        memset(e->title,'t',sizeof(e->title)-1);
++        e->title[sizeof(e->title)-1]='\0';
++        catalog.errors[i]=0;
++    }
++    const struct step long_current[]={{5,1,SIZE_MAX,8000,NULL,NULL},
++        {9,1,SIZE_MAX,8000,"(current) rrrrr","(current) ttttt"}};
++    run("system0/current",long_current,2,0);
++    const struct step long_previous[]={{5,1,SIZE_MAX,8000,NULL,NULL},
++        {9,2,SIZE_MAX,8000,"(previous) rrrrr","(previous) ttttt"}};
++    run("system0/previous",long_previous,2,1);
++    catalog.errors[0]=KSHIM_STORAGE_NOT_FOUND;
++    const struct step broken_current[]={{5,1,SIZE_MAX,8000,NULL,NULL},
++        {9,1,SIZE_MAX,8000,"(current) ttttt",catalog.entries[0].version}};
++    run("system0/current",broken_current,2,0);
+     puts("multi-kernel menu: systems, 8 kernels, aliases, pinned defaults, back, duplicate releases and error isolation passed");
+     return 0;
+ }

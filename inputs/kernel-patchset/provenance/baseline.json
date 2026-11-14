@@ -1,0 +1,12 @@
+{
+  "captured_at": "2026-11-13",
+  "device_commit": "efc39b9d972665c270adc4e4ec2c46685792ffda",
+  "extraction_base": "497791a0a96b866d90add64041c47acdff49cae6",
+  "running_release": "7.2.15-nixos-erhai-efc39b9d9726-upstream4-ebpf1",
+  "nixpkgs_revision": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6",
+  "target_series": "7.3",
+  "initial_nixpkgs_release": "7.3.3",
+  "checkpoint": "/zpool/storage_01/build/LinuxForOneplus/kernel-git-backups/20261113-patchset-migration/kernel-complete-7.2.15.patch",
+  "note": "7.2.15 is extraction evidence only, never a release target.",
+  "checkpoint_sha256": "23237c51f70b20aa080d372364eef0bd02dff5a8a040cf240c4b345e317b784b"
+}

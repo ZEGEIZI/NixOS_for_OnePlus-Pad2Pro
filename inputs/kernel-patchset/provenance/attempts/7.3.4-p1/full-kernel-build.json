@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-11-13T15:54:01.901147+00:00",
+  "patch_head": "bfc760b9caa7d621afe907d592bda39187186411",
+  "kernel_drv": "/nix/store/vdxzcw8v16xn31s56d7iazvniwp90368-linux-erhai-aarch64-unknown-linux-gnu-7.3.4.drv",
+  "outputs": {
+    "dev": "/nix/store/f01236ld0z1zkpy6vnhqf2fl5m3vl9yw-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-dev",
+    "modules": "/nix/store/gj2kx44rhpdg8frg105m5faakrx2pvjv-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-modules",
+    "out": "/nix/store/a4fnwjfjpznab8xha5hvi6jqkb7m55k0-linux-erhai-aarch64-unknown-linux-gnu-7.3.4"
+  },
+  "release": "7.3.4-erhai-p1",
+  "image_arm64_magic": "verified",
+  "vmlinux_arch": "AArch64",
+  "BTF": "present",
+  "sample_module": "/nix/store/gj2kx44rhpdg8frg105m5faakrx2pvjv-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-modules/lib/modules/7.3.4-erhai-p1/kernel/drivers/mailbox/qcom-cpucp-mbox.ko",
+  "sample_module_vermagic": "7.3.4-erhai-p1 SMP preempt mod_unload aarch64",
+  "artifacts_sha256": {
+    "Image": "359225e4b337da94565c8f14c00650ce4ac366ecf30e58f27e208573fea0ef90",
+    "DTB": "755c3106765db18caca1ceb6c3af6b0cf037ffcb05667270a45e695db59023cd"
+  },
+  "config_sha256": "0182d9afd36fe3c69a35d807b46c3fb8af92720f89278b10be2f5e862b32687b",
+  "hardware_verified": false
+}

@@ -1,0 +1,93 @@
+{
+  "timestamp": "2026-11-13T19:21:56.544201+00:00",
+  "baseline_commit": "efc39b9d972665c270adc4e4ec2c46685792ffda",
+  "candidate_commit": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+  "scope": "Source comparison only; no hardware diagnosis or cpuidle.off outcome implied",
+  "files": [
+    {
+      "path": "drivers/cpuidle/cpuidle.c",
+      "baseline_sha256": "040e43a1bb1439384f9871766630cef2296050d8335080725cffdb00afedeaf6",
+      "candidate_sha256": "040e43a1bb1439384f9871766630cef2296050d8335080725cffdb00afedeaf6",
+      "unchanged": true
+    },
+    {
+      "path": "drivers/cpuidle/cpuidle-psci.c",
+      "baseline_sha256": "a9336bbfe3ee5d463ae6faaed8edebacff316779e6a7a00f99797372c20ab962",
+      "candidate_sha256": "a9336bbfe3ee5d463ae6faaed8edebacff316779e6a7a00f99797372c20ab962",
+      "unchanged": true
+    },
+    {
+      "path": "drivers/cpuidle/cpuidle-psci-domain.c",
+      "baseline_sha256": "f160c68c638bc41d7b6531a7e396a75ba7252f9f419f1b04d0f7760d71e91bb3",
+      "candidate_sha256": "f160c68c638bc41d7b6531a7e396a75ba7252f9f419f1b04d0f7760d71e91bb3",
+      "unchanged": true
+    },
+    {
+      "path": "drivers/soc/qcom/rpmh-rsc.c",
+      "baseline_sha256": "6ddd654c5804d8c47cef1f30e1a6a25d98868f4c7d33a77ee239107857b6b87b",
+      "candidate_sha256": "cd93b006407ad94972f36d74e61cacd543d38f31d91b88f5494c844a9bf4c425",
+      "unchanged": false,
+      "diff": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-power-source-audit/drivers_soc_qcom_rpmh-rsc.c.diff"
+    },
+    {
+      "path": "drivers/pmdomain/core.c",
+      "baseline_sha256": "5b1c25268b78406f12666da70d461e30bd2a191575154935a08e1e78c4743f38",
+      "candidate_sha256": "c29842a0eb68815bab36e3d23d06b1ac79e4078485c380ee0d7befe292caea46",
+      "unchanged": false,
+      "diff": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-power-source-audit/drivers_pmdomain_core.c.diff"
+    },
+    {
+      "path": "drivers/pmdomain/qcom/rpmhpd.c",
+      "baseline_sha256": "3baa5b748b6064fdb458be9f2b067df3a075465a7091363f94eee45756a025eb",
+      "candidate_sha256": "a74127fe5a01fd75a851e9a0cd64bcbceda9a3d8dd08bace077a713632ce27bc",
+      "unchanged": false,
+      "diff": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-power-source-audit/drivers_pmdomain_qcom_rpmhpd.c.diff"
+    },
+    {
+      "path": "kernel/time/hrtimer.c",
+      "baseline_sha256": "09d34217478d38e1290798602defe2537b139cf92d205fdf15e849cd154b87ec",
+      "candidate_sha256": "c0d90e9ca887aade1f4173b8a1ba0f24464bcc458cc18472bd6652bd60c93991",
+      "unchanged": false,
+      "diff": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-power-source-audit/kernel_time_hrtimer.c.diff"
+    },
+    {
+      "path": "kernel/time/timer.c",
+      "baseline_sha256": "6695f63fe4a4f58e1d7297ee106b68434aa842598dc055aae1a5572f98ce3fe8",
+      "candidate_sha256": "6695f63fe4a4f58e1d7297ee106b68434aa842598dc055aae1a5572f98ce3fe8",
+      "unchanged": true
+    },
+    {
+      "path": "kernel/sched/idle.c",
+      "baseline_sha256": "d9de1fa69b061e11915a4de03305d23ea305dd0a208e16fe0b55106aa27e1bbd",
+      "candidate_sha256": "6a478625d6d7f722c3a2142f308a4ac79a6f38ab4f97c9c859e936e0c6da1f36",
+      "unchanged": false,
+      "diff": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-power-source-audit/kernel_sched_idle.c.diff"
+    },
+    {
+      "path": "arch/arm64/include/asm/cpuidle.h",
+      "baseline_sha256": "e6acb42cf0d66450f7761608afe28a10c6d02901e05f2ad5fc04e68a4a64fe85",
+      "candidate_sha256": "e6acb42cf0d66450f7761608afe28a10c6d02901e05f2ad5fc04e68a4a64fe85",
+      "unchanged": true
+    },
+    {
+      "path": "arch/arm64/kernel/suspend.c",
+      "baseline_sha256": "2344fbaae094fbebecae26a674f71fe623c90fa58aa82e395e2ce92fd028e46e",
+      "candidate_sha256": "6f8695d610c114a9dd4ee5035f16ba5751fff9411dc738624996e37d0f814443",
+      "unchanged": false,
+      "diff": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-power-source-audit/arch_arm64_kernel_suspend.c.diff"
+    },
+    {
+      "path": "drivers/firmware/psci/psci.c",
+      "baseline_sha256": "310ec046e86d4eafbe326234c1998611eba9d83af6696589d75e5838a94d6a5c",
+      "candidate_sha256": "310ec046e86d4eafbe326234c1998611eba9d83af6696589d75e5838a94d6a5c",
+      "unchanged": true
+    }
+  ],
+  "notes": [
+    "PSCI cpuidle driver/domain and cpuidle core match the exact working source commit",
+    "Changed rpmh-rsc code adds RPMh read transactions; CPU-PM callback is unchanged",
+    "Changed rpmhpd code skips retention levels for all power domains; not a proven cause",
+    "hrtimer/scheduler changes do not establish whether the observed reset occurs in CPU idle",
+    "Runtime working power-domain snapshot saved separately; idle states are transient observations"
+  ]
+}

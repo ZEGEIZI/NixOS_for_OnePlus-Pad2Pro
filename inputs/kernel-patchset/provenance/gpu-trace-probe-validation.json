@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-11-13T18:27:10.924320+00:00",
+  "kernel_release": "7.3.4-erhai-p2",
+  "kernel_image_sha256": "a455bc1ef0deb1d957e58a16acf89049534ff75ac1a8ceaa992ac29da85bda31",
+  "probes": [
+    "console=tty0",
+    "mem_sleep_default=s2idle",
+    "kprobe_event=p:erhai/hw_init,a8xx_hw_init;r:erhai/zap_image_done,adreno_zap_shader_load,ret=$retval:s32;r:erhai/zap_done,a6xx_zap_shader_init,ret=$retval:s32;p:erhai/flush,a6xx_flush;p:erhai/idle,a8xx_idle;r:erhai/idle_done,a8xx_idle,ok=$retval:u8;p:erhai/fence,a6xx_fenced_write,reg=$arg2:u32,val=$arg3:u32;p:erhai/preempt,a8xx_preempt_hw_init;p:erhai/gmu_done,a6xx_gmu_clear_oob",
+    "trace_event=qcom_scm:*",
+    "tp_printk",
+    "nr_cpus=1",
+    "nokaslr",
+    "arm64.nohaft",
+    "arm64.nowfxt",
+    "irqchip.gicv3_pseudo_nmi=0",
+    "ignore_loglevel",
+    "initcall_debug",
+    "log_buf_len=8M",
+    "panic=0",
+    "root=fstab",
+    "loglevel=6",
+    "lsm=landlock,yama,bpf"
+  ],
+  "probe_definitions_accepted": true,
+  "host_only_probe_executed_and_printed": true,
+  "scope": "QEMU virt/cortex-a76; validates built-in probe parser, symbol availability and console printing, not SM8750 GPU execution. No rootfs/initrd supplied; expected VFS panic.",
+  "log_sha256": "22522f783ffddc8ac08830332314d3f8cb763af5b3875dc25acea3a05b051c7f",
+  "compiled_callsite_check": {
+    "disassembly_sha256": "05ccf8b61a68d06acb0914d5e58870ab4a855518b420034add13332f234550cf",
+    "evidence": "The built a8xx_hw_init contains explicit bl calls to a6xx_flush, a8xx_idle and a6xx_zap_shader_init, including a second flush/idle pair after Zap. These sites are not all inlined away."
+  },
+  "publication": {
+    "system": "/nix/store/rs9yljf9wp5p63sn8z4dck135gs2p1dr-nixos-system-pad2pro-erhai-p2-gpu-trace",
+    "boot_id": "nixos-e536371cb687e281dc6847531d0926a3",
+    "image_dtb_initrd": "same p2 payloads",
+    "boot_mount": "ro,noatime",
+    "default": "nixos/current",
+    "hardware_result": "immediate reset; return probes show Zap and secure-mode wait succeeded; see gpu-trace-device-boot.json",
+    "menu_entry": "removed after replacement by trace2"
+  }
+}

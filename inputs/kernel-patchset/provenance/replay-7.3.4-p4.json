@@ -1,0 +1,12 @@
+{
+  "release": "p4",
+  "patch_head": "bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb",
+  "manifest_sha256": "82674daff2c003ec5778fbb4f12df440b2486b3f0b50f0f2a84e36582aefede4",
+  "manifest_verified": true,
+  "replayed": true,
+  "source_equivalent": true,
+  "hardware_verified": false,
+  "version": "7.3.4",
+  "tarball_sha256": "b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f",
+  "source": "/zpool/storage_01/build/LinuxForOneplus/kernel-patchset-work/replay-7.3.4-p4/linux-7.3.4"
+}

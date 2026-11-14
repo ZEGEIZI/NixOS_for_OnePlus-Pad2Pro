@@ -1,0 +1,109 @@
+{
+  "timestamp": "2026-11-13T21:19:24.144877+00:00",
+  "release": "7.3.4-erhai-p3",
+  "patch_head": "d31d13f5d0b1117160e2930da43996219933f14d",
+  "boot_uuid": "7f45701f-e522-46fb-91cd-3b9e8f8459fa",
+  "system": "/nix/store/c9pqm3d78112ydvjfnjkxhljp8r7jbcm-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "normal_boot": "passed; user confirmed graphical login or desktop",
+  "online_cpus": "0-7",
+  "taint": 0,
+  "panel_vddio": {
+    "/sys/class/regulator/regulator.43": {
+      "name": "vreg_l12b_1p8",
+      "microvolts": "1896000",
+      "state": "enabled",
+      "min_microvolts": "1896000",
+      "max_microvolts": "1896000"
+    }
+  },
+  "gpu": {
+    "/sys/devices/platform/soc@0/3d00000.gpu": {
+      "control": "auto",
+      "runtime_status": "suspended",
+      "autosuspend_delay_ms": "66",
+      "runtime_active_time": "36688",
+      "runtime_suspended_time": "199282"
+    }
+  },
+  "profile_promoted": false,
+  "fallback_preserved": true,
+  "boot_cleanup": {
+    "dry_run": false,
+    "orphan_roots_removed": [],
+    "previous": "nixos-8a13fae19c084a7a9f2965b6f6027b15",
+    "protected_systems": {
+      "activated": "/nix/store/c9pqm3d78112ydvjfnjkxhljp8r7jbcm-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+      "booted": "/nix/store/c9pqm3d78112ydvjfnjkxhljp8r7jbcm-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+      "profile": "/nix/store/ydgdj9pf21541af9z7px8drixdmcns61-nixos-system-pad2pro-26.11.20261107.f4a03c0"
+    },
+    "removed": [
+      "nixos-2c1dafdebe8edae4967696fa40b86280"
+    ],
+    "retained": [
+      "nixos-59e14b93b0d3683e29ed643a28d3bf53",
+      "nixos-b2b0bfb7071b917422b5034591a85c15",
+      "nixos-8a13fae19c084a7a9f2965b6f6027b15"
+    ],
+    "system_profiles_changed": false
+  },
+  "bluetooth": "failed: peripheral wake query timeout, byte_tx=1 byte_rx=0",
+  "hardware_acceptance": "partial; Bluetooth failure addressed by p4 candidate awaiting boot; power management, cold boot and complete native ARM64 build remain",
+  "evidence": {
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-p3-running/normal-state.json",
+    "sha256": "bfd22992019b76555af5081ebee8b2539719e573d9b987d3daab555d1454116e"
+  },
+  "touch": "passed; user confirmed tapping, swiping and window dragging",
+  "gpu_rendering": {
+    "renderer": "Adreno (TM) 830v1",
+    "version": "OpenGL ES 3.2 Mesa 26.3.0",
+    "test": "GLES3 shaders, triangle rasterization, fence completion and RGBA8 readback",
+    "pixel": [
+      64,
+      128,
+      191,
+      255
+    ],
+    "gl_error": 0,
+    "result": "passed"
+  },
+  "audio": "passed; desktop PipeWire routed left/right test tones to built-in speakers, user heard both",
+  "wifi_connectivity": "passed; connected automatically and 5 gateway pings without packet loss",
+  "account_preservation": {
+    "ordinary_accounts_checked": 1,
+    "uid_gid_home_owner_password_and_groups_preserved": true,
+    "subordinate_ranges_preserved": true,
+    "issues": [],
+    "baseline_accounts": "/var/lib/erhai-patchset/20261114-034706-candidate/accounts"
+  },
+  "baseline_warnings": "Early display SID 0x800 SMMU faults and deferred-probe messages also appear in the original 7.2.15 baseline; not newly introduced. Some camera and optional playback-path warnings remain and are not proof of accepted functionality.",
+  "wifi_associated_rescan": {
+    "request_returncode": 0,
+    "discovered_entries": 1,
+    "connected_before_and_after": true
+  },
+  "charging": {
+    "result": "passed; raised thresholds briefly, observed Charging with positive battery current, restored original limit and observed Discharging",
+    "temporary_samples": [
+      {
+        "status": "Charging",
+        "capacity": "90",
+        "current_now": "352183",
+        "voltage_now": "4388127",
+        "charge_control_start_threshold": "92",
+        "charge_control_end_threshold": "95"
+      }
+    ],
+    "restored_samples": [
+      {
+        "status": "Discharging",
+        "capacity": "90",
+        "current_now": "-7934",
+        "voltage_now": "4378591",
+        "charge_control_start_threshold": "75",
+        "charge_control_end_threshold": "80"
+      }
+    ],
+    "thresholds_restored": true
+  },
+  "bluetooth_ui": "user confirms Bluetooth cannot be enabled in p3 settings; consistent with transport initialization timeout"
+}

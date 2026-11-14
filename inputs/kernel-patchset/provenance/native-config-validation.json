@@ -1,0 +1,33 @@
+{
+  "patch_head": "bfc760b9caa7d621afe907d592bda39187186411",
+  "native_build_platform": "aarch64-linux",
+  "cross_build_platform": "x86_64-linux",
+  "native_configfile": "/nix/store/j8vbmg61wccj55722y36sifn39ml7wvy-linux-config-7.3.4",
+  "all_fragment_requirements": "passed",
+  "native_config_sha256": "aa074421ee4781ee1a42e2a07d09ae667b396e3a34edb1fa7b750f026248dc18",
+  "config_identical_to_cross": false,
+  "config_difference": [
+    "--- cross\n",
+    "+++ native\n",
+    "@@ -2,7 +2,7 @@\n",
+    " # Automatically generated file; DO NOT EDIT.",
+    " # Linux/arm64 7.3.4 Kernel Configuration",
+    " #",
+    "-CONFIG_CC_VERSION_TEXT=\"aarch64-unknown-linux-gnu-gcc (GCC) 16.2.0\"",
+    "+CONFIG_CC_VERSION_TEXT=\"gcc (GCC) 16.2.0\"",
+    " CONFIG_CC_IS_GCC=y",
+    " CONFIG_GCC_VERSION=160200",
+    " CONFIG_CLANG_VERSION=0",
+    "@@ -9791,6 +9791,7 @@\n",
+    " # CONFIG_DEBUG_INFO_REDUCED is not set",
+    " CONFIG_DEBUG_INFO_COMPRESSED_NONE=y",
+    " # CONFIG_DEBUG_INFO_COMPRESSED_ZLIB is not set",
+    "+# CONFIG_DEBUG_INFO_SPLIT is not set",
+    " CONFIG_DEBUG_INFO_BTF=y",
+    " CONFIG_PAHOLE_HAS_LANG_EXCLUDE=y",
+    " CONFIG_DEBUG_INFO_BTF_MODULES=y"
+  ],
+  "native_full_kernel_build": "not run; complete cross kernel and matching device regression passed",
+  "hardware": "pending",
+  "config_difference_explanation": "Compiler executable text differs (same GCC 16.2.0); native explicitly disables DEBUG_INFO_SPLIT, which is unavailable in the cross configuration. All requested hardware/distribution values match."
+}

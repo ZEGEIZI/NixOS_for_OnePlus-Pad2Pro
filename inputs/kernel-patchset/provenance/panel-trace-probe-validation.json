@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-11-13T18:58:08.206593+00:00",
+  "release": "7.3.4-erhai-p2",
+  "parameters": [
+    "console=tty0",
+    "mem_sleep_default=s2idle",
+    "trace_event=qcom_scm:*,dpu:dpu_crtc_enable,dpu:dpu_enc_enable,dpu:dpu_kms_commit,dpu:dpu_enc_kickoff,regulator:*,gpio:gpio_value",
+    "tp_printk",
+    "fb.lockless_register_fb=1",
+    "kprobe_event=p:erhai/runtime_suspend,adreno_runtime_suspend;p:erhai/gmu_stop,a6xx_gmu_stop;r:erhai/gmu_stopped,a6xx_gmu_stop,ret=$retval:s32;p:erhai/fb_probe,msm_fbdev_driver_fbdev_probe;r:erhai/fb_return,msm_fbdev_driver_fbdev_probe,ret=$retval:s32;p:erhai/register_fb,register_framebuffer;p:erhai/modeset,drm_client_modeset_commit_atomic;p:erhai/dsi_pre,dsi_mgr_bridge_pre_enable;p:erhai/phy,msm_dsi_phy_enable;r:erhai/phy_return,msm_dsi_phy_enable,ret=$retval:s32;p:erhai/dsi_power,msm_dsi_host_power_on;r:erhai/dsi_return,msm_dsi_host_power_on,ret=$retval:s32;p:erhai/panel,novatek_nt36536_prepare;r:erhai/panel_return,novatek_nt36536_prepare,ret=$retval:s32;p:erhai/dcs,mipi_dsi_dcs_write_buffer,cmd=+0($arg2):u8,len=$arg3:u64;p:erhai/xfer,dsi_host_transfer;r:erhai/xfer_return,dsi_host_transfer,ret=$retval:s64;p:erhai/xfer_prepare,msm_dsi_host_xfer_prepare;r:erhai/xfer_ready,msm_dsi_host_xfer_prepare,ret=$retval:s32",
+    "nr_cpus=1",
+    "nokaslr",
+    "arm64.nohaft",
+    "arm64.nowfxt",
+    "irqchip.gicv3_pseudo_nmi=0",
+    "ignore_loglevel",
+    "initcall_debug",
+    "log_buf_len=8M",
+    "panic=0",
+    "root=fstab",
+    "loglevel=6",
+    "lsm=landlock,yama,bpf"
+  ],
+  "validation": "All final probe definitions are a subset of the successful QEMU panel-trace superset.",
+  "log_sha256": "e07de8c1b8a46dcb6699e71cc977ed3bcc1dcd1c781f6d536a479e876ca9458d",
+  "scope": "Generic ARM64 parser/event registration and host-only probe printing; not physical panel coverage.",
+  "command_line_limit": "ARM64 COMMAND_LINE_SIZE is 2048; obsolete GPU-init probes removed, complete candidate command line will be checked before publication.",
+  "publication": {
+    "system": "/nix/store/6v7rk00fv3ms47jbragv0xpmmg0r7mhn-nixos-system-pad2pro-erhai-p2-panel-trace",
+    "boot_id": "nixos-4dc3cfe7319fdcbb5591a38098d29d87",
+    "same_p2_payloads": true,
+    "complete_cmdline_bytes": 1392,
+    "boot_readonly": true,
+    "menu_entries": 3,
+    "hardware_result": "pending manual test"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "repository": "https://github.com/ZEGEIZI/kShimC-oneplus-pad2-pro",
+  "revision": "471c93186579566bf135fed0b34caa632b1da115",
+  "upstream_files": {
+    "boot_files.py": "tools/boot_files.py",
+    "LICENSE": "LICENSE",
+    "LINUX-BOOT-PROTOCOL.md": "LINUX-BOOT-PROTOCOL.md"
+  },
+  "patches": [
+    "patches/shared-payloads.patch"
+  ],
+  "files_sha256": {
+    "boot_files.py": "f10622497496d89fba538338b6a144e274d2d4c119ec57e5cf82ca29a24d0c78",
+    "LICENSE": "aaf135472f81c5b4a0dca9367e5bb5e9750032b5bebe5442b36e4c0a47430df3",
+    "LINUX-BOOT-PROTOCOL.md": "c299c5179ab325d35cdf3628291ffedb7f8f4a2f91d546a931cb5e27eb46ddf6",
+    "patches/shared-payloads.patch": "a48ab1f9421e546cb12a45a75aef4d1e57e243569818106419fe98d5406ffc42"
+  }
+}

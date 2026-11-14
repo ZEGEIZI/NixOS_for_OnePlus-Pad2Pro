@@ -1,0 +1,6 @@
+{
+  "release": "7.2.15-nixos-erhai-870167fad062-brahma1",
+  "out": "/nix/store/a166vz0zqciyfid2nxl9lfrdrlkw6kxk-linux-erhai-aarch64-unknown-linux-gnu-7.2.15",
+  "modules": "/nix/store/jvmzmhwx052dh95jri6klddpz7j7x78v-linux-erhai-aarch64-unknown-linux-gnu-7.2.15-modules",
+  "cps8601": "/nix/store/gw10v5jdjcp3z7gq3rny8bk3k9gpzvj5-cps8601-optional-firmware-aarch64-unknown-linux-gnu-1"
+}

@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-11-13T21:41:27.793326+00:00",
+  "system": "/nix/store/kkqlnxwpxpw7yjx0jcfnqlgn17vxmwch-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "boot_tree": "/nix/store/cbck07nxvsqdv7r7w71i44jhk76i5aw1-nixos-kshim-boot-tree",
+  "boot_id": "nixos-d6c28ef76672e20826d28ef808c2511a",
+  "release": "7.3.4-erhai-p4",
+  "boot_manifest_and_payload_hashes": "passed",
+  "kernel_module_directory": "matched release",
+  "initrd_entries": 2134,
+  "initrd_mailbox_module": "present",
+  "initrd_usb_management": "present",
+  "initrd_wifi_and_bluetooth_firmware": "present",
+  "payloads": [
+    {
+      "path": "/nix/store/2qimv3m43ri30fa7nywaxhcfkp8naz70-linux-erhai-aarch64-unknown-linux-gnu-7.3.4/Image",
+      "size": 54635008,
+      "sha256": "ac017810144413ff551ce17fa05672d3964d08b563bc7a99d5c0a041a2a0c942"
+    },
+    {
+      "path": "/nix/store/k3s8s2jp941qqklm9q3fibd1vcqrfwqd-erhai-kshim-device-tree/qcom/sm8750-erhai.dtb",
+      "size": 193965,
+      "sha256": "1d1eba127b2e9f4f5f4da4107ebac6fcd5150ee7f98fc710750f1ed081061e64"
+    },
+    {
+      "path": "/nix/store/mjxrjdwn35pqnxakpijg4jnzf8akycfg-initrd-linux-erhai-aarch64-unknown-linux-gnu-7.3.4/initrd",
+      "size": 50421275,
+      "sha256": "79c5c77e1e74fa85fb2175e3dff86885b134bf083189053b7092375ca9079fe0"
+    }
+  ],
+  "hardware_verified": false,
+  "cmdline_bytes": 179,
+  "normal_kernel_params": true,
+  "vddio_constraint_uV": {
+    "regulator-min-microvolt": 1896000,
+    "regulator-max-microvolt": 1896000
+  },
+  "vmlinux_arch": "AArch64",
+  "vmlinux_btf": "present",
+  "patch_head": "bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb",
+  "source_checks": {
+    "strict_replay": "/nix/store/qc75wglmfv6nv08hfi99a3bzzrgzdkrn-erhai-patchset-replay",
+    "device_regression": "/nix/store/lbcz2njh09h2n0b332k7v2ch5vyzbxmn-erhai-device-regression",
+    "wifi_firmware": "/nix/store/2bh01vq6n6cv1vr9r133mqfvj9wr2jmj-opd2413-wifi-firmware-tests",
+    "cps8601_firmware": "/nix/store/9knm72rk8ahfbq82v4q4kpbvjrw81bsw-cps8601-firmware-tests",
+    "boot_publication": "/nix/store/z6p675zc0cgkh1s3mhjjv2j6kxwvc9fx-kshim-publication-tests"
+  }
+}

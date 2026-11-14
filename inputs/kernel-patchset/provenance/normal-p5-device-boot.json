@@ -1,0 +1,162 @@
+{
+  "timestamp": "2026-11-14T04:17:30.947410+00:00",
+  "release": "7.3.4-erhai-p5",
+  "boot_uuid": "a7d696b0-56ff-4dc0-acd7-94680f8ce9f8",
+  "booted_system": "/nix/store/qpg8bai4351gb89qxxijhl7k2lba71ci-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "user_confirmed_desktop": true,
+  "online_cpus": "0-7",
+  "kernel_taint": 0,
+  "adsp_reservation": {
+    "timestamp": "2026-11-14T04:16:01.801683+00:00",
+    "release": "7.3.4-erhai-p5",
+    "boot_id": "a7d696b0-56ff-4dc0-acd7-94680f8ce9f8",
+    "pool": "/sys/firmware/devicetree/base/reserved-memory/adsp-rpc-remote-heap",
+    "physical_start": "0xfec00000",
+    "physical_end": "0xff7fffff",
+    "bytes": 12582912,
+    "dt_no_map": true,
+    "dt_reusable": false,
+    "kernel_reservation_log": "[    0.000000] OF: reserved mem: 0x00000000fec00000..0x00000000ff7fffff (12288 KiB) nomap non-reusable adsp-rpc-remote-heap",
+    "live_memblock_nomap": [
+      "16: 0x00000000fec00000..0x00000000ff7fffff    0 NOMAP"
+    ],
+    "system_ram_overlap": [],
+    "kernel_taint": 0,
+    "passed": true
+  },
+  "anonymous_thp_test": {
+    "release": "7.3.4-erhai-p5",
+    "workers": 8,
+    "concurrent_bytes": 2147483648,
+    "total_bytes_written": 8589934592,
+    "elapsed_seconds": 4.307691768999987,
+    "results": [
+      {
+        "worker": 0,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 1,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 2,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 3,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 4,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 5,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 6,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 7,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      }
+    ],
+    "kernel_taint_after": 0,
+    "scope": "anonymous mappings, huge-page faults, pattern samples and repeated release/reallocation; physical memory devices are never opened",
+    "passed": true
+  },
+  "scope": "cross kernel boot, live memory ownership and bounded huge-page load; full native build, native boot/cold boot and final acceptance remain pending",
+  "daily_profile_promoted": false,
+  "ordinary_reboot": {
+    "user_report": "accidental restart, returned to p5",
+    "boot_uuid": "b7df2be7-cc70-4592-ad3c-3bd67cf15eb5",
+    "release": "7.3.4-erhai-p5",
+    "kernel_taint": 0,
+    "adsp_reservation": {
+      "timestamp": "2026-11-14T04:27:57.252577+00:00",
+      "release": "7.3.4-erhai-p5",
+      "boot_id": "b7df2be7-cc70-4592-ad3c-3bd67cf15eb5",
+      "pool": "/sys/firmware/devicetree/base/reserved-memory/adsp-rpc-remote-heap",
+      "physical_start": "0xfec00000",
+      "physical_end": "0xff7fffff",
+      "bytes": 12582912,
+      "dt_no_map": true,
+      "dt_reusable": false,
+      "kernel_reservation_log": "[    0.000000] OF: reserved mem: 0x00000000fec00000..0x00000000ff7fffff (12288 KiB) nomap non-reusable adsp-rpc-remote-heap",
+      "live_memblock_nomap": [
+        "16: 0x00000000fec00000..0x00000000ff7fffff    0 NOMAP"
+      ],
+      "system_ram_overlap": [],
+      "kernel_taint": 0,
+      "passed": true
+    },
+    "result": "passed; native build was interrupted and resumed as a separate attempt"
+  }
+}

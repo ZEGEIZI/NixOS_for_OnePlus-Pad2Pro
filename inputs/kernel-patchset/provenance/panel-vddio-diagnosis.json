@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-11-13T20:37:13.440647+00:00",
+  "source_fix": "d31d13f5d0b1117160e2930da43996219933f14d",
+  "release_target": "7.3.4-erhai-p3",
+  "baseline_p2": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+  "device": "OPD2413 / OnePlus Pad 2 Pro / Erhai",
+  "rail": "vreg_l12b_1p8 / ldob12 / 0x40a00",
+  "baseline_constraint_uV": [
+    1896000,
+    1904000
+  ],
+  "fixed_constraint_uV": [
+    1896000,
+    1896000
+  ],
+  "raw_rpmh_mV": 1900,
+  "old_cached_selector": 198,
+  "old_cached_uV": 1904000,
+  "fixed_selector": 197,
+  "fixed_cached_uV": 1896000,
+  "linear_range": {
+    "min_uV": 320000,
+    "step_uV": 8000
+  },
+  "observations": [
+    "Headless p2 boot exposes DRM and audio devices, with no failed systemd unit",
+    "GPU initialization and DRM resource enumeration work while GPU runtime PM is forbidden",
+    "First atomic modeset resets even while GPU remains powered; GPU suspend is not required for the fault",
+    "Read-only helper confirms RPMh raw value 1900 mV but driver cache 1904000 uV",
+    "Applying a temporary regulator consumer constraint of 1896000 uV succeeds",
+    "Same atomic modeset then completes panel preparation and activates 3392x2400 at 120 Hz",
+    "Live trace confirms voltage vote 1896 to 0x40a00, then enable vote 1 to 0x40a04",
+    "User confirms visible color test pattern",
+    "Restoring GPU auto suspend with original 66 ms delay reaches suspended while display remains active",
+    "Exiting the pattern cleanly disables the panel and retains SSH"
+  ],
+  "scope": "Controlled p2 diagnostic with single CPU, cpuidle disabled, temporary external helper module. Establishes the VDDIO constraint fix; does not accept the p3 normal system. Touch firmware loads, but touch events, rendering, sound and full power-management acceptance remain untested.",
+  "formal_remaining": [
+    "strict replay and complete p3 build",
+    "normal-parameter p3 boot",
+    "complete device acceptance",
+    "native ARM64 full kernel",
+    "default/profile promotion only after acceptance"
+  ],
+  "hardware_accepted": false,
+  "evidence": {
+    "regulator-cache.json": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-repeat/regulator-cache.json",
+      "bytes": 1047,
+      "sha256": "8ed241a5a5599235d035e57156d0399d8bc2ebf4cc2bc0d8c87a9ea254726e7e"
+    },
+    "vddio-query.json": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-repeat/vddio-query.json",
+      "bytes": 154,
+      "sha256": "3b89b54374d839fad8fc6a127d7ea511630fad147f3f41ba95fcae99386ad3c8"
+    },
+    "vddio-apply.json": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-repeat/vddio-apply.json",
+      "bytes": 317,
+      "sha256": "d830bca5719600ccd27447c4e6c130fb8032bb193ddbb26a8ec02dbb8d6c2c29"
+    },
+    "gpu-and-resources.json": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-repeat/gpu-and-resources.json",
+      "bytes": 32711,
+      "sha256": "93680a72f03332b442007256c280f25681b8a3f7041294b2373b7d5388de1c92"
+    },
+    "atomic-modeset-1896.log": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-repeat/atomic-modeset-1896.log",
+      "bytes": 182,
+      "sha256": "d27be6ca71cab68e446a1f1f9e1219b348132ca624954753333c6f009dcf648a"
+    },
+    "gpu-autosuspend.json": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-repeat/gpu-autosuspend.json",
+      "bytes": 5191,
+      "sha256": "75f3879432d3a2b2e7480cc1e148b9af6114d4d9cdfd50f3973a056bc9bee75a"
+    },
+    "live-trace.log": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-repeat/live-trace.log",
+      "bytes": 1844352,
+      "sha256": "c48cb2858e9a5dd7303dbb557811534eb356b3fbb764bef2721ed2ffcbceddaa"
+    },
+    "live-dmesg.log": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-repeat/live-dmesg.log",
+      "bytes": 351977,
+      "sha256": "8eab6191fb8b7802b25457abd754b97c52cb72ed52fdbc78295c44e163ae4406"
+    }
+  },
+  "diagnostic_limitations": [
+    "Both headless p2 boots also time out at the Brahma peripheral UART version query (one byte sent, no receive data). A transport rebind did not recover it. Bluetooth must be checked under normal p3 parameters; the initial zero-failed-unit observation was before the 90-second address-service timeout."
+  ],
+  "factory_cross_check": "android-factory-vddio-reference.json",
+  "interpretation_scope": {
+    "original_source_of_1896000": "existing mainline Erhai DTS lower bound and the nldo515 8 mV selector model; not an exact Android factory setting",
+    "android_reference_collected_after_migration": "2026-11-14: factory consumer request/init/driver report all 1900000 uV",
+    "causal_limit": "Successful modeset at 1896000 uV proves this port setting works; the experiment alone does not isolate physical voltage from initialization/readback/voltage-vote effects."
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-11-13T18:50:18.116404+00:00",
+  "kernel_release": "7.3.4-erhai-p2",
+  "params": [
+    "console=tty0",
+    "mem_sleep_default=s2idle",
+    "trace_event=qcom_scm:*,dpu:dpu_crtc_enable,dpu:dpu_enc_enable,dpu:dpu_kms_commit,dpu:dpu_enc_kickoff",
+    "tp_printk",
+    "fb.lockless_register_fb=1",
+    "kprobe_event=p:erhai/hw_init,a8xx_hw_init;r:erhai/zap_image_done,adreno_zap_shader_load,ret=$retval:s32;r:erhai/zap_done,a6xx_zap_shader_init,ret=$retval:s32;p:erhai/flush,a6xx_flush;p:erhai/idle,a8xx_idle;r:erhai/idle_done,a8xx_idle,ok=$retval:u8;p:erhai/fence,a6xx_fenced_write,reg=$arg2:u32,val=$arg3:u32;p:erhai/preempt,a8xx_preempt_hw_init;p:erhai/gmu_done,a6xx_gmu_clear_oob;r:erhai/gmu_return,a6xx_gmu_clear_oob;r:erhai/hw_return,a8xx_hw_init,ret=$retval:s32;r:erhai/msm_return,msm_gpu_hw_init,ret=$retval:s32;r:erhai/gpu_loaded,adreno_load_gpu;p:erhai/runtime_suspend,adreno_runtime_suspend;p:erhai/gmu_stop,a6xx_gmu_stop;r:erhai/gmu_stopped,a6xx_gmu_stop,ret=$retval:s32;p:erhai/fb_probe,msm_fbdev_driver_fbdev_probe;r:erhai/fb_return,msm_fbdev_driver_fbdev_probe,ret=$retval:s32;p:erhai/register_fb,register_framebuffer;p:erhai/modeset,drm_client_modeset_commit_atomic;p:erhai/dsi_pre,dsi_mgr_bridge_pre_enable;p:erhai/phy,msm_dsi_phy_enable;r:erhai/phy_return,msm_dsi_phy_enable,ret=$retval:s32;p:erhai/dsi_power,msm_dsi_host_power_on;r:erhai/dsi_return,msm_dsi_host_power_on,ret=$retval:s32;p:erhai/panel,novatek_nt36536_prepare;r:erhai/panel_return,novatek_nt36536_prepare,ret=$retval:s32",
+    "nr_cpus=1",
+    "nokaslr",
+    "arm64.nohaft",
+    "arm64.nowfxt",
+    "irqchip.gicv3_pseudo_nmi=0",
+    "ignore_loglevel",
+    "initcall_debug",
+    "log_buf_len=8M",
+    "panic=0",
+    "root=fstab",
+    "loglevel=6",
+    "lsm=landlock,yama,bpf"
+  ],
+  "probe_definitions": "accepted by actual p2 Image under QEMU",
+  "host_probe_printed": true,
+  "scope": "Generic ARM64/QEMU parser and event registration validation; expected no-rootfs panic. Does not exercise physical display/GPU.",
+  "log_sha256": "db5e27869b8e6ae4cfc31816da7bad4323e83366855fa39fc033cd8428a93fde",
+  "console_lock_evidence": [
+    "drm_fb_helper.c HANG DEBUGGING documents fb.lockless_register_fb=1",
+    "fbcon_fb_registered takes console_lock unless lockless_register_fb is set",
+    "Actual p2 Image contains the fb.lockless_register_fb parameter string"
+  ],
+  "publication": {
+    "system": "/nix/store/wf78cl3ka0d1mj3r3qm63zz8ihyd459f-nixos-system-pad2pro-erhai-p2-display-trace",
+    "boot_id": "nixos-3ec7d1f3ac80948587c8a5b6d285234c",
+    "same_p2_payloads": true,
+    "boot_readonly": true,
+    "old_trace2_removed": true,
+    "menu_entries": 3,
+    "hardware_result": "immediate reset; display trace reaches panel prepare after DSI power success; see display-trace-device-boot.json",
+    "menu_entry": "replaced by panel-trace"
+  }
+}

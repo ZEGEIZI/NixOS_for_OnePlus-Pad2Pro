@@ -1,0 +1,163 @@
+From bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Sat, 14 Nov 2026 05:18:40 +0800
+Subject: [PATCH] serial: qcom-geni: balance IRQ masking across port reopen
+
+Linux 7.3 disables the UART IRQ at shutdown entry before synchronizing console tx_kick. The Erhai carry patch retained its older disable_irq_nosync at shutdown exit, increasing the IRQ depth twice for one enable_irq at startup. Brahma bootstrap closes and reopens the UART and then cannot receive its first wake response.
+
+Keep the upstream disable and remove the duplicate downstream mask. Exercise the actual startup and shutdown functions through repeated console and non-console reopen cycles, PM and setup failures; the pre-fix driver fails after the first close.
+---
+ drivers/tty/serial/qcom_geni_serial.c         |   3 +-
+ .../selftests/tty/qcom-geni-lifecycle-test.py | 122 ++++++++++++++++++
+ 2 files changed, 123 insertions(+), 2 deletions(-)
+ create mode 100644 tools/testing/selftests/tty/qcom-geni-lifecycle-test.py
+
+diff --git a/drivers/tty/serial/qcom_geni_serial.c b/drivers/tty/serial/qcom_geni_serial.c
+index cf9094ea9..ffdd7e665 100644
+--- a/drivers/tty/serial/qcom_geni_serial.c
++++ b/drivers/tty/serial/qcom_geni_serial.c
+@@ -1347,7 +1347,7 @@ static void qcom_geni_serial_shutdown(struct uart_port *uport)
+ 	qcom_geni_serial_stop_rx(uport);
+ 
+ 	qcom_geni_serial_cancel_tx_cmd(uport);
+-	/* Drain cancellation status before masking the dedicated IRQ. */
++	/* The IRQ is already disabled; drain status before dropping runtime PM. */
+ 	writel(readl(uport->membase + SE_GENI_M_IRQ_STATUS),
+ 	       uport->membase + SE_GENI_M_IRQ_CLEAR);
+ 	writel(readl(uport->membase + SE_GENI_S_IRQ_STATUS),
+@@ -1356,7 +1356,6 @@ static void qcom_geni_serial_shutdown(struct uart_port *uport)
+ 	       uport->membase + SE_DMA_TX_IRQ_CLR);
+ 	writel(readl(uport->membase + SE_DMA_RX_IRQ_STAT),
+ 	       uport->membase + SE_DMA_RX_IRQ_CLR);
+-	disable_irq_nosync(uport->irq);
+ 	uart_port_unlock_irq(uport);
+ 
+ 	pm_runtime_put_sync(uport->dev);
+diff --git a/tools/testing/selftests/tty/qcom-geni-lifecycle-test.py b/tools/testing/selftests/tty/qcom-geni-lifecycle-test.py
+new file mode 100644
+index 000000000..97c4e800c
+--- /dev/null
++++ b/tools/testing/selftests/tty/qcom-geni-lifecycle-test.py
+@@ -0,0 +1,122 @@
++#!/usr/bin/env python3
++"""Exercise actual GENI startup/shutdown functions with mock IRQ/PM state.
++
++No hardware is accessed. Repeated closes/reopens match Bluetooth bootstrap,
++which must leave one enabled IRQ per open port and no leaked PM references.
++"""
++import os
++from pathlib import Path
++import shlex
++import subprocess
++import tempfile
++
++source = Path(__file__).resolve().parents[4] / "drivers/tty/serial/qcom_geni_serial.c"
++text = source.read_text()
++
++
++def function(signature):
++    start = text.index(signature)
++    brace = text.index("{", start)
++    depth = 1
++    end = brace + 1
++    while depth:
++        depth += (text[end] == "{") - (text[end] == "}")
++        end += 1
++    return text[start:end]
++
++
++harness = r'''
++#include <assert.h>
++#include <stdbool.h>
++#include <stdint.h>
++#include <stdio.h>
++struct tty_port { unsigned int closing_wait; };
++struct uart_state { struct tty_port port; };
++struct uart_port { struct uart_state *state; void *dev; uintptr_t membase;
++                   unsigned int irq; bool console; };
++struct qcom_geni_serial_port { struct uart_port uport; bool setup;
++                              bool tx_kick_enabled; int tx_kick; };
++static struct qcom_geni_serial_port port;
++static struct uart_state state;
++static int irq_depth, pm_refs, resume_error, setup_error;
++#define ASYNC_CLOSING_WAIT_NONE 65535
++#define SE_GENI_M_IRQ_STATUS 0
++#define SE_GENI_M_IRQ_CLEAR 4
++#define SE_GENI_S_IRQ_STATUS 8
++#define SE_GENI_S_IRQ_CLEAR 12
++#define SE_DMA_TX_IRQ_STAT 16
++#define SE_DMA_TX_IRQ_CLR 20
++#define SE_DMA_RX_IRQ_STAT 24
++#define SE_DMA_RX_IRQ_CLR 28
++#define WRITE_ONCE(x, v) ((x) = (v))
++#define dev_err(...) ((void)0)
++static struct qcom_geni_serial_port *to_dev_port(struct uart_port *p)
++{ assert(p == &port.uport); return &port; }
++static int pm_runtime_resume_and_get(void *d)
++{ (void)d; if (resume_error) return resume_error; return ++pm_refs, 0; }
++static void pm_runtime_put_sync(void *d)
++{ (void)d; assert(pm_refs > 0); --pm_refs; }
++static int qcom_geni_serial_port_setup(struct uart_port *p)
++{ (void)p; if (setup_error) return setup_error; port.setup = true; return 0; }
++static bool uart_console(struct uart_port *p) { return p->console; }
++static void uart_port_lock_irq(struct uart_port *p) { (void)p; }
++static void uart_port_unlock_irq(struct uart_port *p) { (void)p; }
++static void irq_work_sync(int *work) { (void)work; }
++static void disable_irq(unsigned int irq) { (void)irq; ++irq_depth; }
++static void disable_irq_nosync(unsigned int irq) { disable_irq(irq); }
++static void enable_irq(unsigned int irq)
++{ (void)irq; assert(irq_depth > 0); --irq_depth; }
++static void synchronize_irq(unsigned int irq) { (void)irq; }
++static void qcom_geni_serial_start_rx(struct uart_port *p) { (void)p; }
++static void qcom_geni_serial_stop_rx(struct uart_port *p) { (void)p; }
++static void qcom_geni_serial_stop_tx(struct uart_port *p) { (void)p; }
++static void qcom_geni_serial_cancel_tx_cmd(struct uart_port *p) { (void)p; }
++static uint32_t readl(uintptr_t address) { (void)address; return 0; }
++static void writel(uint32_t value, uintptr_t address)
++{ (void)value; (void)address; }
++'''
++harness += function("static int qcom_geni_serial_startup(") + "\n"
++harness += function("static void qcom_geni_serial_shutdown(") + "\n"
++harness += r'''
++static void reset(bool console)
++{
++    port = (struct qcom_geni_serial_port){
++        .uport = { .state = &state, .console = console }
++    };
++    irq_depth = 1; pm_refs = resume_error = setup_error = 0;
++}
++int main(void)
++{
++    for (int console = 0; console <= 1; ++console) {
++        reset(console);
++        for (int cycle = 0; cycle < 16; ++cycle) {
++            assert(qcom_geni_serial_startup(&port.uport) == 0);
++            assert(irq_depth == 0 && pm_refs == 1 && port.tx_kick_enabled);
++            qcom_geni_serial_shutdown(&port.uport);
++            assert(irq_depth == 1 && pm_refs == 0 && !port.tx_kick_enabled);
++        }
++        reset(console);
++        resume_error = -5;
++        assert(qcom_geni_serial_startup(&port.uport) == -5);
++        assert(irq_depth == 1 && pm_refs == 0 && !port.tx_kick_enabled);
++        resume_error = 0; setup_error = -6;
++        assert(qcom_geni_serial_startup(&port.uport) == -6);
++        assert(irq_depth == 1 && pm_refs == 0 && !port.tx_kick_enabled);
++        setup_error = 0;
++        assert(qcom_geni_serial_startup(&port.uport) == 0);
++        assert(irq_depth == 0 && pm_refs == 1);
++        qcom_geni_serial_shutdown(&port.uport);
++        assert(irq_depth == 1 && pm_refs == 0);
++    }
++    puts("GENI UART: repeated open/close and startup failures passed");
++    return 0;
++}
++'''
++with tempfile.TemporaryDirectory(prefix="geni-lifecycle-") as directory:
++    root = Path(directory)
++    (root / "test.c").write_text(harness)
++    subprocess.run(shlex.split(os.environ.get("CC", "cc")) + [
++        "-std=c11", "-Wall", "-Wextra", "-Werror", "-Wno-unused-function",
++        str(root / "test.c"), "-o", str(root / "test"),
++    ], check=True)
++    subprocess.run([str(root / "test")], check=True)

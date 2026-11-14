@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-11-13T01:22:42.099767+08:00",
+  "kernel": "7.2.15-nixos-erhai-efc39b9d9726-upstream4-ebpf1",
+  "kernel_build": "Linux version 7.2.15-nixos-erhai-efc39b9d9726-upstream4-ebpf1 (nixbld@localhost) (aarch64-unknown-linux-gnu-gcc (GCC) 16.2.0, GNU ld (GNU Binutils) 2.46) #1-NixOS SMP PREEMPT @315532800",
+  "boot_id": "3bd4fe54-e5bb-4889-8c1e-12d5da378514",
+  "boot_id_before_reboot": "4c693a70-b35e-49a2-882a-a525bb007980",
+  "current_system": "/nix/store/dndi6vrx4pgbv5lsbcki6zjszh53zgkc-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+  "booted_system": "/nix/store/dndi6vrx4pgbv5lsbcki6zjszh53zgkc-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+  "profile_system": "/nix/store/dndi6vrx4pgbv5lsbcki6zjszh53zgkc-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+  "sched_ext_state": "enabled",
+  "sched_ext_ops": "lavd_1.1.4_aarch64_unknown_linux_gnu",
+  "btf_available": true,
+  "loader_config": {
+    "default_mode": "PowerSave",
+    "default_sched": "scx_lavd",
+    "scheds": {
+      "scx_lavd": {
+        "powersave_mode": [
+          "--powersave"
+        ]
+      }
+    }
+  },
+  "scxctl": {
+    "exit_code": 0,
+    "stdout": "running Lavd in PowerSave mode",
+    "stderr": ""
+  },
+  "lavd_processes": [
+    {
+      "pid": 2510,
+      "argv": [
+        "scx_lavd",
+        "--powersave"
+      ]
+    }
+  ],
+  "services": {
+    "scx_loader.service": {
+      "exit_code": 0,
+      "stdout": "active",
+      "stderr": ""
+    },
+    "display-manager.service": {
+      "exit_code": 0,
+      "stdout": "active",
+      "stderr": ""
+    },
+    "NetworkManager.service": {
+      "exit_code": 0,
+      "stdout": "active",
+      "stderr": ""
+    },
+    "bluetooth.service": {
+      "exit_code": 0,
+      "stdout": "active",
+      "stderr": ""
+    }
+  },
+  "failed_units": {
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "boot_mount": {
+    "exit_code": 0,
+    "stdout": "ro,noatime,stripe=128",
+    "stderr": ""
+  },
+  "bluetooth_controller_present": true,
+  "cps8601_module_present": true,
+  "kernel_store": "/nix/store/ix58vbbmjfbcy653zxfylk40j0lw00w6-linux-erhai-aarch64-unknown-linux-gnu-7.2.15",
+  "modules_store": "/nix/store/hrh22qs97bddipiyqjvml9a2was3i6iv-linux-erhai-aarch64-unknown-linux-gnu-7.2.15-modules",
+  "cps8601_store": "/nix/store/hy5g8fxmp9cbdpjl0qpx0ayivjc0mznk-cps8601-optional-firmware-aarch64-unknown-linux-gnu-1",
+  "boot_entry": "nixos-de8ff300a905f21f7115f50d84dd1521"
+}
+

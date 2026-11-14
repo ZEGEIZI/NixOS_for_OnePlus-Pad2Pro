@@ -1,0 +1,733 @@
+--- a/LINUX-BOOT-PROTOCOL.md
++++ b/LINUX-BOOT-PROTOCOL.md
+@@ -52,7 +52,10 @@
+ versions=kernel-v1
+ ```
+ 
+-`versions` 按顺序列出 1～8 个不同版本，须包含 current 和非 none 的 previous；两者不能相同。
++`versions` 按顺序列出不同版本，须包含 current 和非 none 的 previous；两者不能相同。
++菜单按需分页，支持从任意页启动，并能直接打开默认版本所在的页。`entries.conf`
++仍受 8192 字节的配置文件大小限制，发布也受启动分区剩余空间限制。
++支持分页的加载器须在发布第 9 个可见版本前部署。旧加载器无法读取超过 8 项的列表。
+ 
+ ### manifest.conf
+ 
+--- a/README.md
++++ b/README.md
+@@ -7,7 +7,7 @@
+ ## 功能
+ 
+ - 选择原厂 Android，或进入 Linux 系统和内核菜单。
+-- 最多 4 个 Linux 系统，每系统 8 个启动版本，按需加载选中的一套文件。
++- 最多 4 个 Linux 系统，启动版本支持分页，按需加载选中的一套文件。
+ - 检查载荷长度与 SHA-256，支持 current/previous 和固定版本选择。
+ - Atlas 分页菜单，提供中英文、启动延迟、设备信息及电源/高级启动入口；音量键选择，电源键确认。
+ - 当前 ext4 构建使用 8 MiB 运行体槽。语言和延迟不跨重启保存，未实现启动失败自动回退或独立充电界面。
+--- a/boot/vendor/kshim/src/arch/arm64/boot_files_native.c
++++ b/boot/vendor/kshim/src/arch/arm64/boot_files_native.c
+@@ -109,8 +109,8 @@
+     uint32_t timeout_ms, size_t *selected)
+ {
+     struct menu_context *context = opaque;
+-    kshim_menu_role_t roles[1+KSHIM_BOOT_VERSIONS_MAX];
+-    if (count > 1+KSHIM_BOOT_VERSIONS_MAX) return KSHIM_STORAGE_RANGE;
++    kshim_menu_role_t roles[KSHIM_BOOT_MENU_ROWS];
++    if (count > KSHIM_BOOT_MENU_ROWS) return KSHIM_STORAGE_RANGE;
+     for (size_t i = 0; i < count; ++i) roles[i] = KSHIM_MENU_ROLE_UNKNOWN;
+     /* kshim_boot_choose always puts its parent-menu return entry first. */
+     if (count) roles[0] = KSHIM_MENU_ROLE_BACK;
+@@ -131,14 +131,24 @@
+         struct menu_context context = {.runtime = runtime};
+         device_info_read((void *)(uintptr_t)runtime,&context.info);
+         if (kshim_boot_choose(&catalog,select_menu,&context,&selected)) unsafe();
+-        if (selected == SIZE_MAX) return 0;
++        if (selected == SIZE_MAX) {
++            kshim_boot_catalog_free(&catalog);
++            return 0;
++        }
+         if (kshim_mmu_enable_current_cpu()) unsafe();
+-        rc = catalog.errors[selected];
++        struct kshim_boot_summary row = catalog.entries[selected];
++        kshim_boot_catalog_free(&catalog);
++        rc = row.error;
+         if (!rc) rc = kshim_boot_storage_open((void *)(uintptr_t)runtime,&fs);
+         stage = kshim_boot_storage_stage();
+         if (!rc) {
+-            rc = load(fs,&catalog.entries[selected],runtime,packed,packed_bytes,&kernel,dtb_source,capacity);
+-            stage = payload_stage;
++            struct kshim_boot_entry entry;
++            stage = "selected manifest";
++            rc = kshim_boot_open_entry(fs,catalog.systems[row.system],row.version,&entry);
++            if (!rc) {
++                rc = load(fs,&entry,runtime,packed,packed_bytes,&kernel,dtb_source,capacity);
++                stage = payload_stage;
++            }
+         }
+         if (kshim_boot_storage_close()) unsafe();
+         if (!rc) {
+--- a/boot/vendor/kshim/src/core/boot_files_config.c
++++ b/boot/vendor/kshim/src/core/boot_files_config.c
+@@ -1,6 +1,7 @@
+ /* SPDX-License-Identifier: GPL-3.0-only */
+ #include <ext4_boot.h>
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ 
+ struct pair { char *key, *value; };
+@@ -117,32 +118,35 @@
+     }
+     return 0;
+ }
+-int kshim_boot_parse_versions(char *text, struct kshim_boot_versions *out)
++struct kshim_boot_versions {
++    const char *current, *previous, *ids;
++    unsigned count;
++};
++
++static int parse_versions(char *text, struct kshim_boot_versions *out)
+ {
+     struct pair p[4]; int n = parse(text,p,4);
+     if (n < 0) return KSHIM_STORAGE_FORMAT;
+     const char *format = get(p,n,"format");
+     const char *a = get(p,n,"current"), *b = get(p,n,"previous");
+-    if (!format ||
+-        !id(a) || !id(b) || !strcmp(a,"none") || !strcmp(a,b)) return KSHIM_STORAGE_FORMAT;
+-    memset(out,0,sizeof(*out));
+-    strcpy(out->current,a); strcpy(out->previous,b);
++    if (!format || !id(a) || !id(b) || !strcmp(a,"none") || !strcmp(a,b))
++        return KSHIM_STORAGE_FORMAT;
++    *out = (struct kshim_boot_versions){.current = a, .previous = b};
+     if (!strcmp(format,"1")) {
+         if (n != 3) return KSHIM_STORAGE_FORMAT;
+-        strcpy(out->ids[out->count++],a);
+-        if (strcmp(b,"none")) strcpy(out->ids[out->count++],b);
++        out->count = strcmp(b,"none") ? 2 : 1;
+         return 0;
+     }
+     char *list = (char *)get(p,n,"versions");
+     if (strcmp(format,"2") || n != 4 || !list) return KSHIM_STORAGE_FORMAT;
++    out->ids = list;
+     int found_current = 0, found_previous = !strcmp(b,"none");
+     for (;;) {
+         char *end = strchr(list,','); if (end) *end = 0;
+-        if (!id(list) || !strcmp(list,"none") || out->count == KSHIM_BOOT_VERSIONS_MAX)
+-            return KSHIM_STORAGE_FORMAT;
+-        for (unsigned i = 0; i < out->count; ++i)
+-            if (!strcmp(out->ids[i],list)) return KSHIM_STORAGE_CONFLICT;
+-        strcpy(out->ids[out->count++],list);
++        if (!id(list) || !strcmp(list,"none")) return KSHIM_STORAGE_FORMAT;
++        for (const char *earlier = out->ids; earlier < list; earlier += strlen(earlier)+1)
++            if (!strcmp(earlier,list)) return KSHIM_STORAGE_CONFLICT;
++        ++out->count;
+         if (!strcmp(list,a)) found_current = 1;
+         if (!strcmp(list,b)) found_previous = 1;
+         if (!end) break;
+@@ -181,46 +185,69 @@
+         return KSHIM_STORAGE_OVERFLOW;
+     return 0;
+ }
++int kshim_boot_open_entry(struct kshim_ext4 *fs, const char *system,
++                          const char *version, struct kshim_boot_entry *entry)
++{
++    char text[KSHIM_BOOT_CONFIG_MAX+1], path[KSHIM_BOOT_PATH_MAX];
++    snprintf(path,sizeof(path),"kshim/systems/%s/versions/%s/manifest.conf",system,version);
++    int rc = kshim_ext4_text(fs,path,text,sizeof(text));
++    if (!rc) rc = kshim_boot_parse_manifest(text,entry);
++    if (!rc && (strcmp(entry->system,system) || strcmp(entry->version,version)))
++        rc = KSHIM_STORAGE_CONFLICT;
++    return rc;
++}
++
++void kshim_boot_catalog_free(struct kshim_boot_catalog *catalog)
++{
++    free(catalog->entries);
++    catalog->entries = NULL;
++    catalog->count = 0;
++}
++
+ int kshim_boot_discover(struct kshim_ext4 *fs, struct kshim_boot_catalog *out)
+ {
+     char text[KSHIM_BOOT_CONFIG_MAX+1], path[KSHIM_BOOT_PATH_MAX];
+     int rc = kshim_ext4_text(fs,"kshim/boot.conf",text,sizeof(text));
+     if (!rc) rc = kshim_boot_parse_global(text,out);
+     if (rc) return rc;
+-    memset(out->errors,0,sizeof(out->errors));
+-    memset(out->current,0,sizeof(out->current));
+-    memset(out->previous,0,sizeof(out->previous));
+     for (unsigned i = 0; i < out->system_count; ++i) {
+         struct kshim_boot_versions versions;
+         snprintf(path,sizeof(path),"kshim/systems/%s/entries.conf",out->systems[i]);
+         rc = kshim_ext4_text(fs,path,text,sizeof(text));
+-        if (!rc) rc = kshim_boot_parse_versions(text,&versions);
++        if (!rc) rc = parse_versions(text,&versions);
++        unsigned count = rc ? 1 : versions.count;
++        struct kshim_boot_summary *entries =
++            realloc(out->entries,(out->count+count)*sizeof(*entries));
++        if (!entries) {
++            kshim_boot_catalog_free(out);
++            return KSHIM_STORAGE_MEMORY;
++        }
++        out->entries = entries;
+         if (rc) {
+-            struct kshim_boot_entry *e = &out->entries[out->count];
+-            memset(e,0,sizeof(*e));
+-            strcpy(e->system,out->systems[i]);
+-            snprintf(e->title,sizeof(e->title),"%.63s metadata error",out->systems[i]);
+-            out->current[out->count] = 1;
+-            out->errors[out->count++] = rc;
++            struct kshim_boot_summary *row = &entries[out->count++];
++            *row = (struct kshim_boot_summary){.system = i, .current = 1, .error = rc};
++            snprintf(row->title,sizeof(row->title),"%.63s metadata error",out->systems[i]);
+             continue;
+         }
+-        for (unsigned j = 0; j < versions.count; ++j) {
+-            if (out->count == KSHIM_BOOT_ENTRIES_MAX) return KSHIM_STORAGE_OVERFLOW;
+-            struct kshim_boot_entry *e = &out->entries[out->count];
+-            snprintf(path,sizeof(path),"kshim/systems/%s/versions/%s/manifest.conf",out->systems[i],versions.ids[j]);
+-            rc = kshim_ext4_text(fs,path,text,sizeof(text));
+-            if (!rc) rc = kshim_boot_parse_manifest(text,e);
+-            if (!rc && (strcmp(e->system,out->systems[i]) || strcmp(e->version,versions.ids[j]))) rc = KSHIM_STORAGE_CONFLICT;
++
++        const char *version = versions.ids ? versions.ids : versions.current;
++        for (unsigned j = 0; j < count; ++j) {
++            struct kshim_boot_entry entry;
++            struct kshim_boot_summary *row = &entries[out->count++];
++            rc = kshim_boot_open_entry(fs,out->systems[i],version,&entry);
++            *row = (struct kshim_boot_summary){
++                .system = i, .error = rc,
++                .current = !strcmp(version,versions.current),
++                .previous = !strcmp(version,versions.previous),
++            };
++            strcpy(row->version,version);
+             if (rc) {
+-                memset(e,0,sizeof(*e));
+-                strcpy(e->system,out->systems[i]);
+-                strcpy(e->version,versions.ids[j]);
+-                snprintf(e->title,sizeof(e->title),"%.63s manifest error",out->systems[i]);
+-                out->errors[out->count] = rc;
++                snprintf(row->title,sizeof(row->title),"%.63s manifest error",out->systems[i]);
++            } else {
++                strcpy(row->title,entry.title);
++                strcpy(row->release,entry.release);
+             }
+-            out->current[out->count] = !strcmp(versions.ids[j],versions.current);
+-            out->previous[out->count] = !strcmp(versions.ids[j],versions.previous);
+-            ++out->count;
++            version = versions.ids ? version+strlen(version)+1 : versions.previous;
+         }
+     }
+     return 0;
+--- a/boot/vendor/kshim/src/core/boot_files_menu.c
++++ b/boot/vendor/kshim/src/core/boot_files_menu.c
+@@ -5,16 +5,16 @@
+ 
+ static int default_matches(const struct kshim_boot_catalog *catalog, unsigned i)
+ {
+-    const struct kshim_boot_entry *e = &catalog->entries[i];
++    const struct kshim_boot_summary *e = &catalog->entries[i];
+     char key[144];
+-    snprintf(key,sizeof(key),"%s/%s",e->system,e->version);
++    snprintf(key,sizeof(key),"%s/%s",catalog->systems[e->system],e->version);
+     /* current/previous are selector aliases, even when a version ID uses one
+      * of these words. Explicit version IDs otherwise select a pinned kernel. */
+     const char *selector = strchr(catalog->default_entry,'/');
+     if (!selector) return 0;
+     if (!strcmp(selector+1,"current") || !strcmp(selector+1,"previous")) {
+-        int match = !strcmp(selector+1,"current") ? catalog->current[i] : catalog->previous[i];
+-        snprintf(key,sizeof(key),"%s/%s",e->system,selector+1);
++        int match = !strcmp(selector+1,"current") ? e->current : e->previous;
++        snprintf(key,sizeof(key),"%s/%s",catalog->systems[e->system],selector+1);
+         return match && !strcmp(key,catalog->default_entry);
+     }
+     return !strcmp(key,catalog->default_entry);
+@@ -24,29 +24,32 @@
+     kshim_boot_menu_select_fn select, void *context, size_t *entry)
+ {
+     if (!catalog || !select || !entry || !catalog->system_count ||
+-        catalog->system_count > KSHIM_BOOT_SYSTEMS_MAX || catalog->count > KSHIM_BOOT_ENTRIES_MAX)
++        catalog->system_count > KSHIM_BOOT_SYSTEMS_MAX)
+         return KSHIM_STORAGE_ARG;
+     *entry = SIZE_MAX;
+-    const char *names[1+KSHIM_BOOT_VERSIONS_MAX], *descriptions[1+KSHIM_BOOT_VERSIONS_MAX];
+-    char labels[1+KSHIM_BOOT_VERSIONS_MAX][176];
+-    char details[1+KSHIM_BOOT_VERSIONS_MAX][192];
+-    size_t indexes[1+KSHIM_BOOT_VERSIONS_MAX];
++    const char *names[KSHIM_BOOT_MENU_ROWS], *descriptions[KSHIM_BOOT_MENU_ROWS];
++    char labels[KSHIM_BOOT_MENU_ROWS][176];
++    char details[KSHIM_BOOT_MENU_ROWS][192];
++    unsigned counts[KSHIM_BOOT_SYSTEMS_MAX] = {0};
++    unsigned starts[KSHIM_BOOT_SYSTEMS_MAX] = {0};
++    for (unsigned i = 0; i < catalog->count; ++i) {
++        unsigned system = catalog->entries[i].system;
++        if (system >= catalog->system_count) return KSHIM_STORAGE_ARG;
++        if (!counts[system]) starts[system] = i;
++        ++counts[system];
++    }
+     size_t system_initial = 0;
+     uint32_t system_timeout = catalog->timeout_ms;
+     for (unsigned i = 0; i < catalog->count; ++i) {
+         if (!default_matches(catalog,i)) continue;
+-        for (unsigned s = 0; s < catalog->system_count; ++s)
+-            if (!strcmp(catalog->systems[s],catalog->entries[i].system)) system_initial = s+1;
++        system_initial = catalog->entries[i].system+1;
+     }
+     for (;;) {
+         names[0] = "Return to main menu";
+         descriptions[0] = "Choose a built-in boot entry there";
+         for (unsigned s = 0; s < catalog->system_count; ++s) {
+-            unsigned count = 0;
+-            for (unsigned i = 0; i < catalog->count; ++i)
+-                if (!strcmp(catalog->systems[s],catalog->entries[i].system)) ++count;
+             names[s+1] = catalog->systems[s];
+-            snprintf(details[s+1],sizeof(details[0]),"Choose a kernel (%u entries)",count);
++            snprintf(details[s+1],sizeof(details[0]),"Choose a kernel (%u entries)",counts[s]);
+             descriptions[s+1] = details[s+1];
+         }
+         size_t selected = 0;
+@@ -59,42 +62,67 @@
+         system_initial = selected;
+         system_timeout = 0; /* Back never starts a loop of countdowns. */
+ 
+-        names[0] = "Return to systems";
+-        descriptions[0] = "Choose another Linux system";
+-        size_t count = 1, initial = 0;
++        unsigned total = counts[system], first = starts[system];
++        unsigned per_page = total < KSHIM_BOOT_MENU_ROWS ?
++                            KSHIM_BOOT_MENU_ROWS-1 : KSHIM_BOOT_MENU_ROWS-3;
++        unsigned preferred = total;
+         int has_system_default = 0;
+-        for (unsigned i = 0; i < catalog->count; ++i) {
+-            const struct kshim_boot_entry *e = &catalog->entries[i];
+-            if (strcmp(catalog->systems[system],e->system)) continue;
+-            if (count > KSHIM_BOOT_VERSIONS_MAX) return KSHIM_STORAGE_OVERFLOW;
+-            /* LVGL ellipsizes long rows on the right. Keep selector state at
+-             * the front, including entries with a damaged manifest. */
+-            const char *mark = catalog->current[i] ? "(current) " :
+-                               catalog->previous[i] ? "(previous) " : "";
+-            if (catalog->errors[i])
+-                snprintf(labels[count],sizeof(labels[0]),"%s%.90s [%.63s]",mark,e->title,e->version);
+-            else
+-                snprintf(labels[count],sizeof(labels[0]),"%s%.63s [%.63s]",mark,e->release,e->version);
+-            snprintf(details[count],sizeof(details[0]),"%s%.95s | %.63s",mark,e->title,e->version);
+-            names[count] = labels[count]; descriptions[count] = details[count];
+-            indexes[count] = i;
+-            if (catalog->current[i] && !has_system_default) initial = count;
+-            if (default_matches(catalog,i)) { initial = count; has_system_default = 1; }
+-            ++count;
++        for (unsigned j = 0; j < total; ++j) {
++            unsigned i = first+j;
++            if (catalog->entries[i].current && !has_system_default) preferred = j;
++            if (default_matches(catalog,i)) { preferred = j; has_system_default = 1; }
+         }
+-        /* A missing explicit default must not silently auto-boot another
+-         * kernel. Manual selection remains available, including healthy peers. */
++        /* An explicit default that disappeared must not auto-boot a peer. */
+         const char *slash = strchr(catalog->default_entry,'/');
+         if (slash && (size_t)(slash-catalog->default_entry) == strlen(catalog->systems[system]) &&
+             !memcmp(catalog->default_entry,catalog->systems[system],(size_t)(slash-catalog->default_entry)) &&
+-            !has_system_default) initial = 0;
+-        selected = 0;
+-        rc = select(context,names,descriptions,count,initial,
+-                    initial ? catalog->timeout_ms : 0,&selected);
+-        if (rc) return rc;
+-        if (selected >= count) return KSHIM_STORAGE_RANGE;
+-        if (!selected) continue;
+-        *entry = indexes[selected];
+-        return 0;
++            !has_system_default) preferred = total;
++
++        unsigned offset = preferred < total ? preferred/per_page*per_page : 0;
++        uint32_t timeout = preferred < total ? catalog->timeout_ms : 0;
++        for (;;) {
++            names[0] = "Return to systems";
++            descriptions[0] = "Choose another Linux system";
++            size_t count = 1, initial = 0;
++            while (count <= per_page && offset+count-1 < total) {
++                unsigned j = offset+count-1;
++                const struct kshim_boot_summary *e = &catalog->entries[first+j];
++                /* Keep selectors visible when LVGL ellipsizes long labels. */
++                const char *mark = e->current ? "(current) " :
++                                   e->previous ? "(previous) " : "";
++                if (e->error)
++                    snprintf(labels[count],sizeof(labels[0]),"%s%.90s [%.63s]",mark,e->title,e->version);
++                else
++                    snprintf(labels[count],sizeof(labels[0]),"%s%.63s [%.63s]",mark,e->release,e->version);
++                snprintf(details[count],sizeof(details[0]),"%s%.95s | %.63s",mark,e->title,e->version);
++                names[count] = labels[count];
++                descriptions[count] = details[count];
++                if (j == preferred) initial = count;
++                ++count;
++            }
++            size_t end = count, previous = SIZE_MAX, next = SIZE_MAX;
++            if (offset) {
++                previous = count;
++                names[count] = "Previous page";
++                descriptions[count++] = "Show earlier kernels in menu order";
++            }
++            if (offset+end-1 < total) {
++                next = count;
++                names[count] = "Next page";
++                descriptions[count++] = "Show later kernels in menu order";
++            }
++            selected = 0;
++            rc = select(context,names,descriptions,count,initial,timeout,&selected);
++            if (rc) return rc;
++            if (selected >= count) return KSHIM_STORAGE_RANGE;
++            if (!selected) break;
++            if (selected < end) {
++                *entry = first+offset+selected-1;
++                return 0;
++            }
++            if (selected == previous) offset -= per_page;
++            if (selected == next) offset += per_page;
++            timeout = 0;
++        }
+     }
+ }
+--- a/boot/vendor/kshim/src/include/boot_files_menu.h
++++ b/boot/vendor/kshim/src/include/boot_files_menu.h
+@@ -1,6 +1,7 @@
+ /* SPDX-License-Identifier: GPL-3.0-only */
+ #pragma once
+ #include <ext4_boot.h>
++#define KSHIM_BOOT_MENU_ROWS 9u
+ /* The same chooser is exercised by host tests and the native UI. A successful
+  * cancellation sets *entry to SIZE_MAX; a kernel choice is a catalog index.
+  * The callback must finish/quiesce each UI session before returning. */
+--- a/boot/vendor/kshim/src/include/ext4_boot.h
++++ b/boot/vendor/kshim/src/include/ext4_boot.h
+@@ -4,8 +4,6 @@
+ #include <Library/FirmwareLoaderLib/NhFs.h>
+ #define KSHIM_BOOT_CONFIG_MAX 8192u
+ #define KSHIM_BOOT_SYSTEMS_MAX 4u
+-#define KSHIM_BOOT_VERSIONS_MAX 8u
+-#define KSHIM_BOOT_ENTRIES_MAX (KSHIM_BOOT_SYSTEMS_MAX * KSHIM_BOOT_VERSIONS_MAX)
+ #define KSHIM_BOOT_CMDLINE_MAX 4096u
+ #define KSHIM_BOOT_PATH_MAX 512u
+ #define KSHIM_BOOT_ID_MAX 64u
+@@ -33,20 +31,19 @@
+     char cmdline[KSHIM_BOOT_CMDLINE_MAX];
+     struct kshim_boot_file image, dtb, initrd;
+ };
++struct kshim_boot_summary {
++    char version[KSHIM_BOOT_ID_MAX];
++    char title[96], release[128];
++    unsigned system;
++    int error;
++    uint8_t current, previous;
++};
+ struct kshim_boot_catalog {
+     char systems[KSHIM_BOOT_SYSTEMS_MAX][KSHIM_BOOT_ID_MAX];
+     unsigned system_count, count;
+     uint32_t timeout_ms;
+     char default_entry[144]; /* android or system/current|previous|boot_id */
+-    struct kshim_boot_entry entries[KSHIM_BOOT_ENTRIES_MAX];
+-    uint8_t current[KSHIM_BOOT_ENTRIES_MAX];
+-    uint8_t previous[KSHIM_BOOT_ENTRIES_MAX];
+-    int errors[KSHIM_BOOT_ENTRIES_MAX];
+-};
+-struct kshim_boot_versions {
+-    char current[KSHIM_BOOT_ID_MAX], previous[KSHIM_BOOT_ID_MAX];
+-    char ids[KSHIM_BOOT_VERSIONS_MAX][KSHIM_BOOT_ID_MAX];
+-    unsigned count;
++    struct kshim_boot_summary *entries;
+ };
+ int kshim_ext4_mount(struct kshim_ext4 *, const struct kshim_blockdev *,
+                       const struct kshim_partition *);
+@@ -55,9 +52,11 @@
+ int kshim_ext4_text(struct kshim_ext4 *, const char *, char *, size_t);
+ /* Parsers reject unknown/duplicate keys, malformed IDs/paths and overflow. */
+ int kshim_boot_parse_global(char *, struct kshim_boot_catalog *);
+-int kshim_boot_parse_versions(char *, struct kshim_boot_versions *);
+ int kshim_boot_parse_manifest(char *, struct kshim_boot_entry *);
++/* Discover into a zero-initialized catalog. Release it with catalog_free. */
+ int kshim_boot_discover(struct kshim_ext4 *, struct kshim_boot_catalog *);
++void kshim_boot_catalog_free(struct kshim_boot_catalog *);
++int kshim_boot_open_entry(struct kshim_ext4 *, const char *, const char *, struct kshim_boot_entry *);
+ int kshim_boot_read_payload(struct kshim_ext4 *, const struct kshim_boot_entry *,
+                              const struct kshim_boot_file *, void *, size_t);
+ int kshim_boot_uuid(const char *, uint8_t[16]);
+--- a/tests/boot_files_menu_test.c
++++ b/tests/boot_files_menu_test.c
+@@ -4,7 +4,8 @@
+ #include <stdio.h>
+ #include <string.h>
+ 
+-static struct kshim_boot_catalog catalog;
++static struct kshim_boot_summary rows[48];
++static struct kshim_boot_catalog catalog = {.entries = rows};
+ struct step {
+     size_t count, initial, selected;
+     uint32_t timeout;
+@@ -33,7 +34,8 @@
+     *selected=step->selected == SIZE_MAX ? initial : step->selected;
+     if (step->label) assert(strstr(names[*selected],step->label));
+     if (step->detail) assert(strstr(descriptions[*selected],step->detail));
+-    if (*selected && !strncmp(names[0],"Return to systems",17)) {
++    if (*selected && !strncmp(names[0],"Return to systems",17) &&
++        strcmp(names[*selected],"Next page") && strcmp(names[*selected],"Previous page")) {
+         /* Equal releases must remain distinguishable in the primary row,
+          * including UIs where the description is not visible. */
+         assert(strchr(names[*selected],'[') && strchr(names[*selected],']'));
+@@ -53,12 +55,12 @@
+     for (unsigned s=0; s<4; ++s) {
+         snprintf(catalog.systems[s],64,"system%u",s);
+         for (unsigned v=0; v<8; ++v) {
+-            unsigned i=s*8+v; struct kshim_boot_entry *e=&catalog.entries[i];
+-            strcpy(e->system,catalog.systems[s]);
++            unsigned i=s*8+v; struct kshim_boot_summary *e=&catalog.entries[i];
++            e->system=s;
+             snprintf(e->version,64,"kernel%u",v);
+-            snprintf(e->release,128,"6.12.%u",v);
++            snprintf(e->release,sizeof(e->release),"6.12.%u",v);
+             snprintf(e->title,96,"Linux system %u",s);
+-            catalog.current[i]=v == 0; catalog.previous[i]=v == 1;
++            e->current=v == 0; e->previous=v == 1;
+         }
+     }
+     const struct step last[]={{5,0,3,8000,"system2",NULL},{9,1,8,8000,"6.12.7","kernel7"}};
+@@ -79,7 +81,7 @@
+     strcpy(catalog.entries[2].release,catalog.entries[3].release);
+     const struct step same_release[]={{5,0,1,8000,NULL,NULL},{9,1,3,8000,"6.12.3","kernel2"}};
+     run("android",same_release,2,2);
+-    catalog.errors[0]=KSHIM_STORAGE_NOT_FOUND;
++    catalog.entries[0].error=KSHIM_STORAGE_NOT_FOUND;
+     strcpy(catalog.entries[0].title,"manifest error");
+     const struct step healthy[]={{5,0,1,8000,NULL,NULL},{9,1,4,8000,"6.12.3","kernel3"}};
+     run("android",healthy,2,3);
+@@ -94,14 +96,14 @@
+     /* NixOS IDs and releases can fill the protocol fields. Exercise both
+      * aliases and a broken current manifest without shortening the ID. */
+     for (unsigned i=0; i<2; ++i) {
+-        struct kshim_boot_entry *e=&catalog.entries[i];
++        struct kshim_boot_summary *e=&catalog.entries[i];
+         memset(e->release,'r',sizeof(e->release)-1);
+         e->release[sizeof(e->release)-1]='\0';
+         memset(e->version,'v',sizeof(e->version)-1);
+         e->version[0]='0'+i; e->version[sizeof(e->version)-1]='\0';
+         memset(e->title,'t',sizeof(e->title)-1);
+         e->title[sizeof(e->title)-1]='\0';
+-        catalog.errors[i]=0;
++        e->error=0;
+     }
+     const struct step long_current[]={{5,1,SIZE_MAX,8000,NULL,NULL},
+         {9,1,SIZE_MAX,8000,"(current) rrrrr","(current) ttttt"}};
+@@ -109,10 +111,26 @@
+     const struct step long_previous[]={{5,1,SIZE_MAX,8000,NULL,NULL},
+         {9,2,SIZE_MAX,8000,"(previous) rrrrr","(previous) ttttt"}};
+     run("system0/previous",long_previous,2,1);
+-    catalog.errors[0]=KSHIM_STORAGE_NOT_FOUND;
++    catalog.entries[0].error=KSHIM_STORAGE_NOT_FOUND;
+     const struct step broken_current[]={{5,1,SIZE_MAX,8000,NULL,NULL},
+         {9,1,SIZE_MAX,8000,"(current) ttttt",catalog.entries[0].version}};
+     run("system0/current",broken_current,2,0);
+-    puts("multi-kernel menu: systems, 8 kernels, aliases, pinned defaults, back, duplicate releases and error isolation passed");
++    for (unsigned v=8; v<24; ++v) {
++        struct kshim_boot_summary *e=&rows[24+v];
++        *e=rows[31];
++        snprintf(e->version,sizeof(e->version),"kernel%u",v);
++        snprintf(e->release,sizeof(e->release),"6.12.%u",v);
++    }
++    catalog.count=48;
++    const struct step paged[]={{5,0,4,8000,NULL,NULL},
++        {8,1,7,8000,"Next page",NULL},
++        {9,0,8,0,"Next page",NULL},
++        {9,0,7,0,"Previous page",NULL},
++        {9,0,5,0,"6.12.10","kernel10"}};
++    run("android",paged,5,34);
++    const struct step pinned_page[]={{5,4,SIZE_MAX,8000,NULL,NULL},
++        {8,6,SIZE_MAX,8000,"6.12.23","kernel23"}};
++    run("system3/kernel23",pinned_page,2,47);
++    puts("multi-kernel menu: paging, aliases, defaults, back and error isolation passed");
+     return 0;
+ }
+--- a/tests/test_boot_files.py
++++ b/tests/test_boot_files.py
+@@ -237,19 +237,14 @@
+             '--staging-root', str(self.tree), 'list', '--system', 'alpha'], text=True)
+         self.assertEqual([r['version'] for r in json.loads(listing)['kernels']], ['v4', 'v1', 'v2'])
+ 
+-    def test_kernel_limit_never_prunes_or_switches_silently(self):
+-        for v in range(2, 9):
++    def test_more_than_eight_kernels_keep_old_versions(self):
++        for v in range(2, 25):
+             self.publish('alpha', f'v{v}', image=self.small_image(f'v{v}'))
+         system = self.tree/'kshim/systems/alpha'
+-        original = (system/'entries.conf').read_bytes()
+-        with self.assertRaisesRegex(ValueError, 'menu is full'):
+-            self.publish('alpha', 'v9', image=self.small_image('v9'))
+-        self.assertEqual((system/'entries.conf').read_bytes(), original)
+-        self.assertFalse((system/'versions/v9').exists())
+-        boot_files.menu(argparse.Namespace(system='alpha', versions='v8,v7,v6,v5,v4,v3,v2'), self.tree)
++        self.assertEqual(boot_files.versions(system)['versions'],
++                         [f'v{v}' for v in range(24, 0, -1)])
+         self.assertTrue((system/'versions/v1/Image').is_file())
+-        self.publish('alpha', 'v9', image=self.small_image('v9'))
+-        self.assertEqual(self.check(self.ext4())['entries'], 8)
++        self.assertEqual(self.check(self.ext4())['entries'], 24)
+ 
+     def test_invalid_v2_lists_rejected_by_python_and_runtime(self):
+         path = self.tree/'kshim/systems/alpha/entries.conf'
+@@ -260,7 +255,6 @@
+             ('format=2\ncurrent=v1\nprevious=none\nversions=v1,../v2\n', -3),
+             ('format=2\ncurrent=v1\nprevious=none\nversions=v1,none\n', -3),
+             ('format=2\ncurrent=v1\nprevious=none\nversions=v1,\n', -3),
+-            ('format=2\ncurrent=v1\nprevious=none\nversions='+','.join(f'v{i}' for i in range(1, 10))+'\n', -3),
+             ('format=1\ncurrent=v1\nprevious=none\nversions=v1\n', -3),
+             ('format=2\ncurrent=v1\nprevious=none\nversions=v1\nunknown=1\n', -3),
+         ]:
+--- a/tools/boot_files.py
++++ b/tools/boot_files.py
+@@ -18,7 +18,7 @@
+ FILE_MAX = 128 * 1024 * 1024
+ TOTAL_MAX = 256 * 1024 * 1024
+ DTB_MAX = 1024 * 1024
+-VERSIONS_MAX = 8
++CONFIG_MAX = 8192
+ ID = re.compile(r'[A-Za-z0-9_-][A-Za-z0-9_.-]{0,62}\Z')
+ 
+ 
+@@ -67,7 +67,7 @@
+ 
+ 
+ def read_config(path, keys, optional=(), formats=('1',)):
+-    if path.is_symlink() or path.stat().st_size > 8192:
++    if path.is_symlink() or path.stat().st_size > CONFIG_MAX:
+         raise ValueError('Invalid configuration file')
+     result = {}
+     for line in path.read_text().splitlines():
+@@ -183,21 +183,27 @@
+ 
+ def version_list(value):
+     values = value.split(',')
+-    if not 1 <= len(values) <= VERSIONS_MAX or len(set(values)) != len(values):
+-        raise ValueError(f'Expected 1..{VERSIONS_MAX} unique versions')
++    if len(set(values)) != len(values):
++        raise ValueError('Expected unique versions')
+     for item in values:
+         identifier(item)
+     return values
+ 
+ 
+-def write_versions(system, current, previous, listed):
+-    # All callers hold the system lock. The menu and both aliases are switched
+-    # in one atomic configuration replacement; payload files are never deleted.
++def entries_config(current, previous, listed):
+     version_list(','.join(listed))
+     if current not in listed or current == previous or (previous != 'none' and previous not in listed):
+         raise ValueError('Invalid current/previous/menu selection')
+-    atomic_text(system/'entries.conf',
+-                f'format=2\ncurrent={current}\nprevious={previous}\nversions={",".join(listed)}\n')
++    text = f'format=2\ncurrent={current}\nprevious={previous}\nversions={",".join(listed)}\n'
++    if len(text.encode()) > CONFIG_MAX:
++        raise ValueError('entries.conf exceeds the loader configuration size limit')
++    return text
++
++
++def write_versions(system, current, previous, listed):
++    # All callers hold the system lock. Switch the menu and both aliases
++    # in one atomic replacement.
++    atomic_text(system/'entries.conf', entries_config(current, previous, listed))
+ 
+ 
+ def existing_system(boot, system_id):
+@@ -260,8 +266,8 @@
+         if final.exists() or final.is_symlink():
+             raise ValueError('Version exists; publish a NEW boot version ID')
+         listed = [boot_id] + (old['versions'] if old else [])
+-        if len(listed) > VERSIONS_MAX:
+-            raise ValueError('Kernel menu is full; use menu --versions to hide older entries first (files are retained)')
++        previous = old['current'] if old else 'none'
++        config = entries_config(boot_id, previous, listed)
+         sources = [('image', args.image, 'Image'), ('dtb', args.dtb, 'board.dtb')]
+         if args.initrd:
+             sources.append(('initrd', args.initrd, 'initramfs.img'))
+@@ -288,7 +294,7 @@
+                 fields['initrd'] = 'none'
+             fields['cmdline'] = cmdline
+             manifest = ''.join(f'{k}={v}\n' for k, v in fields.items())
+-            if len(manifest.encode()) > 8192:
++            if len(manifest.encode()) > CONFIG_MAX:
+                 raise ValueError('Manifest too large')
+             atomic_text(temporary/'manifest.conf', manifest)
+             sync_dir(temporary)
+@@ -296,8 +302,7 @@
+             sync_dir(store)
+             # A failure after this rename leaves an unreferenced complete
+             # version; the old selection remains valid until the final replace.
+-            previous = old['current'] if old else 'none'
+-            write_versions(system, boot_id, previous, listed)
++            atomic_text(system/'entries.conf', config)
+         finally:
+             if temporary.exists():
+                 shutil.rmtree(temporary)
+@@ -419,7 +424,7 @@
+     selection.add_argument('--version', required=True)
+     ordering = sub.add_parser('menu', help='Expose/reorder/hide kernel entries without deleting files')
+     ordering.add_argument('--system', required=True)
+-    ordering.add_argument('--versions', required=True, help='1..8 comma-separated version IDs; keep current and previous')
++    ordering.add_argument('--versions', required=True, help='Comma-separated version IDs; keep current and previous')
+     args = p.parse_args()
+     try:
+         actions = dict(publish=publish, configure=configure, rollback=rollback,
+--- a/tools/check_boot_files.c
++++ b/tools/check_boot_files.c
+@@ -77,15 +77,18 @@
+         rc=kshim_boot_choose(catalog,choose_menu,&choices,&selected);
+         if (!rc && *choices.next) rc=KSHIM_STORAGE_ARG;
+     }
+-    int payload_status[KSHIM_BOOT_ENTRIES_MAX]={0};
+-    unsigned char checked[KSHIM_BOOT_ENTRIES_MAX]={0};
++    int *payload_status=calloc(catalog->count ? catalog->count : 1,sizeof(*payload_status));
++    if (!payload_status) return 2;
++    struct kshim_boot_entry selected_entry={0};
+     char observed[3][65]={{0}};
+     int discovered=rc == 0;
+     for (unsigned i=0; discovered && i<catalog->count; ++i) {
+         if (script && i != selected) continue;
+-        checked[i]=1;
+-        struct kshim_boot_entry *e=&catalog->entries[i];
+-        int status=catalog->errors[i];
++        const struct kshim_boot_summary *row=&catalog->entries[i];
++        struct kshim_boot_entry entry={0}, *e=&entry;
++        int status=row->error;
++        if (!status) status=kshim_boot_open_entry(fs,catalog->systems[row->system],row->version,e);
++        if (!status && i == selected) selected_entry=entry;
+         const struct kshim_boot_file *files[]={&e->image,&e->dtb,&e->initrd};
+         for (unsigned j=0; !status && j<3; ++j) {
+             if (!files[j]->size) continue;
+@@ -104,18 +107,19 @@
+     printf("{\"status\":%d,\"entries\":%u,\"block_reads\":%llu,\"catalog\":[",rc,catalog->count,(unsigned long long)image.reads);
+     for (unsigned i=0; i<catalog->count; ++i) {
+         if (i) putchar(',');
+-        printf("{\"system\":"); json_string(catalog->entries[i].system);
++        printf("{\"system\":"); json_string(catalog->systems[catalog->entries[i].system]);
+         printf(",\"version\":"); json_string(catalog->entries[i].version);
+         printf(",\"release\":"); json_string(catalog->entries[i].release);
+         printf(",\"current\":%u,\"previous\":%u,\"payload_status\":%d,\"payload_checked\":%s}",
+-               catalog->current[i],catalog->previous[i],payload_status[i],checked[i] ? "true" : "false");
++               catalog->entries[i].current,catalog->entries[i].previous,payload_status[i],
++               discovered && (!script || i == selected) ? "true" : "false");
+     }
+     printf("],\"selection\":");
+     if (selected >= catalog->count) printf("null");
+     else {
+-        const struct kshim_boot_entry *e=&catalog->entries[selected];
+-        printf("{\"system\":"); json_string(e->system);
+-        printf(",\"version\":"); json_string(e->version);
++        const struct kshim_boot_entry *e=&selected_entry;
++        printf("{\"system\":"); json_string(catalog->systems[catalog->entries[selected].system]);
++        printf(",\"version\":"); json_string(catalog->entries[selected].version);
+         printf(",\"cmdline\":"); json_string(e->cmdline);
+         printf(",\"payload_sha256\":{\"image\":"); json_string(observed[0]);
+         printf(",\"dtb\":"); json_string(observed[1]);
+@@ -124,6 +128,8 @@
+         printf("}}");
+     }
+     printf("}\n");
++    free(payload_status);
++    kshim_boot_catalog_free(catalog);
+     free(fs);free(catalog);close(image.fd);
+     return rc ? 1 : 0;
+ }

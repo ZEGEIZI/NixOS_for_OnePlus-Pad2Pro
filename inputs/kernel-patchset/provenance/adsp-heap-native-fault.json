@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-11-13T22:13:52.459157+00:00",
+  "release": "7.3.4-erhai-p4",
+  "full_native_build": "failed at runtime; no valid native kernel output",
+  "build_log": "/tmp/erhai-p4-native-system-build.log",
+  "observation": "six synchronous external aborts while clear_page zeroes anonymous THP pages; processes deadlock in exit_mmap after the abort",
+  "taint": 144,
+  "faulting_instruction": "dc zva,x0",
+  "protected_pool": {
+    "node": "/reserved-memory/adsp-rpc-remote-heap",
+    "start": "0xfec00000",
+    "end": "0xff7fffff",
+    "size_MiB": 12,
+    "reusable": true
+  },
+  "cause": "7.3 FastRPC assigns the complete reserved ADSP heap to DSP VMIDs at probe, but its reusable CMA property leaves pages available to unrelated Linux allocations after HLOS access is revoked",
+  "source_fix": "4a4041f5921c6cbe29946bf36a1035b601ff3400",
+  "fix": "replace reusable with no-map in SM8750 ADSP reserved heap; retain size/alignment/below-4G placement",
+  "hardware_fix_verified": false,
+  "remaining": "replay/build/DTB checks, new normal boot and native-load validation",
+  "evidence": {
+    "native-build-full-dmesg.log": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-p4-running/native-build-full-dmesg.log",
+      "sha256": "7609dd540773db80af8723cc909418d2fa06aa6aba3c3dd5d1480024d641eff8"
+    },
+    "native-build-memory-map.log": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-p4-running/native-build-memory-map.log",
+      "sha256": "596d7ddf2e3e8080a087c6f1a1c56a588aea29feb958ec48509e81c5b3c8e39c"
+    },
+    "native-build-wait-diagnosis.json": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-p4-running/native-build-wait-diagnosis.json",
+      "sha256": "6853611aba3a3b2b604be8b93b3e375c1b010d3771c17966869db8c8b287d375"
+    },
+    "running-boot.dtb": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-p4-running/running-boot.dtb",
+      "sha256": "cd346937b353cdcc738d295f420ea51399bc29024fd277fe7bd14d203bdad0ec"
+    }
+  },
+  "additional_evidence": {
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-p4-running/linear-map-physical-check.json",
+    "sha256": "06a768b32c18b5f829c5349c3e1fdc38608ae976c264d2eb0a4434b64dbf54ff",
+    "observation": "All six 2MiB blocks at fec00000/fee00000/ff000000/ff200000/ff400000/ff600000 report compound-head and THP flags in /proc/kpageflags, confirming normal allocator use of the entire DSP-owned pool. /proc/kcore unavailable; no raw memory read."
+  }
+}

@@ -1,0 +1,6121 @@
+From fd5231089bf41fa2ed7f6893fa8fea19fa1de4b8 Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Fri, 13 Nov 2026 21:41:34 +0800
+Subject: [PATCH] erhai: port camera-and-video to Linux 7.3
+
+Source: https://github.com/ZEGEIZI/linux-sm8750-erhai/commit/efc39b9d972665c270adc4e4ec2c46685792ffda
+Extraction-group: fa2b1defdbf18c7a5db57eb1c26de56624a2100a
+
+Generated subsystem aggregation; original author and license notices are
+preserved in source. See patchset provenance/source-commits.tsv and
+provenance/port-7.3.json for historical sources and upstream equivalents.
+Upstream-status: downstream; hardware acceptance pending
+---
+ drivers/media/i2c/Kconfig                     |  23 +
+ drivers/media/i2c/Makefile                    |   3 +
+ drivers/media/i2c/cn3927.c                    | 327 +++++++
+ drivers/media/i2c/sc1300cs.c                  | 826 ++++++++++++++++++
+ drivers/media/i2c/sc820cs.c                   | 794 +++++++++++++++++
+ drivers/media/platform/qcom/camss/Kconfig     |   1 +
+ drivers/media/platform/qcom/camss/Makefile    |   3 +
+ .../platform/qcom/camss/camss-csid-980.c      | 479 ++++++++++
+ .../platform/qcom/camss/camss-csid-gen4.c     | 391 +++++++++
+ .../media/platform/qcom/camss/camss-csid.c    |  81 +-
+ .../media/platform/qcom/camss/camss-csid.h    |  14 +-
+ .../media/platform/qcom/camss/camss-csiphy.c  | 200 ++++-
+ .../media/platform/qcom/camss/camss-csiphy.h  |  12 +-
+ .../platform/qcom/camss/camss-tpg-gen1.c      |  28 +-
+ .../platform/qcom/camss/camss-vfe-gen4.c      | 201 +++++
+ drivers/media/platform/qcom/camss/camss-vfe.c |  32 +-
+ drivers/media/platform/qcom/camss/camss-vfe.h |   3 +
+ drivers/media/platform/qcom/camss/camss.c     | 561 +++++++++++-
+ drivers/media/platform/qcom/camss/camss.h     |   5 +
+ .../media/platform/qcom/iris/iris_buffer.c    |  30 +-
+ drivers/media/platform/qcom/iris/iris_core.c  |  10 +-
+ drivers/media/platform/qcom/iris/iris_core.h  |   5 +
+ drivers/media/platform/qcom/iris/iris_ctrls.c |   9 +
+ .../platform/qcom/iris/iris_hfi_common.c      |   3 +-
+ .../media/platform/qcom/iris/iris_hfi_gen2.c  |  20 +
+ .../qcom/iris/iris_hfi_gen2_command.c         |  18 +
+ .../qcom/iris/iris_hfi_gen2_defines.h         |   3 +
+ .../qcom/iris/iris_hfi_gen2_response.c        |   2 +-
+ .../platform/qcom/iris/iris_platform_common.h |   2 +
+ drivers/media/platform/qcom/iris/iris_probe.c |  11 +-
+ .../media/platform/qcom/iris/iris_resources.c |  16 +
+ .../media/platform/qcom/iris/iris_resources.h |   2 +
+ drivers/media/platform/qcom/iris/iris_vidc.c  |   3 +
+ .../platform/qcom/iris/iris_vpu_common.c      |  16 +-
+ .../qualcomm/phy-qcom-mipi-csi2-3ph-dphy.c    | 430 +++++++++
+ .../phy/qualcomm/phy-qcom-mipi-csi2-core.c    | 465 ++++++++++
+ drivers/phy/qualcomm/phy-qcom-mipi-csi2.h     | 100 +++
+ 37 files changed, 5033 insertions(+), 96 deletions(-)
+ create mode 100644 drivers/media/i2c/cn3927.c
+ create mode 100644 drivers/media/i2c/sc1300cs.c
+ create mode 100644 drivers/media/i2c/sc820cs.c
+ create mode 100644 drivers/media/platform/qcom/camss/camss-csid-980.c
+ create mode 100644 drivers/media/platform/qcom/camss/camss-csid-gen4.c
+ create mode 100644 drivers/media/platform/qcom/camss/camss-vfe-gen4.c
+ create mode 100644 drivers/phy/qualcomm/phy-qcom-mipi-csi2-3ph-dphy.c
+ create mode 100644 drivers/phy/qualcomm/phy-qcom-mipi-csi2-core.c
+ create mode 100644 drivers/phy/qualcomm/phy-qcom-mipi-csi2.h
+
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index 5c52007f9..5e6263354 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -169,6 +169,22 @@ config VIDEO_IMX214
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called imx214.
+ 
++config VIDEO_SC1300CS
++	tristate "SmartSens SC1300CS sensor support"
++	select V4L2_CCI_I2C
++	help
++	  V4L2 driver for the SmartSens SC1300CS RAW10 camera sensor.
++	  To compile this driver as a module, choose M here: the module
++	  will be called sc1300cs.
++
++config VIDEO_SC820CS
++	tristate "SmartSens SC820CS sensor support"
++	select V4L2_CCI_I2C
++	help
++	  V4L2 driver for the SmartSens SC820CS RAW10 camera sensor.
++	  To compile this driver as a module, choose M here: the module
++	  will be called sc820cs.
++
+ config VIDEO_IMX219
+ 	tristate "Sony IMX219 sensor support"
+ 	select V4L2_CCI_I2C
+@@ -941,6 +957,13 @@ config VIDEO_DW9768
+ 	  capability. This is designed for linear control of
+ 	  voice coil motors, controlled via I2C serial interface.
+ 
++config VIDEO_CN3927
++	tristate "Chipnext CN3927 lens voice coil support"
++	help
++	  V4L2 driver for the Chipnext CN3927 10-bit lens actuator.
++	  To compile this driver as a module, choose M here: the module
++	  will be called cn3927.
++
+ config VIDEO_DW9807_VCM
+ 	tristate "DW9807 lens voice coil support"
+ 	help
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index d04bd5724..b1f20b914 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -174,3 +174,6 @@ obj-$(CONFIG_VIDEO_VPX3220) += vpx3220.o
+ obj-$(CONFIG_VIDEO_WM8739) += wm8739.o
+ obj-$(CONFIG_VIDEO_WM8775) += wm8775.o
+ obj-$(CONFIG_VIDEO_INTEL_CVS) += cvs/
++obj-$(CONFIG_VIDEO_SC1300CS) += sc1300cs.o
++obj-$(CONFIG_VIDEO_SC820CS) += sc820cs.o
++obj-$(CONFIG_VIDEO_CN3927) += cn3927.o
+diff --git a/drivers/media/i2c/cn3927.c b/drivers/media/i2c/cn3927.c
+new file mode 100644
+index 000000000..e61113453
+--- /dev/null
++++ b/drivers/media/i2c/cn3927.c
+@@ -0,0 +1,327 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Chipnext CN3927 camera voice-coil motor driver
++ * Copyright (C) 2022 Rockchip Electronics Co., Ltd.
++ *
++ * Based on TheMojoMan's CN3927 driver in
++ * https://github.com/TheMojoMan/oneplus-erhai-linux
++ * revision 74ba8ddb4dc8fd930841b6802053b4362b59ce46.
++ * The unlock sequence and split DAC writes match the OnePlus Android
++ * actuator configuration. The focus DAC is 10 bits at registers 0x03/0x04.
++ */
++
++#include <linux/delay.h>
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/pm_runtime.h>
++#include <linux/regulator/consumer.h>
++
++#include <media/v4l2-ctrls.h>
++#include <media/v4l2-device.h>
++#include <media/v4l2-event.h>
++
++#define CN3927_NAME			"cn3927"
++#define CN3927_MAX_FOCUS_POS		1023
++#define CN3927_PARK_STEP		32
++#define CN3927_PARK_POSITION		32
++#define CN3927_MOVE_DELAY_US		1000
++#define CN3927_POWER_DELAY_US		10000
++
++/* Position DAC: MSB[1:0] at 0x03, LSB at 0x04. */
++#define CN3927_REG_POS_MSB		0x03
++#define CN3927_REG_POS_LSB		0x04
++
++struct cn3927_device {
++	struct v4l2_ctrl_handler controls;
++	struct v4l2_subdev subdev;
++	struct regulator_bulk_data supplies[2];
++	u16 focus;
++};
++
++static inline struct cn3927_device *to_cn3927(struct v4l2_subdev *subdev)
++{
++	return container_of(subdev, struct cn3927_device, subdev);
++}
++
++static int cn3927_write(struct cn3927_device *cn3927, u8 reg, u8 value)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(&cn3927->subdev);
++	u8 buf[] = { reg, value };
++	int ret;
++
++	ret = i2c_master_send(client, buf, sizeof(buf));
++	if (ret == sizeof(buf))
++		return 0;
++	return ret < 0 ? ret : -EIO;
++}
++
++static int cn3927_set_focus(struct cn3927_device *cn3927, u16 focus)
++{
++	int ret;
++
++	ret = cn3927_write(cn3927, CN3927_REG_POS_MSB, (focus >> 8) & 0x03);
++	if (ret)
++		return ret;
++
++	return cn3927_write(cn3927, CN3927_REG_POS_LSB, focus & 0xff);
++}
++
++static int cn3927_init(struct cn3927_device *cn3927)
++{
++	static const u8 init_sequence[][2] = {
++		{ 0xed, 0xab },
++		{ 0x06, 0x84 },
++		{ 0x07, 0x01 },
++		{ 0x08, 0x6f },
++	};
++	unsigned int i;
++	int ret;
++
++	for (i = 0; i < ARRAY_SIZE(init_sequence); i++) {
++		ret = cn3927_write(cn3927, init_sequence[i][0], init_sequence[i][1]);
++		if (ret)
++			return ret;
++	}
++	return 0;
++}
++
++static int cn3927_set_ctrl(struct v4l2_ctrl *ctrl)
++{
++	struct cn3927_device *cn3927 =
++		container_of(ctrl->handler, struct cn3927_device, controls);
++	int ret;
++
++	if (ctrl->id != V4L2_CID_FOCUS_ABSOLUTE)
++		return -EINVAL;
++
++	ret = pm_runtime_get_if_in_use(cn3927->subdev.dev);
++	if (ret < 0)
++		return ret;
++	if (!ret) {
++		cn3927->focus = ctrl->val;
++		return 0;
++	}
++
++	ret = cn3927_set_focus(cn3927, ctrl->val);
++	pm_runtime_put(cn3927->subdev.dev);
++	if (!ret)
++		cn3927->focus = ctrl->val;
++
++	return ret;
++}
++
++static const struct v4l2_ctrl_ops cn3927_ctrl_ops = {
++	.s_ctrl = cn3927_set_ctrl,
++};
++
++static int cn3927_open(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh)
++{
++	return pm_runtime_resume_and_get(subdev->dev);
++}
++
++static int cn3927_close(struct v4l2_subdev *subdev, struct v4l2_subdev_fh *fh)
++{
++	pm_runtime_put(subdev->dev);
++
++	return 0;
++}
++
++static const struct v4l2_subdev_internal_ops cn3927_internal_ops = {
++	.open = cn3927_open,
++	.close = cn3927_close,
++};
++
++static const struct v4l2_subdev_core_ops cn3927_core_ops = {
++	.log_status = v4l2_ctrl_subdev_log_status,
++	.subscribe_event = v4l2_ctrl_subdev_subscribe_event,
++	.unsubscribe_event = v4l2_event_subdev_unsubscribe,
++};
++
++static const struct v4l2_subdev_ops cn3927_subdev_ops = {
++	.core = &cn3927_core_ops,
++};
++
++static int cn3927_runtime_suspend(struct device *dev)
++{
++	struct v4l2_subdev *subdev = dev_get_drvdata(dev);
++	struct cn3927_device *cn3927 = to_cn3927(subdev);
++	int focus;
++	int err;
++	int ret;
++
++	focus = cn3927->focus & ~(CN3927_PARK_STEP - 1);
++	if (focus < CN3927_PARK_POSITION)
++		focus = CN3927_PARK_POSITION;
++
++	for (; focus >= CN3927_PARK_POSITION; focus -= CN3927_PARK_STEP) {
++		err = cn3927_set_focus(cn3927, focus);
++
++		if (err) {
++			dev_warn(dev, "failed to park lens: %d\n", err);
++			return -EBUSY;
++		}
++		usleep_range(CN3927_MOVE_DELAY_US, CN3927_MOVE_DELAY_US + 100);
++	}
++
++	/* A failed park leaves the device active and its supplies enabled. */
++	ret = regulator_bulk_disable(ARRAY_SIZE(cn3927->supplies), cn3927->supplies);
++	return ret;
++}
++
++static int cn3927_runtime_resume(struct device *dev)
++{
++	struct v4l2_subdev *subdev = dev_get_drvdata(dev);
++	struct cn3927_device *cn3927 = to_cn3927(subdev);
++	int focus;
++	int ret;
++
++	ret = regulator_bulk_enable(ARRAY_SIZE(cn3927->supplies),
++				    cn3927->supplies);
++	if (ret)
++		return ret;
++
++	/* Allow the VCM supply and its UVLO reset circuit to settle. */
++	usleep_range(CN3927_POWER_DELAY_US,
++		     CN3927_POWER_DELAY_US + 1000);
++
++	ret = cn3927_init(cn3927);
++	if (ret)
++		goto disable_supplies;
++
++	for (focus = 0; focus < cn3927->focus; focus += CN3927_PARK_STEP) {
++		ret = cn3927_set_focus(cn3927, focus);
++		if (ret)
++			goto disable_supplies;
++		usleep_range(CN3927_MOVE_DELAY_US,
++			     CN3927_MOVE_DELAY_US + 100);
++	}
++
++	ret = cn3927_set_focus(cn3927, cn3927->focus);
++	if (!ret)
++		return 0;
++
++disable_supplies:
++	regulator_bulk_disable(ARRAY_SIZE(cn3927->supplies),
++			       cn3927->supplies);
++
++	return ret;
++}
++
++static void cn3927_cleanup(struct cn3927_device *cn3927)
++{
++	v4l2_ctrl_handler_free(&cn3927->controls);
++	media_entity_cleanup(&cn3927->subdev.entity);
++}
++
++static int cn3927_probe(struct i2c_client *client)
++{
++	struct cn3927_device *cn3927;
++	int ret;
++
++	cn3927 = devm_kzalloc(&client->dev, sizeof(*cn3927), GFP_KERNEL);
++	if (!cn3927)
++		return -ENOMEM;
++
++	cn3927->supplies[0].supply = "vio";
++	cn3927->supplies[1].supply = "vaf";
++	ret = devm_regulator_bulk_get(&client->dev,
++				      ARRAY_SIZE(cn3927->supplies),
++				      cn3927->supplies);
++	if (ret)
++		return dev_err_probe(&client->dev, ret,
++				     "failed to get VCM supplies\n");
++
++	v4l2_i2c_subdev_init(&cn3927->subdev, client, &cn3927_subdev_ops);
++	cn3927->subdev.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE |
++				  V4L2_SUBDEV_FL_HAS_EVENTS;
++	cn3927->subdev.internal_ops = &cn3927_internal_ops;
++	cn3927->subdev.entity.function = MEDIA_ENT_F_LENS;
++	strscpy(cn3927->subdev.name, "cn3927 focus",
++		sizeof(cn3927->subdev.name));
++
++	v4l2_ctrl_handler_init(&cn3927->controls, 1);
++	v4l2_ctrl_new_std(&cn3927->controls, &cn3927_ctrl_ops,
++			  V4L2_CID_FOCUS_ABSOLUTE, 0,
++			  CN3927_MAX_FOCUS_POS, 1, 0);
++	if (cn3927->controls.error) {
++		ret = cn3927->controls.error;
++		goto err_free_controls;
++	}
++	cn3927->subdev.ctrl_handler = &cn3927->controls;
++
++	ret = media_entity_pads_init(&cn3927->subdev.entity, 0, NULL);
++	if (ret)
++		goto err_free_controls;
++
++	/*
++	 * The VCM is physically powered off at this point.  Initialise runtime
++	 * PM before publishing the subdevice: publishing it first allows udev or
++	 * libcamera to open the node while runtime PM still considers the device
++	 * active and skips the resume callback entirely.
++	 */
++	pm_runtime_set_suspended(&client->dev);
++	pm_runtime_enable(&client->dev);
++
++	ret = v4l2_async_register_subdev(&cn3927->subdev);
++	if (ret)
++		goto err_disable_pm;
++
++	return 0;
++
++err_disable_pm:
++	pm_runtime_disable(&client->dev);
++	media_entity_cleanup(&cn3927->subdev.entity);
++err_free_controls:
++	v4l2_ctrl_handler_free(&cn3927->controls);
++	return ret;
++}
++
++static void cn3927_remove(struct i2c_client *client)
++{
++	struct v4l2_subdev *subdev = i2c_get_clientdata(client);
++	struct cn3927_device *cn3927 = to_cn3927(subdev);
++
++	v4l2_async_unregister_subdev(subdev);
++	pm_runtime_disable(&client->dev);
++	if (!pm_runtime_status_suspended(&client->dev)) {
++		/* Unbind cannot defer parking: balance the remaining rail votes. */
++		if (cn3927_runtime_suspend(&client->dev))
++			regulator_bulk_disable(ARRAY_SIZE(cn3927->supplies),
++					       cn3927->supplies);
++	}
++	pm_runtime_set_suspended(&client->dev);
++	cn3927_cleanup(cn3927);
++}
++
++static const struct of_device_id cn3927_of_match[] = {
++	{ .compatible = "chipnext,cn3927" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, cn3927_of_match);
++
++static const struct i2c_device_id cn3927_id_table[] = {
++	{ CN3927_NAME },
++	{ }
++};
++MODULE_DEVICE_TABLE(i2c, cn3927_id_table);
++
++static const struct dev_pm_ops cn3927_pm_ops = {
++	RUNTIME_PM_OPS(cn3927_runtime_suspend, cn3927_runtime_resume, NULL)
++};
++
++static struct i2c_driver cn3927_i2c_driver = {
++	.driver = {
++		.name = CN3927_NAME,
++		.of_match_table = cn3927_of_match,
++		.pm = pm_ptr(&cn3927_pm_ops),
++	},
++	.probe = cn3927_probe,
++	.remove = cn3927_remove,
++	.id_table = cn3927_id_table,
++};
++module_i2c_driver(cn3927_i2c_driver);
++
++MODULE_AUTHOR("Nabu Linux contributors");
++MODULE_AUTHOR("TheMojoMan <themojoman@gmx.net>");
++MODULE_DESCRIPTION("Chipnext CN3927 camera lens driver");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/media/i2c/sc1300cs.c b/drivers/media/i2c/sc1300cs.c
+new file mode 100644
+index 000000000..1343edc32
+--- /dev/null
++++ b/drivers/media/i2c/sc1300cs.c
+@@ -0,0 +1,826 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * SmartSens SC1300CS camera sensor
++ *
++ * Based on TheMojoMan's sc1320cs driver in
++ * https://github.com/TheMojoMan/oneplus-erhai-linux
++ * revision 74ba8ddb4dc8fd930841b6802053b4362b59ce46.
++ * Register sequences originate from Android bus captures, not a datasheet.
++ * The original attribution is retained:
++ * Copyright (c) Qualcomm Innovation Center, Inc. All rights reserved.
++ *
++ * Exposure and gain encoding is based on the GPL-2.0 vendor sensor driver:
++ * Copyright (C) 2015 MediaTek Inc.
++ * https://github.com/oppo-source/android_kernel_oppo_mt6835
++ * revision 9c93b939b3198a82775bbe3fb74f6e647b533825.
++ */
++
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/gpio/consumer.h>
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/pm_runtime.h>
++#include <linux/regulator/consumer.h>
++
++#include <media/v4l2-cci.h>
++#include <media/v4l2-ctrls.h>
++#include <media/v4l2-device.h>
++#include <media/v4l2-event.h>
++#include <media/v4l2-fwnode.h>
++#include <media/v4l2-subdev.h>
++
++#define SC1300CS_CHIP_ID		0xc658
++#define SC1300CS_WIDTH		4160
++#define SC1300CS_HEIGHT		3120
++#define SC1300CS_HTS		1250
++/* Four output pixels per 120 MHz timing-clock tick. */
++#define SC1300CS_LINE_LENGTH	(SC1300CS_HTS * 4)
++#define SC1300CS_VTS		3200
++#define SC1300CS_VTS_MAX		0x7ffe
++#define SC1300CS_EXPOSURE_MARGIN	5
++#define SC1300CS_PIXEL_RATE	480000000
++#define SC1300CS_XCLK_RATE	24000000
++
++#define SC1300CS_REG_MIRROR_FLIP	CCI_REG8(0x3221)
++#define SC1300CS_MIRROR		0x06
++#define SC1300CS_FLIP		0x60
++
++static const s64 sc1300cs_link_freqs[] = { 600000000 };
++/* Power-on order: I/O, digital core, analogue. */
++static const char * const sc1300cs_supply_names[] = { "dovdd", "dvdd", "avdd" };
++
++struct sc1300cs {
++	struct device *dev;
++	struct regmap *regmap;
++	struct clk *xclk;
++	struct gpio_desc *reset;
++	struct regulator_bulk_data supplies[3];
++	struct v4l2_subdev sd;
++	struct media_pad pad;
++	struct v4l2_ctrl_handler ctrls;
++	struct v4l2_ctrl *exposure;
++	struct v4l2_ctrl *hblank;
++	struct v4l2_ctrl *vblank;
++	struct v4l2_ctrl *hflip;
++	struct v4l2_ctrl *vflip;
++	const struct sc1300cs_mode *mode;
++};
++
++static inline struct sc1300cs *to_sc1300cs(struct v4l2_subdev *sd)
++{
++	return container_of(sd, struct sc1300cs, sd);
++}
++
++/*
++ * The colour filter array is RGGB. Mirroring and flipping move the first
++ * pixel read out, so each flip changes the Bayer order.
++ */
++static u32 sc1300cs_mbus_code(struct sc1300cs *sensor)
++{
++	static const u32 codes[2][2] = {
++		{ MEDIA_BUS_FMT_SRGGB10_1X10, MEDIA_BUS_FMT_SGRBG10_1X10 },
++		{ MEDIA_BUS_FMT_SGBRG10_1X10, MEDIA_BUS_FMT_SBGGR10_1X10 },
++	};
++
++	return codes[sensor->vflip->val][sensor->hflip->val];
++}
++
++/*
++ * Native RAW10 register sequence from the Android sensor library's bus
++ * traffic, as published with the sc1320cs driver. Reset and stream-on
++ * are issued separately. Timing and exposure controls replace the captured
++ * automatic-exposure values before streaming starts.
++ */
++static const struct cci_reg_sequence sc1300cs_mode[] = {
++	{ CCI_REG8(0x36e9), 0x80 },
++	{ CCI_REG8(0x37f9), 0x80 },
++	{ CCI_REG8(0x36ea), 0x13 },
++	{ CCI_REG8(0x36eb), 0x0c },
++	{ CCI_REG8(0x36ec), 0x4b },
++	{ CCI_REG8(0x36ed), 0x18 },
++	{ CCI_REG8(0x36e9), 0x23 },
++	{ CCI_REG8(0x37f9), 0x24 },
++	{ CCI_REG8(0x301f), 0x31 },
++	{ CCI_REG8(0x320c), 0x04 },
++	{ CCI_REG8(0x320d), 0xe2 },
++	{ CCI_REG8(0x320e), 0x0c },
++	{ CCI_REG8(0x320f), 0x80 },
++	{ CCI_REG8(0x3279), 0x10 },
++	{ CCI_REG8(0x3301), 0x07 },
++	{ CCI_REG8(0x3302), 0x18 },
++	{ CCI_REG8(0x3304), 0x38 },
++	{ CCI_REG8(0x3306), 0x58 },
++	{ CCI_REG8(0x3308), 0x0c },
++	{ CCI_REG8(0x3309), 0x80 },
++	{ CCI_REG8(0x330b), 0xb8 },
++	{ CCI_REG8(0x330d), 0x10 },
++	{ CCI_REG8(0x330e), 0x2b },
++	{ CCI_REG8(0x3314), 0x15 },
++	{ CCI_REG8(0x331c), 0x04 },
++	{ CCI_REG8(0x331e), 0x29 },
++	{ CCI_REG8(0x331f), 0x71 },
++	{ CCI_REG8(0x3320), 0x08 },
++	{ CCI_REG8(0x3323), 0x04 },
++	{ CCI_REG8(0x3333), 0x10 },
++	{ CCI_REG8(0x3334), 0x40 },
++	{ CCI_REG8(0x3351), 0x06 },
++	{ CCI_REG8(0x335d), 0x60 },
++	{ CCI_REG8(0x3364), 0x56 },
++	{ CCI_REG8(0x337f), 0x13 },
++	{ CCI_REG8(0x3390), 0x09 },
++	{ CCI_REG8(0x3391), 0x0f },
++	{ CCI_REG8(0x3392), 0x1f },
++	{ CCI_REG8(0x3393), 0x10 },
++	{ CCI_REG8(0x3394), 0x1c },
++	{ CCI_REG8(0x3395), 0x20 },
++	{ CCI_REG8(0x33ac), 0x0a },
++	{ CCI_REG8(0x33ad), 0x14 },
++	{ CCI_REG8(0x33ae), 0x14 },
++	{ CCI_REG8(0x33af), 0x60 },
++	{ CCI_REG8(0x33b0), 0x0f },
++	{ CCI_REG8(0x33b2), 0x50 },
++	{ CCI_REG8(0x33b3), 0x28 },
++	{ CCI_REG8(0x349f), 0x1e },
++	{ CCI_REG8(0x34a6), 0x08 },
++	{ CCI_REG8(0x34a7), 0x09 },
++	{ CCI_REG8(0x34a8), 0x18 },
++	{ CCI_REG8(0x34a9), 0x18 },
++	{ CCI_REG8(0x34f8), 0x0f },
++	{ CCI_REG8(0x34f9), 0x18 },
++	{ CCI_REG8(0x3630), 0xc6 },
++	{ CCI_REG8(0x3637), 0x47 },
++	{ CCI_REG8(0x363c), 0x8d },
++	{ CCI_REG8(0x3650), 0x21 },
++	{ CCI_REG8(0x3651), 0x9f },
++	{ CCI_REG8(0x3670), 0x0c },
++	{ CCI_REG8(0x367b), 0x56 },
++	{ CCI_REG8(0x367c), 0x67 },
++	{ CCI_REG8(0x367d), 0x67 },
++	{ CCI_REG8(0x367e), 0x08 },
++	{ CCI_REG8(0x367f), 0x0f },
++	{ CCI_REG8(0x3690), 0x84 },
++	{ CCI_REG8(0x3691), 0x87 },
++	{ CCI_REG8(0x3692), 0x8e },
++	{ CCI_REG8(0x3693), 0x9b },
++	{ CCI_REG8(0x3694), 0x09 },
++	{ CCI_REG8(0x3695), 0x0b },
++	{ CCI_REG8(0x3696), 0x0f },
++	{ CCI_REG8(0x3697), 0x8b },
++	{ CCI_REG8(0x3698), 0x8d },
++	{ CCI_REG8(0x3699), 0x8d },
++	{ CCI_REG8(0x369a), 0x08 },
++	{ CCI_REG8(0x369b), 0x0f },
++	{ CCI_REG8(0x370f), 0x01 },
++	{ CCI_REG8(0x3724), 0x41 },
++	{ CCI_REG8(0x3771), 0x03 },
++	{ CCI_REG8(0x3772), 0x03 },
++	{ CCI_REG8(0x3773), 0x63 },
++	{ CCI_REG8(0x377a), 0x08 },
++	{ CCI_REG8(0x377b), 0x0f },
++	{ CCI_REG8(0x3900), 0x0d },
++	{ CCI_REG8(0x3903), 0x20 },
++	{ CCI_REG8(0x3905), 0x0c },
++	{ CCI_REG8(0x3908), 0x40 },
++	{ CCI_REG8(0x391a), 0x30 },
++	{ CCI_REG8(0x391b), 0x21 },
++	{ CCI_REG8(0x391c), 0x13 },
++	{ CCI_REG8(0x391d), 0x00 },
++	{ CCI_REG8(0x391f), 0x41 },
++	{ CCI_REG8(0x3926), 0xe0 },
++	{ CCI_REG8(0x393f), 0x80 },
++	{ CCI_REG8(0x3940), 0x00 },
++	{ CCI_REG8(0x3941), 0x00 },
++	{ CCI_REG8(0x3942), 0x00 },
++	{ CCI_REG8(0x3943), 0x7c },
++	{ CCI_REG8(0x3944), 0x79 },
++	{ CCI_REG8(0x3945), 0x7d },
++	{ CCI_REG8(0x3946), 0x7d },
++	{ CCI_REG8(0x39dd), 0x00 },
++	{ CCI_REG8(0x39de), 0x04 },
++	{ CCI_REG8(0x39e7), 0x04 },
++	{ CCI_REG8(0x39e8), 0x03 },
++	{ CCI_REG8(0x39e9), 0x80 },
++	{ CCI_REG8(0x3e00), 0x01 },
++	{ CCI_REG8(0x3e01), 0x8f },
++	{ CCI_REG8(0x3e02), 0x90 },
++	{ CCI_REG8(0x3f08), 0x0a },
++	{ CCI_REG8(0x4401), 0x13 },
++	{ CCI_REG8(0x4402), 0x03 },
++	{ CCI_REG8(0x4403), 0x0c },
++	{ CCI_REG8(0x4404), 0x24 },
++	{ CCI_REG8(0x4405), 0x2f },
++	{ CCI_REG8(0x440c), 0x3c },
++	{ CCI_REG8(0x440d), 0x3c },
++	{ CCI_REG8(0x440e), 0x2d },
++	{ CCI_REG8(0x440f), 0x4b },
++	{ CCI_REG8(0x4413), 0x01 },
++	{ CCI_REG8(0x441b), 0x18 },
++	{ CCI_REG8(0x4509), 0x18 },
++	{ CCI_REG8(0x450d), 0x13 },
++	{ CCI_REG8(0x4800), 0x24 },
++	{ CCI_REG8(0x4837), 0x17 },
++	{ CCI_REG8(0x5000), 0x1e },
++	{ CCI_REG8(0x5002), 0x00 },
++	{ CCI_REG8(0x5015), 0x41 },
++	{ CCI_REG8(0x550e), 0x00 },
++	{ CCI_REG8(0x550f), 0x7a },
++	{ CCI_REG8(0x5780), 0x76 },
++	{ CCI_REG8(0x5784), 0x08 },
++	{ CCI_REG8(0x5787), 0x0a },
++	{ CCI_REG8(0x5788), 0x0a },
++	{ CCI_REG8(0x5789), 0x0a },
++	{ CCI_REG8(0x578a), 0x0a },
++	{ CCI_REG8(0x578b), 0x0a },
++	{ CCI_REG8(0x578c), 0x0a },
++	{ CCI_REG8(0x578d), 0x40 },
++	{ CCI_REG8(0x5790), 0x08 },
++	{ CCI_REG8(0x5791), 0x04 },
++	{ CCI_REG8(0x5792), 0x04 },
++	{ CCI_REG8(0x5793), 0x08 },
++	{ CCI_REG8(0x5794), 0x04 },
++	{ CCI_REG8(0x5795), 0x04 },
++	{ CCI_REG8(0x5799), 0x44 },
++	{ CCI_REG8(0x57a6), 0x1c },
++	{ CCI_REG8(0x57aa), 0xeb },
++	{ CCI_REG8(0x57ab), 0x7f },
++	{ CCI_REG8(0x57ac), 0x00 },
++	{ CCI_REG8(0x57ad), 0x00 },
++	{ CCI_REG8(0x58e0), 0xb4 },
++	{ CCI_REG8(0x3200), 0x00 },
++	{ CCI_REG8(0x3201), 0x00 },
++	{ CCI_REG8(0x3202), 0x00 },
++	{ CCI_REG8(0x3203), 0x00 },
++	{ CCI_REG8(0x3204), 0x10 },
++	{ CCI_REG8(0x3205), 0x7f },
++	{ CCI_REG8(0x3206), 0x0c },
++	{ CCI_REG8(0x3207), 0x3f },
++	{ CCI_REG8(0x3208), 0x10 },
++	{ CCI_REG8(0x3209), 0x40 },
++	{ CCI_REG8(0x320a), 0x0c },
++	{ CCI_REG8(0x320b), 0x30 },
++	{ CCI_REG8(0x3210), 0x00 },
++	{ CCI_REG8(0x3211), 0x20 },
++	{ CCI_REG8(0x3212), 0x00 },
++	{ CCI_REG8(0x3213), 0x08 },
++	{ CCI_REG8(0x3215), 0x11 },
++	{ CCI_REG8(0x3220), 0x00 },
++	/* Native readout; the flip controls program this register. */
++	{ CCI_REG8(0x3221), 0x00 },
++	{ CCI_REG8(0x5000), 0x1e },
++	{ CCI_REG8(0x5900), 0x01 },
++	{ CCI_REG8(0x5901), 0x00 },
++	{ CCI_REG8(0x301f), 0x00 },
++	{ CCI_REG8(0x326d), 0x00 },
++	{ CCI_REG8(0x320e), 0x19 },
++	{ CCI_REG8(0x320f), 0x04 },
++	{ CCI_REG8(0x3e20), 0x00 },
++	{ CCI_REG8(0x3e00), 0x03 },
++	{ CCI_REG8(0x3e01), 0x1f },
++	{ CCI_REG8(0x3e02), 0xe0 },
++	{ CCI_REG8(0x3e09), 0x0f },
++	{ CCI_REG8(0x3e07), 0x80 },
++	{ CCI_REG8(0x301f), 0x00 },
++	{ CCI_REG8(0x3337), 0x00 },
++	{ CCI_REG8(0x391f), 0x41 },
++};
++
++/*
++ * 2x2 binning, from the stock camera module data: the registers that differ
++ * from the full-resolution sequence above. Line length and frame length are
++ * unchanged, so the line time and the frame rate stay the same.
++ */
++static const struct cci_reg_sequence sc1300cs_binning[] = {
++	{ CCI_REG8(0x3208), 0x08 },
++	{ CCI_REG8(0x3209), 0x38 },
++	{ CCI_REG8(0x320a), 0x06 },
++	{ CCI_REG8(0x320b), 0x18 },
++	{ CCI_REG8(0x3211), 0x04 },
++	{ CCI_REG8(0x3213), 0x04 },
++	{ CCI_REG8(0x3215), 0x31 },
++	{ CCI_REG8(0x3220), 0x01 },
++	{ CCI_REG8(0x5000), 0x5e },
++	{ CCI_REG8(0x5901), 0x04 },
++};
++
++struct sc1300cs_mode {
++	u32 width;
++	u32 height;
++	const struct cci_reg_sequence *regs;
++	unsigned int num_regs;
++};
++
++static const struct sc1300cs_mode sc1300cs_modes[] = {
++	{ .width = SC1300CS_WIDTH, .height = SC1300CS_HEIGHT },
++	{ .width = 2104, .height = 1560, .regs = sc1300cs_binning,
++	  .num_regs = ARRAY_SIZE(sc1300cs_binning) },
++};
++
++static int sc1300cs_power_on(struct device *dev)
++{
++	struct sc1300cs *sensor = to_sc1300cs(dev_get_drvdata(dev));
++	int i, ret;
++
++	for (i = 0; i < ARRAY_SIZE(sensor->supplies); i++) {
++		ret = regulator_enable(sensor->supplies[i].consumer);
++		if (ret)
++			goto disable_supplies;
++		usleep_range(1000, 1500);
++	}
++
++	/* Keep reset asserted until the input clock is running. */
++	ret = clk_prepare_enable(sensor->xclk);
++	if (ret)
++		goto disable_supplies;
++	usleep_range(1000, 1500);
++	gpiod_set_value_cansleep(sensor->reset, 0);
++	usleep_range(10000, 12000);
++
++	return 0;
++
++disable_supplies:
++	while (i--) {
++		regulator_disable(sensor->supplies[i].consumer);
++		usleep_range(1000, 1500);
++	}
++	return ret;
++}
++
++static int sc1300cs_power_off(struct device *dev)
++{
++	struct sc1300cs *sensor = to_sc1300cs(dev_get_drvdata(dev));
++	int i;
++
++	clk_disable_unprepare(sensor->xclk);
++	usleep_range(5000, 5500);
++	gpiod_set_value_cansleep(sensor->reset, 1);
++	usleep_range(1000, 1500);
++	for (i = ARRAY_SIZE(sensor->supplies) - 1; i >= 0; i--) {
++		regulator_disable(sensor->supplies[i].consumer);
++		usleep_range(1000, 1500);
++	}
++	return 0;
++}
++
++static int sc1300cs_set_exposure(struct sc1300cs *sensor, unsigned int lines)
++{
++	/* Exposure is encoded in half-lines in bits 19:4. */
++	return cci_write(sensor->regmap, CCI_REG24(0x3e00), lines << 5, NULL);
++}
++
++static int sc1300cs_set_ctrl(struct v4l2_ctrl *ctrl)
++{
++	struct sc1300cs *sensor = container_of(ctrl->handler, struct sc1300cs, ctrls);
++	static const u8 coarse_gain[] = { 0x00, 0x08, 0x09, 0x0b, 0x0f };
++	unsigned int stage;
++	int ret, exposure_max;
++
++	if (ctrl->id == V4L2_CID_VBLANK) {
++		exposure_max = (sensor->mode->height + ctrl->val - SC1300CS_EXPOSURE_MARGIN) & ~1;
++		ret = __v4l2_ctrl_modify_range(sensor->exposure, 4, exposure_max,
++					       2, min(exposure_max, 1000));
++		if (ret)
++			return ret;
++	}
++
++	if (ctrl->id == V4L2_CID_HFLIP || ctrl->id == V4L2_CID_VFLIP) {
++		struct v4l2_subdev_state *state =
++			v4l2_subdev_get_locked_active_state(&sensor->sd);
++
++		v4l2_subdev_state_get_format(state, 0)->code = sc1300cs_mbus_code(sensor);
++	}
++
++	ret = pm_runtime_get_if_in_use(sensor->dev);
++	if (ret <= 0)
++		return ret;
++	ret = 0;
++
++	switch (ctrl->id) {
++	case V4L2_CID_EXPOSURE:
++		ret = sc1300cs_set_exposure(sensor, ctrl->val);
++		break;
++	case V4L2_CID_VBLANK:
++		/* Clamp the shutter before shortening the frame. */
++		ret = sc1300cs_set_exposure(sensor, sensor->exposure->val);
++		cci_write(sensor->regmap, CCI_REG16(0x320e),
++			  sensor->mode->height + ctrl->val, &ret);
++		break;
++	case V4L2_CID_ANALOGUE_GAIN:
++		/* Vendor gain encoding: 1024 represents unity. */
++		stage = fls(ctrl->val / 1024) - 1;
++		cci_write(sensor->regmap, CCI_REG8(0x3e09), coarse_gain[stage], &ret);
++		cci_write(sensor->regmap, CCI_REG8(0x3e07),
++			  (ctrl->val >> stage) >> 3, &ret);
++		break;
++	case V4L2_CID_HFLIP:
++	case V4L2_CID_VFLIP:
++		ret = cci_write(sensor->regmap, SC1300CS_REG_MIRROR_FLIP,
++				(sensor->hflip->val ? SC1300CS_MIRROR : 0) |
++				(sensor->vflip->val ? SC1300CS_FLIP : 0), NULL);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++	pm_runtime_put(sensor->dev);
++	return ret;
++}
++
++static const struct v4l2_ctrl_ops sc1300cs_ctrl_ops = {
++	.s_ctrl = sc1300cs_set_ctrl,
++};
++
++static int sc1300cs_init_controls(struct sc1300cs *sensor)
++{
++	struct v4l2_ctrl_handler *hdl = &sensor->ctrls;
++	struct v4l2_fwnode_device_properties props;
++	struct v4l2_ctrl *ctrl;
++	int ret;
++
++	v4l2_ctrl_handler_init(hdl, 11);
++	ctrl = v4l2_ctrl_new_int_menu(hdl, NULL, V4L2_CID_LINK_FREQ, 0, 0,
++				      sc1300cs_link_freqs);
++	if (ctrl)
++		ctrl->flags |= V4L2_CTRL_FLAG_READ_ONLY;
++	v4l2_ctrl_new_std(hdl, NULL, V4L2_CID_PIXEL_RATE, SC1300CS_PIXEL_RATE,
++			  SC1300CS_PIXEL_RATE, 1, SC1300CS_PIXEL_RATE);
++	sensor->hblank = v4l2_ctrl_new_std(hdl, NULL, V4L2_CID_HBLANK,
++				 SC1300CS_LINE_LENGTH - SC1300CS_WIDTH,
++				 SC1300CS_LINE_LENGTH - SC1300CS_WIDTH, 1,
++				 SC1300CS_LINE_LENGTH - SC1300CS_WIDTH);
++	if (sensor->hblank)
++		sensor->hblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
++	sensor->vblank = v4l2_ctrl_new_std(hdl, &sc1300cs_ctrl_ops, V4L2_CID_VBLANK,
++					 SC1300CS_VTS - SC1300CS_HEIGHT,
++					 SC1300CS_VTS_MAX - SC1300CS_HEIGHT, 2,
++					 SC1300CS_VTS - SC1300CS_HEIGHT);
++	sensor->exposure = v4l2_ctrl_new_std(hdl, &sc1300cs_ctrl_ops, V4L2_CID_EXPOSURE,
++					   4, (SC1300CS_VTS - SC1300CS_EXPOSURE_MARGIN) & ~1,
++					   2, 1000);
++	v4l2_ctrl_new_std(hdl, &sc1300cs_ctrl_ops, V4L2_CID_ANALOGUE_GAIN,
++			  1024, 16384, 8, 1024);
++	sensor->hflip = v4l2_ctrl_new_std(hdl, &sc1300cs_ctrl_ops, V4L2_CID_HFLIP,
++					0, 1, 1, 0);
++	if (sensor->hflip)
++		sensor->hflip->flags |= V4L2_CTRL_FLAG_MODIFY_LAYOUT;
++	sensor->vflip = v4l2_ctrl_new_std(hdl, &sc1300cs_ctrl_ops, V4L2_CID_VFLIP,
++					0, 1, 1, 0);
++	if (sensor->vflip)
++		sensor->vflip->flags |= V4L2_CTRL_FLAG_MODIFY_LAYOUT;
++	if (hdl->error) {
++		ret = hdl->error;
++		goto free_controls;
++	}
++	ret = v4l2_fwnode_device_parse(sensor->dev, &props);
++	if (ret)
++		goto free_controls;
++	ret = v4l2_ctrl_new_fwnode_properties(hdl, &sc1300cs_ctrl_ops, &props);
++	if (ret)
++		goto free_controls;
++	sensor->sd.ctrl_handler = hdl;
++	return 0;
++
++free_controls:
++	v4l2_ctrl_handler_free(hdl);
++	return ret;
++}
++
++static int sc1300cs_enable_streams(struct v4l2_subdev *sd,
++				 struct v4l2_subdev_state *state,
++				 u32 pad, u64 streams_mask)
++{
++	struct sc1300cs *sensor = to_sc1300cs(sd);
++	int ret;
++
++	ret = pm_runtime_resume_and_get(sensor->dev);
++	if (ret < 0)
++		return ret;
++	ret = cci_write(sensor->regmap, CCI_REG8(0x0103), 1, NULL);
++	if (ret)
++		goto power_off;
++	usleep_range(10000, 11000);
++	ret = cci_multi_reg_write(sensor->regmap, sc1300cs_mode,
++				  ARRAY_SIZE(sc1300cs_mode), NULL);
++	if (sensor->mode->num_regs)
++		cci_multi_reg_write(sensor->regmap, sensor->mode->regs,
++				    sensor->mode->num_regs, &ret);
++	cci_write(sensor->regmap, CCI_REG16(0x320c), SC1300CS_HTS, &ret);
++	if (ret)
++		goto power_off;
++	ret = __v4l2_ctrl_handler_setup(&sensor->ctrls);
++	if (ret)
++		goto power_off;
++	ret = cci_write(sensor->regmap, CCI_REG8(0x0100), 1, NULL);
++	if (ret)
++		goto power_off;
++	/* The flips change the Bayer order; keep them fixed while streaming. */
++	__v4l2_ctrl_grab(sensor->hflip, true);
++	__v4l2_ctrl_grab(sensor->vflip, true);
++	return 0;
++power_off:
++	pm_runtime_put_sync(sensor->dev);
++	return ret;
++}
++
++static int sc1300cs_disable_streams(struct v4l2_subdev *sd,
++				  struct v4l2_subdev_state *state,
++				  u32 pad, u64 streams_mask)
++{
++	struct sc1300cs *sensor = to_sc1300cs(sd);
++	int ret;
++
++	ret = cci_write(sensor->regmap, CCI_REG8(0x0100), 0, NULL);
++	__v4l2_ctrl_grab(sensor->hflip, false);
++	__v4l2_ctrl_grab(sensor->vflip, false);
++	pm_runtime_put_sync(sensor->dev);
++	return ret;
++}
++
++static int sc1300cs_set_format(struct v4l2_subdev *sd,
++			     struct v4l2_subdev_state *state,
++			     struct v4l2_subdev_format *fmt)
++{
++	struct sc1300cs *sensor = to_sc1300cs(sd);
++	const struct sc1300cs_mode *mode;
++	int ret;
++
++	if (fmt->which == V4L2_SUBDEV_FORMAT_ACTIVE && sd->enabled_pads)
++		return -EBUSY;
++
++	mode = v4l2_find_nearest_size(sc1300cs_modes, ARRAY_SIZE(sc1300cs_modes),
++				      width, height, fmt->format.width,
++				      fmt->format.height);
++	fmt->format = (struct v4l2_mbus_framefmt) {
++		.width = mode->width,
++		.height = mode->height,
++		.code = sc1300cs_mbus_code(sensor),
++		.field = V4L2_FIELD_NONE,
++		.colorspace = V4L2_COLORSPACE_RAW,
++		.ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT,
++		.quantization = V4L2_QUANTIZATION_FULL_RANGE,
++		.xfer_func = V4L2_XFER_FUNC_NONE,
++	};
++	*v4l2_subdev_state_get_format(state, 0) = fmt->format;
++	/* Both modes read out the whole array; binning halves each axis. */
++	*v4l2_subdev_state_get_crop(state, 0) = (struct v4l2_rect) {
++		.width = SC1300CS_WIDTH,
++		.height = SC1300CS_HEIGHT,
++	};
++	if (fmt->which != V4L2_SUBDEV_FORMAT_ACTIVE)
++		return 0;
++
++	sensor->mode = mode;
++	ret = __v4l2_ctrl_modify_range(sensor->hblank,
++				       SC1300CS_LINE_LENGTH - mode->width,
++				       SC1300CS_LINE_LENGTH - mode->width, 1,
++				       SC1300CS_LINE_LENGTH - mode->width);
++	if (ret)
++		return ret;
++	ret = __v4l2_ctrl_modify_range(sensor->vblank,
++				       SC1300CS_VTS - mode->height,
++				       SC1300CS_VTS_MAX - mode->height,
++				       sensor->vblank->step,
++				       SC1300CS_VTS - mode->height);
++	if (ret)
++		return ret;
++	return __v4l2_ctrl_s_ctrl(sensor->vblank, SC1300CS_VTS - mode->height);
++}
++
++static int sc1300cs_init_state(struct v4l2_subdev *sd,
++			     struct v4l2_subdev_state *state)
++{
++	struct v4l2_subdev_format fmt = { .pad = 0 };
++
++	return sc1300cs_set_format(sd, state, &fmt);
++}
++
++static int sc1300cs_enum_mbus_code(struct v4l2_subdev *sd,
++				 struct v4l2_subdev_state *state,
++				 struct v4l2_subdev_mbus_code_enum *code)
++{
++	if (code->index)
++		return -EINVAL;
++	code->code = sc1300cs_mbus_code(to_sc1300cs(sd));
++	return 0;
++}
++
++static int sc1300cs_enum_frame_size(struct v4l2_subdev *sd,
++				  struct v4l2_subdev_state *state,
++				  struct v4l2_subdev_frame_size_enum *fse)
++{
++	if (fse->index >= ARRAY_SIZE(sc1300cs_modes) ||
++	    fse->code != sc1300cs_mbus_code(to_sc1300cs(sd)))
++		return -EINVAL;
++	fse->min_width = fse->max_width = sc1300cs_modes[fse->index].width;
++	fse->min_height = fse->max_height = sc1300cs_modes[fse->index].height;
++	return 0;
++}
++
++static int sc1300cs_get_selection(struct v4l2_subdev *sd,
++			       struct v4l2_subdev_state *state,
++			       struct v4l2_subdev_selection *sel)
++{
++	if (sel->pad)
++		return -EINVAL;
++
++	switch (sel->target) {
++	case V4L2_SEL_TGT_CROP:
++	case V4L2_SEL_TGT_CROP_DEFAULT:
++	case V4L2_SEL_TGT_CROP_BOUNDS:
++		sel->r = *v4l2_subdev_state_get_crop(state, 0);
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++static const struct v4l2_subdev_core_ops sc1300cs_core_ops = {
++	.subscribe_event = v4l2_ctrl_subdev_subscribe_event,
++	.unsubscribe_event = v4l2_event_subdev_unsubscribe,
++};
++
++static const struct v4l2_subdev_video_ops sc1300cs_video_ops = {
++	.s_stream = v4l2_subdev_s_stream_helper,
++};
++
++static const struct v4l2_subdev_pad_ops sc1300cs_pad_ops = {
++	.enum_mbus_code = sc1300cs_enum_mbus_code,
++	.enum_frame_size = sc1300cs_enum_frame_size,
++	.get_fmt = v4l2_subdev_get_fmt,
++	.set_fmt = sc1300cs_set_format,
++	.get_selection = sc1300cs_get_selection,
++	.enable_streams = sc1300cs_enable_streams,
++	.disable_streams = sc1300cs_disable_streams,
++};
++
++static const struct v4l2_subdev_ops sc1300cs_subdev_ops = {
++	.core = &sc1300cs_core_ops,
++	.video = &sc1300cs_video_ops,
++	.pad = &sc1300cs_pad_ops,
++};
++
++static const struct v4l2_subdev_internal_ops sc1300cs_internal_ops = {
++	.init_state = sc1300cs_init_state,
++};
++
++static int sc1300cs_check_endpoint(struct device *dev)
++{
++	struct v4l2_fwnode_endpoint ep = { .bus_type = V4L2_MBUS_CSI2_DPHY };
++	struct fwnode_handle *endpoint;
++	unsigned int i;
++	int ret;
++
++	endpoint = fwnode_graph_get_next_endpoint(dev_fwnode(dev), NULL);
++	if (!endpoint)
++		return -EINVAL;
++	ret = v4l2_fwnode_endpoint_alloc_parse(endpoint, &ep);
++	fwnode_handle_put(endpoint);
++	if (ret)
++		goto free_endpoint;
++	ret = -EINVAL;
++	if (ep.bus.mipi_csi2.num_data_lanes != 4 ||
++	    ep.bus.mipi_csi2.clock_lane ||
++	    ep.nr_of_link_frequencies != 1 ||
++	    ep.link_frequencies[0] != sc1300cs_link_freqs[0])
++		goto free_endpoint;
++	for (i = 0; i < 4; i++)
++		if (ep.bus.mipi_csi2.data_lanes[i] != i + 1)
++			goto free_endpoint;
++	ret = 0;
++free_endpoint:
++	v4l2_fwnode_endpoint_free(&ep);
++	return ret;
++}
++
++static int sc1300cs_probe(struct i2c_client *client)
++{
++	struct device *dev = &client->dev;
++	struct sc1300cs *sensor;
++	u64 id;
++	unsigned int i;
++	int ret;
++
++	sensor = devm_kzalloc(dev, sizeof(*sensor), GFP_KERNEL);
++	if (!sensor)
++		return -ENOMEM;
++	sensor->dev = dev;
++	ret = sc1300cs_check_endpoint(dev);
++	if (ret)
++		return dev_err_probe(dev, ret, "invalid CSI-2 endpoint\n");
++	sensor->regmap = devm_cci_regmap_init_i2c(client, 16);
++	if (IS_ERR(sensor->regmap))
++		return PTR_ERR(sensor->regmap);
++	for (i = 0; i < ARRAY_SIZE(sensor->supplies); i++)
++		sensor->supplies[i].supply = sc1300cs_supply_names[i];
++	ret = devm_regulator_bulk_get(dev, ARRAY_SIZE(sensor->supplies), sensor->supplies);
++	if (ret)
++		return dev_err_probe(dev, ret, "failed to get supplies\n");
++	sensor->xclk = devm_clk_get(dev, NULL);
++	if (IS_ERR(sensor->xclk))
++		return dev_err_probe(dev, PTR_ERR(sensor->xclk), "failed to get clock\n");
++	if (clk_get_rate(sensor->xclk) != SC1300CS_XCLK_RATE)
++		return dev_err_probe(dev, -EINVAL, "24 MHz clock required\n");
++	sensor->reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
++	if (IS_ERR(sensor->reset))
++		return dev_err_probe(dev, PTR_ERR(sensor->reset), "failed to get reset\n");
++
++	v4l2_i2c_subdev_init(&sensor->sd, client, &sc1300cs_subdev_ops);
++	sensor->sd.internal_ops = &sc1300cs_internal_ops;
++	sensor->sd.flags = V4L2_SUBDEV_FL_HAS_DEVNODE | V4L2_SUBDEV_FL_HAS_EVENTS;
++	sensor->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
++	sensor->pad.flags = MEDIA_PAD_FL_SOURCE;
++	ret = sc1300cs_power_on(dev);
++	if (ret)
++		return ret;
++	/* The sensor may NACK while leaving reset; bound the readiness wait. */
++	for (i = 0; i < 8; i++) {
++		ret = cci_read(sensor->regmap, CCI_REG16(0x3107), &id, NULL);
++		if (!ret)
++			break;
++		if (i < 7)
++			msleep(20);
++	}
++	if (ret)
++		goto power_off;
++	if (id != SC1300CS_CHIP_ID) {
++		ret = dev_err_probe(dev, -ENODEV, "unexpected chip ID: %#llx\n", id);
++		goto power_off;
++	}
++	dev_dbg(dev, "chip ID: %#llx\n", id);
++	ret = sc1300cs_init_controls(sensor);
++	if (ret)
++		goto power_off;
++	sensor->mode = &sc1300cs_modes[0];
++	ret = media_entity_pads_init(&sensor->sd.entity, 1, &sensor->pad);
++	if (ret)
++		goto free_controls;
++	sensor->sd.state_lock = sensor->ctrls.lock;
++	ret = v4l2_subdev_init_finalize(&sensor->sd);
++	if (ret)
++		goto cleanup_entity;
++
++	ret = pm_runtime_set_active(dev);
++	if (ret)
++		goto cleanup_subdev;
++	pm_runtime_get_noresume(dev);
++	pm_runtime_enable(dev);
++	ret = v4l2_async_register_subdev_sensor(&sensor->sd);
++	if (ret)
++		goto disable_pm;
++	pm_runtime_put(dev);
++	return 0;
++
++disable_pm:
++	pm_runtime_disable(dev);
++	pm_runtime_put_noidle(dev);
++	pm_runtime_set_suspended(dev);
++cleanup_subdev:
++	v4l2_subdev_cleanup(&sensor->sd);
++cleanup_entity:
++	media_entity_cleanup(&sensor->sd.entity);
++free_controls:
++	v4l2_ctrl_handler_free(&sensor->ctrls);
++power_off:
++	sc1300cs_power_off(dev);
++	return ret;
++}
++
++static void sc1300cs_remove(struct i2c_client *client)
++{
++	struct v4l2_subdev *sd = i2c_get_clientdata(client);
++	struct sc1300cs *sensor = to_sc1300cs(sd);
++
++	v4l2_async_unregister_subdev(sd);
++	pm_runtime_disable(sensor->dev);
++	if (!pm_runtime_status_suspended(sensor->dev))
++		sc1300cs_power_off(sensor->dev);
++	pm_runtime_set_suspended(sensor->dev);
++	v4l2_subdev_cleanup(sd);
++	media_entity_cleanup(&sd->entity);
++	v4l2_ctrl_handler_free(&sensor->ctrls);
++}
++
++static const struct dev_pm_ops sc1300cs_pm_ops = {
++	RUNTIME_PM_OPS(sc1300cs_power_off, sc1300cs_power_on, NULL)
++};
++
++static const struct of_device_id sc1300cs_of_match[] = {
++	{ .compatible = "smartsens,sc1300cs" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, sc1300cs_of_match);
++
++static struct i2c_driver sc1300cs_driver = {
++	.driver = {
++		.name = "sc1300cs",
++		.of_match_table = sc1300cs_of_match,
++		.pm = pm_ptr(&sc1300cs_pm_ops),
++	},
++	.probe = sc1300cs_probe,
++	.remove = sc1300cs_remove,
++};
++module_i2c_driver(sc1300cs_driver);
++
++MODULE_AUTHOR("TheMojoMan <themojoman@gmx.net>");
++MODULE_DESCRIPTION("SmartSens SC1300CS camera sensor driver");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/media/i2c/sc820cs.c b/drivers/media/i2c/sc820cs.c
+new file mode 100644
+index 000000000..6ca222cdc
+--- /dev/null
++++ b/drivers/media/i2c/sc820cs.c
+@@ -0,0 +1,794 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * SmartSens SC820CS camera sensor
++ *
++ * Based on TheMojoMan's sc820cs driver in
++ * https://github.com/TheMojoMan/oneplus-erhai-linux
++ * revision 74ba8ddb4dc8fd930841b6802053b4362b59ce46.
++ * Register sequences originate from Android bus captures, not a datasheet.
++ * The original attribution is retained:
++ * Copyright (c) Qualcomm Innovation Center, Inc. All rights reserved.
++ *
++ * Exposure and gain encoding is based on the GPL-2.0 vendor sensor driver:
++ * Copyright (C) 2018 MediaTek Inc.
++ * https://github.com/oppo-source/android_kernel_oppo_mt6835
++ * revision 9c93b939b3198a82775bbe3fb74f6e647b533825.
++ */
++
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/gpio/consumer.h>
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/pm_runtime.h>
++#include <linux/regulator/consumer.h>
++
++#include <media/v4l2-cci.h>
++#include <media/v4l2-ctrls.h>
++#include <media/v4l2-device.h>
++#include <media/v4l2-event.h>
++#include <media/v4l2-fwnode.h>
++#include <media/v4l2-subdev.h>
++
++#define SC820CS_CHIP_ID		0xd154
++#define SC820CS_WIDTH		3264
++#define SC820CS_HEIGHT		2448
++#define SC820CS_HTS		1760
++/* Two output pixels per 132 MHz timing-clock tick, independent of MIPI. */
++#define SC820CS_LINE_LENGTH	(SC820CS_HTS * 2)
++#define SC820CS_VTS		2500
++#define SC820CS_VTS_MAX		0x7fff
++#define SC820CS_EXPOSURE_MARGIN	4
++#define SC820CS_PIXEL_RATE	264000000
++#define SC820CS_XCLK_RATE	24000000
++
++#define SC820CS_REG_MIRROR_FLIP	CCI_REG8(0x3221)
++#define SC820CS_MIRROR		0x06
++#define SC820CS_FLIP		0x60
++
++static const s64 sc820cs_link_freqs[] = { 368000000 };
++/* Power-on order: I/O, digital core, analogue. */
++static const char * const sc820cs_supply_names[] = { "dovdd", "dvdd", "avdd" };
++
++struct sc820cs {
++	struct device *dev;
++	struct regmap *regmap;
++	struct clk *xclk;
++	struct gpio_desc *reset;
++	struct regulator_bulk_data supplies[3];
++	struct v4l2_subdev sd;
++	struct media_pad pad;
++	struct v4l2_ctrl_handler ctrls;
++	struct v4l2_ctrl *exposure;
++	struct v4l2_ctrl *hblank;
++	struct v4l2_ctrl *vblank;
++	struct v4l2_ctrl *hflip;
++	struct v4l2_ctrl *vflip;
++	const struct sc820cs_mode *mode;
++};
++
++static inline struct sc820cs *to_sc820cs(struct v4l2_subdev *sd)
++{
++	return container_of(sd, struct sc820cs, sd);
++}
++
++/*
++ * The colour filter array is RGGB. Mirroring and flipping move the first
++ * pixel read out, so each flip changes the Bayer order.
++ */
++static u32 sc820cs_mbus_code(struct sc820cs *sensor)
++{
++	static const u32 codes[2][2] = {
++		{ MEDIA_BUS_FMT_SRGGB10_1X10, MEDIA_BUS_FMT_SGRBG10_1X10 },
++		{ MEDIA_BUS_FMT_SGBRG10_1X10, MEDIA_BUS_FMT_SBGGR10_1X10 },
++	};
++
++	return codes[sensor->vflip->val][sensor->hflip->val];
++}
++
++/*
++ * Native RAW10 register sequence from the Android sensor library's bus
++ * traffic, as published with the sc820cs driver. Reset and stream-on
++ * are issued separately. Timing and exposure controls replace the captured
++ * automatic-exposure values before streaming starts.
++ */
++static const struct cci_reg_sequence sc820cs_mode[] = {
++	{ CCI_REG8(0x36e9), 0x80 },
++	{ CCI_REG8(0x37f9), 0x80 },
++	{ CCI_REG8(0x36e9), 0x24 },
++	{ CCI_REG8(0x37f9), 0x24 },
++	{ CCI_REG8(0x301f), 0x0e },
++	{ CCI_REG8(0x3205), 0xc7 },
++	{ CCI_REG8(0x3211), 0x04 },
++	{ CCI_REG8(0x3270), 0x00 },
++	{ CCI_REG8(0x3271), 0x00 },
++	{ CCI_REG8(0x3272), 0x00 },
++	{ CCI_REG8(0x3273), 0x03 },
++	{ CCI_REG8(0x3301), 0x08 },
++	{ CCI_REG8(0x3303), 0x10 },
++	{ CCI_REG8(0x3306), 0x84 },
++	{ CCI_REG8(0x3307), 0x04 },
++	{ CCI_REG8(0x3309), 0x88 },
++	{ CCI_REG8(0x330a), 0x01 },
++	{ CCI_REG8(0x330b), 0x0c },
++	{ CCI_REG8(0x330c), 0x10 },
++	{ CCI_REG8(0x330d), 0x18 },
++	{ CCI_REG8(0x330e), 0x30 },
++	{ CCI_REG8(0x330f), 0x04 },
++	{ CCI_REG8(0x3310), 0x02 },
++	{ CCI_REG8(0x3314), 0x15 },
++	{ CCI_REG8(0x3317), 0x04 },
++	{ CCI_REG8(0x331f), 0x79 },
++	{ CCI_REG8(0x3326), 0x0e },
++	{ CCI_REG8(0x3327), 0x0a },
++	{ CCI_REG8(0x3329), 0x0b },
++	{ CCI_REG8(0x3333), 0x10 },
++	{ CCI_REG8(0x3334), 0x40 },
++	{ CCI_REG8(0x3347), 0x0f },
++	{ CCI_REG8(0x335d), 0x60 },
++	{ CCI_REG8(0x3364), 0x56 },
++	{ CCI_REG8(0x336c), 0xce },
++	{ CCI_REG8(0x3390), 0x08 },
++	{ CCI_REG8(0x3391), 0x09 },
++	{ CCI_REG8(0x3392), 0x0f },
++	{ CCI_REG8(0x3393), 0x10 },
++	{ CCI_REG8(0x3394), 0x20 },
++	{ CCI_REG8(0x3395), 0x28 },
++	{ CCI_REG8(0x33ad), 0x3c },
++	{ CCI_REG8(0x33af), 0x70 },
++	{ CCI_REG8(0x33b2), 0x70 },
++	{ CCI_REG8(0x33b3), 0x40 },
++	{ CCI_REG8(0x349f), 0x1e },
++	{ CCI_REG8(0x34a6), 0x09 },
++	{ CCI_REG8(0x34a7), 0x0f },
++	{ CCI_REG8(0x34a8), 0x30 },
++	{ CCI_REG8(0x34a9), 0x20 },
++	{ CCI_REG8(0x34f8), 0x1f },
++	{ CCI_REG8(0x34f9), 0x08 },
++	{ CCI_REG8(0x3637), 0x43 },
++	{ CCI_REG8(0x363c), 0x8d },
++	{ CCI_REG8(0x3650), 0x21 },
++	{ CCI_REG8(0x3651), 0x9f },
++	{ CCI_REG8(0x3670), 0x4a },
++	{ CCI_REG8(0x3674), 0xf6 },
++	{ CCI_REG8(0x3675), 0xdc },
++	{ CCI_REG8(0x3676), 0xcc },
++	{ CCI_REG8(0x367c), 0x09 },
++	{ CCI_REG8(0x367d), 0x0f },
++	{ CCI_REG8(0x3690), 0x34 },
++	{ CCI_REG8(0x3691), 0x44 },
++	{ CCI_REG8(0x3692), 0x55 },
++	{ CCI_REG8(0x3698), 0x86 },
++	{ CCI_REG8(0x3699), 0x8d },
++	{ CCI_REG8(0x369a), 0x99 },
++	{ CCI_REG8(0x369b), 0xb7 },
++	{ CCI_REG8(0x369c), 0x0f },
++	{ CCI_REG8(0x369d), 0x1f },
++	{ CCI_REG8(0x36a2), 0x09 },
++	{ CCI_REG8(0x36a3), 0x0b },
++	{ CCI_REG8(0x36a4), 0x0f },
++	{ CCI_REG8(0x36b0), 0x48 },
++	{ CCI_REG8(0x36b1), 0x38 },
++	{ CCI_REG8(0x36b2), 0x41 },
++	{ CCI_REG8(0x370f), 0x01 },
++	{ CCI_REG8(0x3724), 0xc1 },
++	{ CCI_REG8(0x3771), 0x07 },
++	{ CCI_REG8(0x3772), 0x03 },
++	{ CCI_REG8(0x3773), 0x63 },
++	{ CCI_REG8(0x377a), 0x08 },
++	{ CCI_REG8(0x377b), 0x0f },
++	{ CCI_REG8(0x3901), 0x04 },
++	{ CCI_REG8(0x3903), 0xa0 },
++	{ CCI_REG8(0x3905), 0x8d },
++	{ CCI_REG8(0x391d), 0x01 },
++	{ CCI_REG8(0x3926), 0x23 },
++	{ CCI_REG8(0x393f), 0x80 },
++	{ CCI_REG8(0x3940), 0x00 },
++	{ CCI_REG8(0x3941), 0x00 },
++	{ CCI_REG8(0x3942), 0x00 },
++	{ CCI_REG8(0x3943), 0x63 },
++	{ CCI_REG8(0x3944), 0x5f },
++	{ CCI_REG8(0x3c04), 0x01 },
++	{ CCI_REG8(0x3e00), 0x01 },
++	{ CCI_REG8(0x3e01), 0x38 },
++	{ CCI_REG8(0x3e02), 0x00 },
++	{ CCI_REG8(0x4401), 0x13 },
++	{ CCI_REG8(0x4402), 0x03 },
++	{ CCI_REG8(0x4403), 0x0e },
++	{ CCI_REG8(0x4404), 0x28 },
++	{ CCI_REG8(0x4405), 0x34 },
++	{ CCI_REG8(0x4407), 0x0e },
++	{ CCI_REG8(0x440c), 0x42 },
++	{ CCI_REG8(0x440d), 0x42 },
++	{ CCI_REG8(0x440e), 0x32 },
++	{ CCI_REG8(0x440f), 0x53 },
++	{ CCI_REG8(0x4412), 0x01 },
++	{ CCI_REG8(0x4424), 0x01 },
++	{ CCI_REG8(0x442d), 0x00 },
++	{ CCI_REG8(0x442e), 0x00 },
++	{ CCI_REG8(0x4509), 0x28 },
++	{ CCI_REG8(0x450d), 0x18 },
++	{ CCI_REG8(0x451d), 0xc8 },
++	{ CCI_REG8(0x4526), 0x09 },
++	{ CCI_REG8(0x5000), 0x0e },
++	{ CCI_REG8(0x550e), 0x00 },
++	{ CCI_REG8(0x550f), 0xbc },
++	{ CCI_REG8(0x5780), 0x66 },
++	{ CCI_REG8(0x578d), 0x40 },
++	{ CCI_REG8(0x57aa), 0xeb },
++	/* Native readout; the flip controls program this register. */
++	{ CCI_REG8(0x3221), 0x00 },
++	{ CCI_REG8(0x301f), 0x0e },
++	{ CCI_REG8(0x3200), 0x00 },
++	{ CCI_REG8(0x3201), 0x00 },
++	{ CCI_REG8(0x3202), 0x00 },
++	{ CCI_REG8(0x3203), 0x00 },
++	{ CCI_REG8(0x3204), 0x0c },
++	{ CCI_REG8(0x3206), 0x09 },
++	{ CCI_REG8(0x3207), 0x9f },
++	{ CCI_REG8(0x3208), 0x0c },
++	{ CCI_REG8(0x3209), 0xc0 },
++	{ CCI_REG8(0x320a), 0x09 },
++	{ CCI_REG8(0x320b), 0x90 },
++	{ CCI_REG8(0x3210), 0x00 },
++	{ CCI_REG8(0x3212), 0x00 },
++	{ CCI_REG8(0x3213), 0x08 },
++	{ CCI_REG8(0x3215), 0x11 },
++	{ CCI_REG8(0x3220), 0x00 },
++	{ CCI_REG8(0x5000), 0x0e },
++	{ CCI_REG8(0x5900), 0x01 },
++	{ CCI_REG8(0x5901), 0x00 },
++	{ CCI_REG8(0x301f), 0x00 },
++	{ CCI_REG8(0x326d), 0x00 },
++	{ CCI_REG8(0x320e), 0x0c },
++	{ CCI_REG8(0x320f), 0x38 },
++	{ CCI_REG8(0x3e20), 0x00 },
++	{ CCI_REG8(0x3e00), 0x01 },
++	{ CCI_REG8(0x3e01), 0x86 },
++	{ CCI_REG8(0x3e02), 0x80 },
++	{ CCI_REG8(0x3e08), 0x0f },
++	{ CCI_REG8(0x3e07), 0x80 },
++	{ CCI_REG8(0x301f), 0x00 },
++	{ CCI_REG8(0x3337), 0x00 },
++	{ CCI_REG8(0x391f), 0xc9 },
++};
++
++/*
++ * 2x2 binning, from the stock camera module data: the registers that differ
++ * from the full-resolution sequence above. Line length and frame length are
++ * unchanged, so the line time and the frame rate stay the same.
++ */
++static const struct cci_reg_sequence sc820cs_binning[] = {
++	{ CCI_REG8(0x3208), 0x06 },
++	{ CCI_REG8(0x3209), 0x60 },
++	{ CCI_REG8(0x320a), 0x04 },
++	{ CCI_REG8(0x320b), 0xc8 },
++	{ CCI_REG8(0x3213), 0x04 },
++	{ CCI_REG8(0x3215), 0x31 },
++	{ CCI_REG8(0x3220), 0x01 },
++	{ CCI_REG8(0x5000), 0x4e },
++	{ CCI_REG8(0x5900), 0xf1 },
++	{ CCI_REG8(0x5901), 0x04 },
++};
++
++struct sc820cs_mode {
++	u32 width;
++	u32 height;
++	const struct cci_reg_sequence *regs;
++	unsigned int num_regs;
++};
++
++static const struct sc820cs_mode sc820cs_modes[] = {
++	{ .width = SC820CS_WIDTH, .height = SC820CS_HEIGHT },
++	{ .width = 1632, .height = 1224, .regs = sc820cs_binning,
++	  .num_regs = ARRAY_SIZE(sc820cs_binning) },
++};
++
++static int sc820cs_power_on(struct device *dev)
++{
++	struct sc820cs *sensor = to_sc820cs(dev_get_drvdata(dev));
++	int i, ret;
++
++	for (i = 0; i < ARRAY_SIZE(sensor->supplies); i++) {
++		ret = regulator_enable(sensor->supplies[i].consumer);
++		if (ret)
++			goto disable_supplies;
++		usleep_range(1000, 1500);
++	}
++
++	/* Keep reset asserted until the input clock is running. */
++	ret = clk_prepare_enable(sensor->xclk);
++	if (ret)
++		goto disable_supplies;
++	usleep_range(1000, 1500);
++	gpiod_set_value_cansleep(sensor->reset, 0);
++	usleep_range(10000, 12000);
++
++	return 0;
++
++disable_supplies:
++	while (i--) {
++		regulator_disable(sensor->supplies[i].consumer);
++		usleep_range(1000, 1500);
++	}
++	return ret;
++}
++
++static int sc820cs_power_off(struct device *dev)
++{
++	struct sc820cs *sensor = to_sc820cs(dev_get_drvdata(dev));
++	int i;
++
++	clk_disable_unprepare(sensor->xclk);
++	usleep_range(5000, 5500);
++	gpiod_set_value_cansleep(sensor->reset, 1);
++	usleep_range(1000, 1500);
++	for (i = ARRAY_SIZE(sensor->supplies) - 1; i >= 0; i--) {
++		regulator_disable(sensor->supplies[i].consumer);
++		usleep_range(1000, 1500);
++	}
++	return 0;
++}
++
++static int sc820cs_set_exposure(struct sc820cs *sensor, unsigned int lines)
++{
++	/* Exposure is encoded in half-lines in bits 19:4. */
++	return cci_write(sensor->regmap, CCI_REG24(0x3e00), lines << 5, NULL);
++}
++
++static int sc820cs_set_ctrl(struct v4l2_ctrl *ctrl)
++{
++	struct sc820cs *sensor = container_of(ctrl->handler, struct sc820cs, ctrls);
++	static const u8 coarse_gain[] = { 0x00, 0x08, 0x09, 0x0b, 0x0f };
++	unsigned int stage;
++	int ret, exposure_max;
++
++	if (ctrl->id == V4L2_CID_VBLANK) {
++		exposure_max = sensor->mode->height + ctrl->val - SC820CS_EXPOSURE_MARGIN;
++		ret = __v4l2_ctrl_modify_range(sensor->exposure, 2, exposure_max,
++					       1, min(exposure_max, 1000));
++		if (ret)
++			return ret;
++	}
++
++	if (ctrl->id == V4L2_CID_HFLIP || ctrl->id == V4L2_CID_VFLIP) {
++		struct v4l2_subdev_state *state =
++			v4l2_subdev_get_locked_active_state(&sensor->sd);
++
++		v4l2_subdev_state_get_format(state, 0)->code = sc820cs_mbus_code(sensor);
++	}
++
++	ret = pm_runtime_get_if_in_use(sensor->dev);
++	if (ret <= 0)
++		return ret;
++	ret = 0;
++
++	switch (ctrl->id) {
++	case V4L2_CID_EXPOSURE:
++		ret = sc820cs_set_exposure(sensor, ctrl->val);
++		break;
++	case V4L2_CID_VBLANK:
++		/* Clamp the shutter before shortening the frame. */
++		ret = sc820cs_set_exposure(sensor, sensor->exposure->val);
++		cci_write(sensor->regmap, CCI_REG16(0x320e),
++			  sensor->mode->height + ctrl->val, &ret);
++		break;
++	case V4L2_CID_ANALOGUE_GAIN:
++		/* Vendor gain encoding: 1024 represents unity. */
++		stage = fls(ctrl->val / 1024) - 1;
++		cci_write(sensor->regmap, CCI_REG8(0x3e08), coarse_gain[stage], &ret);
++		cci_write(sensor->regmap, CCI_REG8(0x3e07),
++			  (ctrl->val >> stage) >> 3, &ret);
++		break;
++	case V4L2_CID_HFLIP:
++	case V4L2_CID_VFLIP:
++		ret = cci_write(sensor->regmap, SC820CS_REG_MIRROR_FLIP,
++				(sensor->hflip->val ? SC820CS_MIRROR : 0) |
++				(sensor->vflip->val ? SC820CS_FLIP : 0), NULL);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++	pm_runtime_put(sensor->dev);
++	return ret;
++}
++
++static const struct v4l2_ctrl_ops sc820cs_ctrl_ops = {
++	.s_ctrl = sc820cs_set_ctrl,
++};
++
++static int sc820cs_init_controls(struct sc820cs *sensor)
++{
++	struct v4l2_ctrl_handler *hdl = &sensor->ctrls;
++	struct v4l2_fwnode_device_properties props;
++	struct v4l2_ctrl *ctrl;
++	int ret;
++
++	v4l2_ctrl_handler_init(hdl, 11);
++	ctrl = v4l2_ctrl_new_int_menu(hdl, NULL, V4L2_CID_LINK_FREQ, 0, 0,
++				      sc820cs_link_freqs);
++	if (ctrl)
++		ctrl->flags |= V4L2_CTRL_FLAG_READ_ONLY;
++	v4l2_ctrl_new_std(hdl, NULL, V4L2_CID_PIXEL_RATE, SC820CS_PIXEL_RATE,
++			  SC820CS_PIXEL_RATE, 1, SC820CS_PIXEL_RATE);
++	sensor->hblank = v4l2_ctrl_new_std(hdl, NULL, V4L2_CID_HBLANK,
++				 SC820CS_LINE_LENGTH - SC820CS_WIDTH,
++				 SC820CS_LINE_LENGTH - SC820CS_WIDTH, 1,
++				 SC820CS_LINE_LENGTH - SC820CS_WIDTH);
++	if (sensor->hblank)
++		sensor->hblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
++	sensor->vblank = v4l2_ctrl_new_std(hdl, &sc820cs_ctrl_ops, V4L2_CID_VBLANK,
++					 SC820CS_VTS - SC820CS_HEIGHT,
++					 SC820CS_VTS_MAX - SC820CS_HEIGHT, 1,
++					 SC820CS_VTS - SC820CS_HEIGHT);
++	sensor->exposure = v4l2_ctrl_new_std(hdl, &sc820cs_ctrl_ops, V4L2_CID_EXPOSURE,
++					   2, SC820CS_VTS - SC820CS_EXPOSURE_MARGIN,
++					   1, 1000);
++	v4l2_ctrl_new_std(hdl, &sc820cs_ctrl_ops, V4L2_CID_ANALOGUE_GAIN,
++			  1024, 16384, 8, 1024);
++	sensor->hflip = v4l2_ctrl_new_std(hdl, &sc820cs_ctrl_ops, V4L2_CID_HFLIP,
++					0, 1, 1, 0);
++	if (sensor->hflip)
++		sensor->hflip->flags |= V4L2_CTRL_FLAG_MODIFY_LAYOUT;
++	sensor->vflip = v4l2_ctrl_new_std(hdl, &sc820cs_ctrl_ops, V4L2_CID_VFLIP,
++					0, 1, 1, 0);
++	if (sensor->vflip)
++		sensor->vflip->flags |= V4L2_CTRL_FLAG_MODIFY_LAYOUT;
++	if (hdl->error) {
++		ret = hdl->error;
++		goto free_controls;
++	}
++	ret = v4l2_fwnode_device_parse(sensor->dev, &props);
++	if (ret)
++		goto free_controls;
++	ret = v4l2_ctrl_new_fwnode_properties(hdl, &sc820cs_ctrl_ops, &props);
++	if (ret)
++		goto free_controls;
++	sensor->sd.ctrl_handler = hdl;
++	return 0;
++
++free_controls:
++	v4l2_ctrl_handler_free(hdl);
++	return ret;
++}
++
++static int sc820cs_enable_streams(struct v4l2_subdev *sd,
++				 struct v4l2_subdev_state *state,
++				 u32 pad, u64 streams_mask)
++{
++	struct sc820cs *sensor = to_sc820cs(sd);
++	int ret;
++
++	ret = pm_runtime_resume_and_get(sensor->dev);
++	if (ret < 0)
++		return ret;
++	ret = cci_write(sensor->regmap, CCI_REG8(0x0103), 1, NULL);
++	if (ret)
++		goto power_off;
++	usleep_range(10000, 11000);
++	ret = cci_multi_reg_write(sensor->regmap, sc820cs_mode,
++				  ARRAY_SIZE(sc820cs_mode), NULL);
++	if (sensor->mode->num_regs)
++		cci_multi_reg_write(sensor->regmap, sensor->mode->regs,
++				    sensor->mode->num_regs, &ret);
++	cci_write(sensor->regmap, CCI_REG16(0x320c), SC820CS_HTS, &ret);
++	if (ret)
++		goto power_off;
++	ret = __v4l2_ctrl_handler_setup(&sensor->ctrls);
++	if (ret)
++		goto power_off;
++	ret = cci_write(sensor->regmap, CCI_REG8(0x0100), 1, NULL);
++	if (ret)
++		goto power_off;
++	/* The flips change the Bayer order; keep them fixed while streaming. */
++	__v4l2_ctrl_grab(sensor->hflip, true);
++	__v4l2_ctrl_grab(sensor->vflip, true);
++	return 0;
++power_off:
++	pm_runtime_put_sync(sensor->dev);
++	return ret;
++}
++
++static int sc820cs_disable_streams(struct v4l2_subdev *sd,
++				  struct v4l2_subdev_state *state,
++				  u32 pad, u64 streams_mask)
++{
++	struct sc820cs *sensor = to_sc820cs(sd);
++	int ret;
++
++	ret = cci_write(sensor->regmap, CCI_REG8(0x0100), 0, NULL);
++	__v4l2_ctrl_grab(sensor->hflip, false);
++	__v4l2_ctrl_grab(sensor->vflip, false);
++	pm_runtime_put_sync(sensor->dev);
++	return ret;
++}
++
++static int sc820cs_set_format(struct v4l2_subdev *sd,
++			     struct v4l2_subdev_state *state,
++			     struct v4l2_subdev_format *fmt)
++{
++	struct sc820cs *sensor = to_sc820cs(sd);
++	const struct sc820cs_mode *mode;
++	int ret;
++
++	if (fmt->which == V4L2_SUBDEV_FORMAT_ACTIVE && sd->enabled_pads)
++		return -EBUSY;
++
++	mode = v4l2_find_nearest_size(sc820cs_modes, ARRAY_SIZE(sc820cs_modes),
++				      width, height, fmt->format.width,
++				      fmt->format.height);
++	fmt->format = (struct v4l2_mbus_framefmt) {
++		.width = mode->width,
++		.height = mode->height,
++		.code = sc820cs_mbus_code(sensor),
++		.field = V4L2_FIELD_NONE,
++		.colorspace = V4L2_COLORSPACE_RAW,
++		.ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT,
++		.quantization = V4L2_QUANTIZATION_FULL_RANGE,
++		.xfer_func = V4L2_XFER_FUNC_NONE,
++	};
++	*v4l2_subdev_state_get_format(state, 0) = fmt->format;
++	/* Both modes read out the whole array; binning halves each axis. */
++	*v4l2_subdev_state_get_crop(state, 0) = (struct v4l2_rect) {
++		.width = SC820CS_WIDTH,
++		.height = SC820CS_HEIGHT,
++	};
++	if (fmt->which != V4L2_SUBDEV_FORMAT_ACTIVE)
++		return 0;
++
++	sensor->mode = mode;
++	ret = __v4l2_ctrl_modify_range(sensor->hblank,
++				       SC820CS_LINE_LENGTH - mode->width,
++				       SC820CS_LINE_LENGTH - mode->width, 1,
++				       SC820CS_LINE_LENGTH - mode->width);
++	if (ret)
++		return ret;
++	ret = __v4l2_ctrl_modify_range(sensor->vblank,
++				       SC820CS_VTS - mode->height,
++				       SC820CS_VTS_MAX - mode->height,
++				       sensor->vblank->step,
++				       SC820CS_VTS - mode->height);
++	if (ret)
++		return ret;
++	return __v4l2_ctrl_s_ctrl(sensor->vblank, SC820CS_VTS - mode->height);
++}
++
++static int sc820cs_init_state(struct v4l2_subdev *sd,
++			     struct v4l2_subdev_state *state)
++{
++	struct v4l2_subdev_format fmt = { .pad = 0 };
++
++	return sc820cs_set_format(sd, state, &fmt);
++}
++
++static int sc820cs_enum_mbus_code(struct v4l2_subdev *sd,
++				 struct v4l2_subdev_state *state,
++				 struct v4l2_subdev_mbus_code_enum *code)
++{
++	if (code->index)
++		return -EINVAL;
++	code->code = sc820cs_mbus_code(to_sc820cs(sd));
++	return 0;
++}
++
++static int sc820cs_enum_frame_size(struct v4l2_subdev *sd,
++				  struct v4l2_subdev_state *state,
++				  struct v4l2_subdev_frame_size_enum *fse)
++{
++	if (fse->index >= ARRAY_SIZE(sc820cs_modes) ||
++	    fse->code != sc820cs_mbus_code(to_sc820cs(sd)))
++		return -EINVAL;
++	fse->min_width = fse->max_width = sc820cs_modes[fse->index].width;
++	fse->min_height = fse->max_height = sc820cs_modes[fse->index].height;
++	return 0;
++}
++
++static int sc820cs_get_selection(struct v4l2_subdev *sd,
++			       struct v4l2_subdev_state *state,
++			       struct v4l2_subdev_selection *sel)
++{
++	if (sel->pad)
++		return -EINVAL;
++
++	switch (sel->target) {
++	case V4L2_SEL_TGT_CROP:
++	case V4L2_SEL_TGT_CROP_DEFAULT:
++	case V4L2_SEL_TGT_CROP_BOUNDS:
++		sel->r = *v4l2_subdev_state_get_crop(state, 0);
++		return 0;
++	default:
++		return -EINVAL;
++	}
++}
++
++static const struct v4l2_subdev_core_ops sc820cs_core_ops = {
++	.subscribe_event = v4l2_ctrl_subdev_subscribe_event,
++	.unsubscribe_event = v4l2_event_subdev_unsubscribe,
++};
++
++static const struct v4l2_subdev_video_ops sc820cs_video_ops = {
++	.s_stream = v4l2_subdev_s_stream_helper,
++};
++
++static const struct v4l2_subdev_pad_ops sc820cs_pad_ops = {
++	.enum_mbus_code = sc820cs_enum_mbus_code,
++	.enum_frame_size = sc820cs_enum_frame_size,
++	.get_fmt = v4l2_subdev_get_fmt,
++	.set_fmt = sc820cs_set_format,
++	.get_selection = sc820cs_get_selection,
++	.enable_streams = sc820cs_enable_streams,
++	.disable_streams = sc820cs_disable_streams,
++};
++
++static const struct v4l2_subdev_ops sc820cs_subdev_ops = {
++	.core = &sc820cs_core_ops,
++	.video = &sc820cs_video_ops,
++	.pad = &sc820cs_pad_ops,
++};
++
++static const struct v4l2_subdev_internal_ops sc820cs_internal_ops = {
++	.init_state = sc820cs_init_state,
++};
++
++static int sc820cs_check_endpoint(struct device *dev)
++{
++	struct v4l2_fwnode_endpoint ep = { .bus_type = V4L2_MBUS_CSI2_DPHY };
++	struct fwnode_handle *endpoint;
++	unsigned int i;
++	int ret;
++
++	endpoint = fwnode_graph_get_next_endpoint(dev_fwnode(dev), NULL);
++	if (!endpoint)
++		return -EINVAL;
++	ret = v4l2_fwnode_endpoint_alloc_parse(endpoint, &ep);
++	fwnode_handle_put(endpoint);
++	if (ret)
++		goto free_endpoint;
++	ret = -EINVAL;
++	if (ep.bus.mipi_csi2.num_data_lanes != 4 ||
++	    ep.bus.mipi_csi2.clock_lane ||
++	    ep.nr_of_link_frequencies != 1 ||
++	    ep.link_frequencies[0] != sc820cs_link_freqs[0])
++		goto free_endpoint;
++	for (i = 0; i < 4; i++)
++		if (ep.bus.mipi_csi2.data_lanes[i] != i + 1)
++			goto free_endpoint;
++	ret = 0;
++free_endpoint:
++	v4l2_fwnode_endpoint_free(&ep);
++	return ret;
++}
++
++static int sc820cs_probe(struct i2c_client *client)
++{
++	struct device *dev = &client->dev;
++	struct sc820cs *sensor;
++	u64 id;
++	unsigned int i;
++	int ret;
++
++	sensor = devm_kzalloc(dev, sizeof(*sensor), GFP_KERNEL);
++	if (!sensor)
++		return -ENOMEM;
++	sensor->dev = dev;
++	ret = sc820cs_check_endpoint(dev);
++	if (ret)
++		return dev_err_probe(dev, ret, "invalid CSI-2 endpoint\n");
++	sensor->regmap = devm_cci_regmap_init_i2c(client, 16);
++	if (IS_ERR(sensor->regmap))
++		return PTR_ERR(sensor->regmap);
++	for (i = 0; i < ARRAY_SIZE(sensor->supplies); i++)
++		sensor->supplies[i].supply = sc820cs_supply_names[i];
++	ret = devm_regulator_bulk_get(dev, ARRAY_SIZE(sensor->supplies), sensor->supplies);
++	if (ret)
++		return dev_err_probe(dev, ret, "failed to get supplies\n");
++	sensor->xclk = devm_clk_get(dev, NULL);
++	if (IS_ERR(sensor->xclk))
++		return dev_err_probe(dev, PTR_ERR(sensor->xclk), "failed to get clock\n");
++	if (clk_get_rate(sensor->xclk) != SC820CS_XCLK_RATE)
++		return dev_err_probe(dev, -EINVAL, "24 MHz clock required\n");
++	sensor->reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
++	if (IS_ERR(sensor->reset))
++		return dev_err_probe(dev, PTR_ERR(sensor->reset), "failed to get reset\n");
++
++	v4l2_i2c_subdev_init(&sensor->sd, client, &sc820cs_subdev_ops);
++	sensor->sd.internal_ops = &sc820cs_internal_ops;
++	sensor->sd.flags = V4L2_SUBDEV_FL_HAS_DEVNODE | V4L2_SUBDEV_FL_HAS_EVENTS;
++	sensor->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
++	sensor->pad.flags = MEDIA_PAD_FL_SOURCE;
++	ret = sc820cs_power_on(dev);
++	if (ret)
++		return ret;
++	/* The sensor may NACK while leaving reset; bound the readiness wait. */
++	for (i = 0; i < 8; i++) {
++		ret = cci_read(sensor->regmap, CCI_REG16(0x3107), &id, NULL);
++		if (!ret)
++			break;
++		if (i < 7)
++			msleep(20);
++	}
++	if (ret)
++		goto power_off;
++	if (id != SC820CS_CHIP_ID) {
++		ret = dev_err_probe(dev, -ENODEV, "unexpected chip ID: %#llx\n", id);
++		goto power_off;
++	}
++	dev_dbg(dev, "chip ID: %#llx\n", id);
++	ret = sc820cs_init_controls(sensor);
++	if (ret)
++		goto power_off;
++	sensor->mode = &sc820cs_modes[0];
++	ret = media_entity_pads_init(&sensor->sd.entity, 1, &sensor->pad);
++	if (ret)
++		goto free_controls;
++	sensor->sd.state_lock = sensor->ctrls.lock;
++	ret = v4l2_subdev_init_finalize(&sensor->sd);
++	if (ret)
++		goto cleanup_entity;
++
++	ret = pm_runtime_set_active(dev);
++	if (ret)
++		goto cleanup_subdev;
++	pm_runtime_get_noresume(dev);
++	pm_runtime_enable(dev);
++	ret = v4l2_async_register_subdev_sensor(&sensor->sd);
++	if (ret)
++		goto disable_pm;
++	pm_runtime_put(dev);
++	return 0;
++
++disable_pm:
++	pm_runtime_disable(dev);
++	pm_runtime_put_noidle(dev);
++	pm_runtime_set_suspended(dev);
++cleanup_subdev:
++	v4l2_subdev_cleanup(&sensor->sd);
++cleanup_entity:
++	media_entity_cleanup(&sensor->sd.entity);
++free_controls:
++	v4l2_ctrl_handler_free(&sensor->ctrls);
++power_off:
++	sc820cs_power_off(dev);
++	return ret;
++}
++
++static void sc820cs_remove(struct i2c_client *client)
++{
++	struct v4l2_subdev *sd = i2c_get_clientdata(client);
++	struct sc820cs *sensor = to_sc820cs(sd);
++
++	v4l2_async_unregister_subdev(sd);
++	pm_runtime_disable(sensor->dev);
++	if (!pm_runtime_status_suspended(sensor->dev))
++		sc820cs_power_off(sensor->dev);
++	pm_runtime_set_suspended(sensor->dev);
++	v4l2_subdev_cleanup(sd);
++	media_entity_cleanup(&sd->entity);
++	v4l2_ctrl_handler_free(&sensor->ctrls);
++}
++
++static const struct dev_pm_ops sc820cs_pm_ops = {
++	RUNTIME_PM_OPS(sc820cs_power_off, sc820cs_power_on, NULL)
++};
++
++static const struct of_device_id sc820cs_of_match[] = {
++	{ .compatible = "smartsens,sc820cs" },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, sc820cs_of_match);
++
++static struct i2c_driver sc820cs_driver = {
++	.driver = {
++		.name = "sc820cs",
++		.of_match_table = sc820cs_of_match,
++		.pm = pm_ptr(&sc820cs_pm_ops),
++	},
++	.probe = sc820cs_probe,
++	.remove = sc820cs_remove,
++};
++module_i2c_driver(sc820cs_driver);
++
++MODULE_AUTHOR("TheMojoMan <themojoman@gmx.net>");
++MODULE_DESCRIPTION("SmartSens SC820CS camera sensor driver");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/media/platform/qcom/camss/Kconfig b/drivers/media/platform/qcom/camss/Kconfig
+index 4eda48cb1..1edc5e5a1 100644
+--- a/drivers/media/platform/qcom/camss/Kconfig
++++ b/drivers/media/platform/qcom/camss/Kconfig
+@@ -7,3 +7,4 @@ config VIDEO_QCOM_CAMSS
+ 	select VIDEO_V4L2_SUBDEV_API
+ 	select VIDEOBUF2_DMA_SG
+ 	select V4L2_FWNODE
++	select PHY_QCOM_MIPI_CSI2
+diff --git a/drivers/media/platform/qcom/camss/Makefile b/drivers/media/platform/qcom/camss/Makefile
+index 27898b3cc..c19d31838 100644
+--- a/drivers/media/platform/qcom/camss/Makefile
++++ b/drivers/media/platform/qcom/camss/Makefile
+@@ -8,8 +8,10 @@ qcom-camss-objs += \
+ 		camss-csid-4-7.o \
+ 		camss-csid-340.o \
+ 		camss-csid-680.o \
++		camss-csid-980.o \
+ 		camss-csid-gen2.o \
+ 		camss-csid-gen3.o \
++		camss-csid-gen4.o \
+ 		camss-csiphy.o \
+ 		camss-csiphy-2ph-1-0.o \
+ 		camss-csiphy-3ph-1-0.o \
+@@ -27,6 +29,7 @@ qcom-camss-objs += \
+ 		camss-vfe-680.o \
+ 		camss-vfe-gen1.o \
+ 		camss-vfe-gen3.o \
++		camss-vfe-gen4.o \
+ 		camss-vfe-vbif.o \
+ 		camss-video.o
+ 
+diff --git a/drivers/media/platform/qcom/camss/camss-csid-980.c b/drivers/media/platform/qcom/camss/camss-csid-980.c
+new file mode 100644
+index 000000000..0fa020e5c
+--- /dev/null
++++ b/drivers/media/platform/qcom/camss/camss-csid-980.c
+@@ -0,0 +1,479 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * camss-csid-980.c
++ *
++ * Qualcomm MSM Camera Subsystem - CSID (CSI Decoder) Module
++ *
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ */
++#include <linux/completion.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/of.h>
++#include "camss.h"
++#include "camss-csid.h"
++#include "camss-csid-gen3.h"
++
++/* Reset and Command Registers */
++#define CSID_RST_CFG				0xC
++#define		RST_MODE				BIT(0)
++#define		RST_LOCATION				BIT(4)
++
++/* Reset and Command Registers */
++#define CSID_RST_CMD				0x10
++#define		SELECT_HW_RST				BIT(0)
++#define		SELECT_IRQ_RST				BIT(2)
++#define CSID_IRQ_CMD				0x14
++#define		IRQ_CMD_CLEAR				BIT(0)
++
++/* Register Update Commands, RUP/AUP */
++#define CSID_RUP_CMD				0x18
++#define CSID_AUP_CMD				0x1C
++#define		CSID_RUP_AUP_RDI(rdi)			(BIT(8) << (rdi))
++#define CSID_RUP_AUP_CMD			0x20
++#define		RUP_SET					BIT(0)
++#define		MUP					BIT(4)
++
++#define CSID_LITE_RUP_AUP_CMD			0x18
++#define		CSID_LITE_RUP_RDI(rdi)		(BIT(4) << (rdi))
++#define		CSID_LITE_AUP_RDI(rdi)		(BIT(20) << (rdi))
++
++/* Top level interrupt registers */
++#define CSID_TOP_IRQ_STATUS			(csid_is_lite(csid) ? 0x7C : 0x84)
++#define CSID_TOP_IRQ_MASK			(csid_is_lite(csid) ? 0x80 : 0x88)
++#define CSID_TOP_IRQ_CLEAR			(csid_is_lite(csid) ? 0x84 : 0x8C)
++#define CSID_TOP_IRQ_SET			(csid_is_lite(csid) ? 0x88 : 0x90)
++#define		INFO_RST_DONE				BIT(0)
++#define		CSI2_RX_IRQ_STATUS			BIT(2)
++#define		BUF_DONE_IRQ_STATUS			BIT(csid_is_lite(csid) ? 13 : 3)
++
++/* Buffer done interrupt registers */
++#define CSID_BUF_DONE_IRQ_STATUS		(csid_is_lite(csid) ? 0x8C : 0xA4)
++#define		BUF_DONE_IRQ_STATUS_RDI_OFFSET		(csid_is_lite(csid) ? 1 : 16)
++#define CSID_BUF_DONE_IRQ_MASK			(csid_is_lite(csid) ? 0x90 : 0xA8)
++#define CSID_BUF_DONE_IRQ_CLEAR			(csid_is_lite(csid) ? 0x94 : 0xAC)
++#define CSID_BUF_DONE_IRQ_SET			(csid_is_lite(csid) ? 0x98 : 0xB0)
++
++/* CSI2 RX interrupt registers */
++#define CSID_CSI2_RX_IRQ_STATUS			(csid_is_lite(csid) ? 0x9C : 0xB4)
++#define CSID_CSI2_RX_IRQ_MASK			(csid_is_lite(csid) ? 0xA0 : 0xB8)
++#define CSID_CSI2_RX_IRQ_CLEAR			(csid_is_lite(csid) ? 0xA4 : 0xBC)
++#define CSID_CSI2_RX_IRQ_SET			(csid_is_lite(csid) ? 0xA8 : 0xC0)
++
++/* CSI2 RX Configuration */
++#define CSID_CSI2_RX_CFG0			(csid_is_lite(csid) ? 0x200 : 0x400)
++#define		CSI2_RX_CFG0_NUM_ACTIVE_LANES		0
++#define		CSI2_RX_CFG0_PHY_SEL_BASE_IDX		1
++#define		CSI2_RX_CFG0_DL0_INPUT_SEL		4
++#define		CSI2_RX_CFG0_PHY_NUM_SEL		20
++#define		CSI2_RX_CFG0_TPG_MUX_EN			BIT(27)
++#define		CSI2_RX_CFG0_TPG_MUX_SEL		GENMASK(29, 28)
++#define CSID_CSI2_RX_CFG1			(csid_is_lite(csid) ? 0x204 : 0x404)
++#define		CSI2_RX_CFG1_ECC_CORRECTION_EN		BIT(0)
++#define		CSI2_RX_CFG1_VC_MODE			BIT(2)
++
++#define MSM_CSID_MAX_SRC_STREAMS_980		(csid_is_lite(csid) ? 4 : 5)
++
++#define CSID_RDI_CFG0(rdi)                                  \
++	({                                                  \
++		__typeof__(rdi) _rdi = (rdi);               \
++		csid_is_lite(csid) ? 0x500 + 0x100 * _rdi : \
++				     0xE00 + 0x200 * _rdi;  \
++	})
++#define		RDI_CFG0_RETIME_BS			BIT(5)
++#define		RDI_CFG0_TIMESTAMP_EN			BIT(6)
++#define		RDI_CFG0_TIMESTAMP_STB_SEL		BIT(8)
++#define		RDI_CFG0_DECODE_FORMAT			12
++#define		RDI_CFG0_DT				16
++#define		RDI_CFG0_VC				22
++#define		RDI_CFG0_DT_ID				27
++#define		RDI_CFG0_EN				BIT(31)
++
++/* RDI Control and Configuration */
++#define CSID_RDI_CTRL(rdi)                                  \
++	({                                                  \
++		__typeof__(rdi) _rdi = (rdi);               \
++		csid_is_lite(csid) ? 0x504 + 0x100 * _rdi : \
++				     0xE04 + 0x200 * _rdi;  \
++	})
++#define		RDI_CTRL_START_CMD			BIT(0)
++
++#define CSID_RDI_CFG1(rdi)                                  \
++	({                                                  \
++		__typeof__(rdi) _rdi = (rdi);               \
++		csid_is_lite(csid) ? 0x510 + 0x100 * _rdi : \
++				     0xE10 + 0x200 * _rdi;  \
++	})
++#define		RDI_CFG1_DROP_H_EN			BIT(5)
++#define		RDI_CFG1_DROP_V_EN			BIT(6)
++#define		RDI_CFG1_CROP_H_EN			BIT(7)
++#define		RDI_CFG1_CROP_V_EN			BIT(8)
++#define		RDI_CFG1_PACKING_FORMAT_MIPI		BIT(15)
++
++/* RDI Pixel Store Configuration */
++#define CSID_RDI_PIX_STORE_CFG0(rdi)		(0xE14 + 0x200 * (rdi))
++#define		RDI_PIX_STORE_CFG0_EN			BIT(0)
++#define		RDI_PIX_STORE_CFG0_MIN_HBI		1
++
++/* RDI IRQ Status in wrapper */
++#define CSID_CSI2_RDIN_IRQ_STATUS(rdi) \
++	(csid_is_lite(csid) ? 0xEC : 0x114 + 0x10 * (rdi))
++#define CSID_CSI2_RDIN_IRQ_CLEAR(rdi) \
++	(csid_is_lite(csid) ? 0xF4 : 0x11C + 0x10 * (rdi))
++#define		INFO_INPUT_SOF				BIT(12)
++#define		INFO_RUP_DONE				BIT(23)
++/* Full CSID only: per-RDI interrupt mask and its summary bit in the top mask. */
++#define CSID_CSI2_RDIN_IRQ_MASK(rdi)		(0x118 + 0x10 * (rdi))
++#define		TOP_IRQ_RDI(rdi)			BIT(16 + (rdi))
++
++static void __csid_full_aup_rup_trigger(struct csid_device *csid)
++{
++	/* trigger SET in combined register */
++	writel(RUP_SET, csid->base + CSID_RUP_AUP_CMD);
++}
++
++static void __csid_aup_update(struct csid_device *csid, int port_id)
++{
++	if (csid_is_lite(csid)) {
++		/* CSID Lites in v980 follow the legacy way of a combined RUP
++		 * and AUP commands without an explicit SET register.
++		 */
++		csid->reg_update |= CSID_LITE_AUP_RDI(port_id);
++		writel(csid->reg_update, csid->base + CSID_LITE_RUP_AUP_CMD);
++	} else {
++		csid->aup_update |= CSID_RUP_AUP_RDI(port_id);
++		writel(csid->aup_update, csid->base + CSID_AUP_CMD);
++
++		/* CSID Fulls in v980 split AUP and RUP commands, which requires
++		 * additional SET operation to make registers modification take
++		 * effect.
++		 */
++		__csid_full_aup_rup_trigger(csid);
++	}
++}
++
++static void __csid_rup_update(struct csid_device *csid, int port_id)
++{
++	if (csid_is_lite(csid)) {
++		/* CSID Lites in v980 follow the legacy way of a combined RUP
++		 * and AUP commands without an explicit SET register.
++		 */
++		csid->reg_update |= CSID_LITE_RUP_RDI(port_id);
++		writel(csid->reg_update, csid->base + CSID_LITE_RUP_AUP_CMD);
++	} else {
++		csid->rup_update |= CSID_RUP_AUP_RDI(port_id);
++		writel(csid->rup_update, csid->base + CSID_RUP_CMD);
++
++		/* CSID Fulls in v980 split AUP and RUP commands, which requires
++		 * additional SET operation to make registers modification take
++		 * effect.
++		 */
++		__csid_full_aup_rup_trigger(csid);
++	}
++}
++
++static void __csid_aup_rup_clear(struct csid_device *csid, int port_id)
++{
++	/* Hardware clears the registers upon consuming the settings */
++	if (csid_is_lite(csid)) {
++		csid->reg_update &= ~CSID_LITE_RUP_RDI(port_id);
++		csid->reg_update &= ~CSID_LITE_AUP_RDI(port_id);
++	} else {
++		csid->aup_update &= ~CSID_RUP_AUP_RDI(port_id);
++		csid->rup_update &= ~CSID_RUP_AUP_RDI(port_id);
++	}
++}
++
++static void __csid_configure_rx(struct csid_device *csid,
++				struct csid_phy_config *phy)
++{
++	struct camss *camss = csid->camss;
++	int val;
++
++	val = (phy->lane_cnt - 1) << CSI2_RX_CFG0_NUM_ACTIVE_LANES;
++	val |= phy->lane_assign << CSI2_RX_CFG0_DL0_INPUT_SEL;
++
++	if (camss->tpg && csid->tpg_linked &&
++	    camss->tpg[phy->csiphy_id].testgen.mode != TPG_PAYLOAD_MODE_DISABLED) {
++		val |= FIELD_PREP(CSI2_RX_CFG0_TPG_MUX_SEL, phy->csiphy_id + 1);
++		val |= CSI2_RX_CFG0_TPG_MUX_EN;
++	} else {
++		val |= (phy->csiphy_id + CSI2_RX_CFG0_PHY_SEL_BASE_IDX)
++			<< CSI2_RX_CFG0_PHY_NUM_SEL;
++	}
++
++	writel(val, csid->base + CSID_CSI2_RX_CFG0);
++
++	val = CSI2_RX_CFG1_ECC_CORRECTION_EN;
++	writel(val, csid->base + CSID_CSI2_RX_CFG1);
++}
++
++static void __csid_configure_rx_vc(struct csid_device *csid, int vc)
++{
++	int val;
++
++	if (vc > 3) {
++		val = readl(csid->base + CSID_CSI2_RX_CFG1);
++		val |= CSI2_RX_CFG1_VC_MODE;
++		writel(val, csid->base + CSID_CSI2_RX_CFG1);
++	}
++}
++
++static void __csid_ctrl_rdi(struct csid_device *csid, int enable, u8 rdi)
++{
++	u32 rdi_ctrl_offset = CSID_RDI_CTRL(rdi);
++	int val = 0;
++
++	if (enable)
++		val = RDI_CTRL_START_CMD;
++
++	writel(val, csid->base + rdi_ctrl_offset);
++}
++
++static void __csid_configure_rdi_pix_store(struct csid_device *csid, u8 rdi)
++{
++	u32 val;
++
++	/*
++	 * Configure pixel store to allow absorption of hblanking or idle time.
++	 * This helps with horizontal crop and prevents line buffer conflicts.
++	 * Reset state is 0x8 which has MIN_HBI=4, we keep the default MIN_HBI
++	 * and just enable the pixel store functionality.
++	 */
++	val = (4 << RDI_PIX_STORE_CFG0_MIN_HBI) | RDI_PIX_STORE_CFG0_EN;
++	writel(val, csid->base + CSID_RDI_PIX_STORE_CFG0(rdi));
++}
++
++static void __csid_configure_rdi_stream(struct csid_device *csid, u8 enable, u8 port, u8 vc)
++{
++	u8 lane_cnt = csid->phy.lane_cnt;
++	u32 val;
++
++	/* Source pads matching RDI channels on hardware.
++	 * E.g. Pad 1 -> RDI0, Pad 2 -> RDI1, etc.
++	 */
++	struct v4l2_mbus_framefmt *input_format = &csid->fmt[MSM_CSID_PAD_FIRST_SRC + port];
++	const struct csid_format_info *format = csid_get_fmt_entry(csid->res->formats->formats,
++								   csid->res->formats->nformats,
++								   input_format->code);
++
++	if (!lane_cnt)
++		lane_cnt = 4;
++
++	/*
++	 * DT_ID is a two bit bitfield that is concatenated with
++	 * the four least significant bits of the five bit VC
++	 * bitfield to generate an internal CID value.
++	 *
++	 * CSID_RDI_CFG0(vc)
++	 * DT_ID : 28:27
++	 * VC    : 26:22
++	 * DT    : 21:16
++	 *
++	 * CID   : VC 3:0 << 2 | DT_ID 1:0
++	 */
++	u8 dt_id = vc & 0x03;
++	u32 rdi_cfg0_offset = CSID_RDI_CFG0(port);
++	u32 rdi_cfg1_offset = CSID_RDI_CFG1(port);
++	u32 rdi_ctrl_offset = CSID_RDI_CTRL(port);
++
++	val = RDI_CFG0_TIMESTAMP_EN;
++	val |= RDI_CFG0_TIMESTAMP_STB_SEL;
++	val |= RDI_CFG0_RETIME_BS;
++
++	/* note: for non-RDI path, this should be format->decode_format */
++	val |= DECODE_FORMAT_PAYLOAD_ONLY << RDI_CFG0_DECODE_FORMAT;
++	val |= vc << RDI_CFG0_VC;
++	val |= format->data_type << RDI_CFG0_DT;
++	val |= dt_id << RDI_CFG0_DT_ID;
++	writel(val, csid->base + rdi_cfg0_offset);
++
++	val = RDI_CFG1_PACKING_FORMAT_MIPI;
++	writel(val, csid->base + rdi_cfg1_offset);
++
++	/* Configure pixel store using dedicated register in 980 */
++	if (!csid_is_lite(csid))
++		__csid_configure_rdi_pix_store(csid, port);
++
++	val = 0;
++	writel(val, csid->base + rdi_ctrl_offset);
++
++	val = readl(csid->base + rdi_cfg0_offset);
++
++	if (enable)
++		val |= RDI_CFG0_EN;
++
++	writel(val, csid->base + rdi_cfg0_offset);
++}
++
++/* Interrupt at the start of every frame on an RDI to report frame starts. */
++static void __csid_frame_sync_irq(struct csid_device *csid, u8 enable, u8 rdi)
++{
++	u32 top;
++
++	if (!csid->res->frame_sync)
++		return;
++
++	top = readl(csid->base + CSID_TOP_IRQ_MASK);
++	if (enable)
++		top |= TOP_IRQ_RDI(rdi);
++	else
++		top &= ~TOP_IRQ_RDI(rdi);
++	writel(enable ? INFO_INPUT_SOF : 0, csid->base + CSID_CSI2_RDIN_IRQ_MASK(rdi));
++	writel(top, csid->base + CSID_TOP_IRQ_MASK);
++}
++
++static void csid_configure_stream(struct csid_device *csid, u8 enable)
++{
++	u8 i, k;
++
++	__csid_configure_rx(csid, &csid->phy);
++
++	for (i = 0; i < MSM_CSID_MAX_SRC_STREAMS_980; i++) {
++		if (csid->phy.en_vc & BIT(i)) {
++			__csid_frame_sync_irq(csid, enable, i);
++			__csid_configure_rdi_stream(csid, enable, i, 0);
++			__csid_configure_rx_vc(csid, 0);
++
++			for (k = 0; k < CAMSS_INIT_BUF_COUNT; k++) {
++				__csid_aup_update(csid, i);
++				__csid_rup_update(csid, i);
++			}
++
++			__csid_ctrl_rdi(csid, enable, i);
++		}
++	}
++}
++
++static int csid_configure_testgen_pattern(struct csid_device *csid, s32 val)
++{
++	return 0;
++}
++
++static void csid_subdev_reg_update(struct csid_device *csid, int port_id,
++				   bool clear)
++{
++	if (clear)
++		__csid_aup_rup_clear(csid, port_id);
++	else
++		__csid_aup_update(csid, port_id);
++}
++
++/**
++ * csid_isr - CSID module interrupt service routine
++ * @irq: Interrupt line
++ * @dev: CSID device
++ *
++ * Return IRQ_HANDLED on success
++ */
++static irqreturn_t csid_isr(int irq, void *dev)
++{
++	struct csid_device *csid = dev;
++	u32 val, buf_done_val;
++	u8 reset_done;
++	int i;
++
++	val = readl(csid->base + CSID_TOP_IRQ_STATUS);
++	writel(val, csid->base + CSID_TOP_IRQ_CLEAR);
++
++	reset_done = val & INFO_RST_DONE;
++
++	buf_done_val = readl(csid->base + CSID_BUF_DONE_IRQ_STATUS);
++	writel(buf_done_val, csid->base + CSID_BUF_DONE_IRQ_CLEAR);
++
++	for (i = 0; i < MSM_CSID_MAX_SRC_STREAMS_980; i++) {
++		if (csid->phy.en_vc & BIT(i)) {
++			val = readl(csid->base + CSID_CSI2_RDIN_IRQ_STATUS(i));
++			writel(val, csid->base + CSID_CSI2_RDIN_IRQ_CLEAR(i));
++
++			if (val & INFO_RUP_DONE)
++				csid_subdev_reg_update(csid, i, true);
++
++			if (buf_done_val & BIT(BUF_DONE_IRQ_STATUS_RDI_OFFSET + i))
++				camss_buf_done(csid->camss, csid->id, i);
++
++			/* After buf done, so the event carries this frame's number. */
++			if (val & INFO_INPUT_SOF && csid->res->frame_sync)
++				csid_frame_start(csid, i);
++		}
++	}
++
++	val = IRQ_CMD_CLEAR;
++	writel(val, csid->base + CSID_IRQ_CMD);
++
++	if (reset_done)
++		complete(&csid->reset_complete);
++
++	return IRQ_HANDLED;
++}
++
++/**
++ * csid_reset - Trigger reset on CSID module and wait to complete
++ * @csid: CSID device
++ *
++ * Return 0 on success or a negative error code otherwise
++ */
++static int csid_reset(struct csid_device *csid)
++{
++	unsigned long time;
++	u32 val;
++	int i;
++
++	reinit_completion(&csid->reset_complete);
++
++	val = INFO_RST_DONE | BUF_DONE_IRQ_STATUS;
++	writel(val, csid->base + CSID_TOP_IRQ_CLEAR);
++	writel(val, csid->base + CSID_TOP_IRQ_MASK);
++
++	val = 0;
++	for (i = 0; i < MSM_CSID_MAX_SRC_STREAMS_980; i++) {
++		if (csid->phy.en_vc & BIT(i)) {
++			/*
++			 * Only need to clear buf done IRQ status here,
++			 * RUP done IRQ status will be cleared once isr
++			 * strobe generated by CSID_RST_CMD
++			 */
++			val |= BIT(BUF_DONE_IRQ_STATUS_RDI_OFFSET + i);
++		}
++	}
++	writel(val, csid->base + CSID_BUF_DONE_IRQ_CLEAR);
++	writel(val, csid->base + CSID_BUF_DONE_IRQ_MASK);
++
++	/* Clear all IRQ status with CLEAR bits set */
++	val = IRQ_CMD_CLEAR;
++	writel(val, csid->base + CSID_IRQ_CMD);
++
++	val = RST_LOCATION | RST_MODE;
++	writel(val, csid->base + CSID_RST_CFG);
++
++	val = SELECT_HW_RST | SELECT_IRQ_RST;
++	writel(val, csid->base + CSID_RST_CMD);
++
++	time = wait_for_completion_timeout(&csid->reset_complete,
++					   msecs_to_jiffies(CSID_RESET_TIMEOUT_MS));
++
++	if (!time) {
++		dev_err(csid->camss->dev, "CSID reset timeout\n");
++		return -ETIMEDOUT;
++	}
++
++	return 0;
++}
++
++static void csid_subdev_init(struct csid_device *csid)
++{
++	csid->testgen.nmodes = CSID_PAYLOAD_MODE_DISABLED;
++}
++
++const struct csid_hw_ops csid_ops_980 = {
++	.configure_stream = csid_configure_stream,
++	.configure_testgen_pattern = csid_configure_testgen_pattern,
++	.hw_version = csid_hw_version,
++	.isr = csid_isr,
++	.reset = csid_reset,
++	.src_pad_code = csid_src_pad_code,
++	.subdev_init = csid_subdev_init,
++	.reg_update = csid_subdev_reg_update,
++};
+diff --git a/drivers/media/platform/qcom/camss/camss-csid-gen4.c b/drivers/media/platform/qcom/camss/camss-csid-gen4.c
+new file mode 100644
+index 000000000..bc52e4a11
+--- /dev/null
++++ b/drivers/media/platform/qcom/camss/camss-csid-gen4.c
+@@ -0,0 +1,391 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * camss-csid-gen4.c
++ *
++ * Qualcomm MSM Camera Subsystem - CSID (CSI Decoder) Module
++ *
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ */
++#include <linux/completion.h>
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/of.h>
++
++#include "camss.h"
++#include "camss-csid.h"
++#include "camss-csid-gen3.h"
++
++/* Reset and Command Registers */
++#define CSID_RST_CFG				0x108
++#define		RST_MODE				BIT(0)
++#define		RST_LOCATION				BIT(4)
++
++/* Reset and Command Registers */
++#define CSID_RST_CMD				0x10C
++#define		SELECT_HW_RST				BIT(0)
++#define		SELECT_IRQ_RST				BIT(2)
++#define CSID_IRQ_CMD				0x110
++#define		IRQ_CMD_CLEAR				BIT(0)
++
++/* Register Update Commands, RUP/AUP */
++#define CSID_RUP_CMD				0x114
++#define CSID_AUP_CMD				0x118
++#define		CSID_RUP_AUP_RDI(rdi)			(BIT(8) << (rdi))
++#define CSID_RUP_AUP_CMD			0x11C
++#define		RUP_SET					BIT(0)
++#define		MUP					BIT(4)
++
++/* Top level interrupt registers */
++#define CSID_TOP_IRQ_STATUS			0x180
++#define CSID_TOP_IRQ_MASK			0x184
++#define CSID_TOP_IRQ_CLEAR			0x188
++#define		INFO_RST_DONE				BIT(0)
++#define		CSI2_RX_IRQ_STATUS			BIT(2)
++#define		BUF_DONE_IRQ_STATUS			BIT(3)
++
++/* Buffer done interrupt registers */
++#define CSID_BUF_DONE_IRQ_STATUS		0x1A0
++#define		BUF_DONE_IRQ_STATUS_RDI_OFFSET		16
++#define CSID_BUF_DONE_IRQ_MASK			0x1A4
++#define CSID_BUF_DONE_IRQ_CLEAR			0x1A8
++#define CSID_BUF_DONE_IRQ_SET			0x1AC
++
++/* CSI2 RX interrupt registers */
++#define CSID_CSI2_RX_IRQ_STATUS			0x1B0
++#define CSID_CSI2_RX_IRQ_MASK			0x1B4
++#define CSID_CSI2_RX_IRQ_CLEAR			0x1B8
++#define CSID_CSI2_RX_IRQ_SET			0x1BC
++
++/* CSI2 RX Configuration */
++#define CSID_CSI2_RX_CFG0			0x880
++#define		CSI2_RX_CFG0_NUM_ACTIVE_LANES		0
++#define		CSI2_RX_CFG0_DL0_INPUT_SEL		4
++#define		CSI2_RX_CFG0_PHY_NUM_SEL		20
++#define		CSI2_RX_CFG0_TPG_MUX_EN			BIT(27)
++#define		CSI2_RX_CFG0_TPG_MUX_SEL		GENMASK(29, 28)
++#define		CSI2_RX_CFG0_PHY_SEL_BASE_IDX		1
++#define CSID_CSI2_RX_CFG1			0x884
++#define		CSI2_RX_CFG1_ECC_CORRECTION_EN		BIT(0)
++#define		CSI2_RX_CFG1_VC_MODE			BIT(2)
++
++#define MSM_CSID_MAX_SRC_STREAMS_GEN4		(csid_is_lite(csid) ? 4 : 5)
++
++/* RDI Configuration */
++#define CSID_RDI_CFG0(rdi)	(csid_is_lite(csid) ?\
++					(0x3080 + 0x200 * (rdi)) :\
++					(0x5480 + 0x200 * (rdi)))
++#define		RDI_CFG0_RETIME_BS			BIT(5)
++#define		RDI_CFG0_TIMESTAMP_EN			BIT(6)
++#define		RDI_CFG0_TIMESTAMP_STB_SEL		BIT(8)
++#define		RDI_CFG0_DECODE_FORMAT			12
++#define		RDI_CFG0_DT				16
++#define		RDI_CFG0_VC				22
++#define		RDI_CFG0_EN				BIT(31)
++
++/* RDI Control and Configuration */
++#define CSID_RDI_CTRL(rdi)	(csid_is_lite(csid) ?\
++					(0x3088 + 0x200 * (rdi)) :\
++					(0x5488 + 0x200 * (rdi)))
++#define		RDI_CTRL_START_CMD			BIT(0)
++
++#define CSID_RDI_CFG1(rdi)	(csid_is_lite(csid) ?\
++					(0x3094 + 0x200 * (rdi)) :\
++					(0x5494 + 0x200 * (rdi)))
++#define		RDI_CFG1_DROP_H_EN			BIT(5)
++#define		RDI_CFG1_DROP_V_EN			BIT(6)
++#define		RDI_CFG1_CROP_H_EN			BIT(7)
++#define		RDI_CFG1_CROP_V_EN			BIT(8)
++#define		RDI_CFG1_PACKING_FORMAT_MIPI		BIT(15)
++
++/* RDI Pixel Store Configuration */
++#define CSID_RDI_PIX_STORE_CFG0(rdi)	(0x5498 + 0x200 * (rdi))
++#define		RDI_PIX_STORE_CFG0_EN			BIT(0)
++#define		RDI_PIX_STORE_CFG0_MIN_HBI		1
++
++/* RDI IRQ Status in wrapper */
++#define CSID_CSI2_RDIN_IRQ_STATUS(rdi)	(0x224 + (0x10 * (rdi)))
++#define CSID_CSI2_RDIN_IRQ_MASK(rdi)	(0x228 + (0x10 * (rdi)))
++#define CSID_CSI2_RDIN_IRQ_CLEAR(rdi)	(0x22C + (0x10 * (rdi)))
++#define		INFO_RUP_DONE				BIT(23)
++
++static void __csid_aup_rup_trigger(struct csid_device *csid)
++{
++	/* trigger SET in combined register */
++	writel(RUP_SET, csid->base + CSID_RUP_AUP_CMD);
++}
++
++static void __csid_aup_rup_clear(struct csid_device *csid, int port_id)
++{
++	/* Hardware clears the registers upon consuming the settings */
++	csid->aup_update &= ~CSID_RUP_AUP_RDI(port_id);
++	csid->rup_update &= ~CSID_RUP_AUP_RDI(port_id);
++}
++
++static void __csid_aup_update(struct csid_device *csid, int port_id)
++{
++	csid->aup_update |= CSID_RUP_AUP_RDI(port_id);
++	writel(csid->aup_update, csid->base + CSID_AUP_CMD);
++
++	__csid_aup_rup_trigger(csid);
++}
++
++static void __csid_reg_update(struct csid_device *csid, int port_id)
++{
++	csid->rup_update |= CSID_RUP_AUP_RDI(port_id);
++	writel(csid->rup_update, csid->base + CSID_RUP_CMD);
++
++	__csid_aup_rup_trigger(csid);
++}
++
++static void __csid_configure_rx(struct csid_device *csid,
++				struct csid_phy_config *phy)
++{
++	struct camss *camss = csid->camss;
++	int val;
++
++	val = (phy->lane_cnt - 1) << CSI2_RX_CFG0_NUM_ACTIVE_LANES;
++	val |= phy->lane_assign << CSI2_RX_CFG0_DL0_INPUT_SEL;
++
++	if (camss->tpg && csid->tpg_linked &&
++	    camss->tpg[phy->csiphy_id].testgen.mode != TPG_PAYLOAD_MODE_DISABLED) {
++		val |= FIELD_PREP(CSI2_RX_CFG0_TPG_MUX_SEL, phy->csiphy_id + 1);
++		val |= CSI2_RX_CFG0_TPG_MUX_EN;
++	} else {
++		val |= (phy->csiphy_id + CSI2_RX_CFG0_PHY_SEL_BASE_IDX)
++			<< CSI2_RX_CFG0_PHY_NUM_SEL;
++	}
++
++	writel(val, csid->base + CSID_CSI2_RX_CFG0);
++
++	val = CSI2_RX_CFG1_ECC_CORRECTION_EN;
++	writel(val, csid->base + CSID_CSI2_RX_CFG1);
++}
++
++static void __csid_configure_rx_vc(struct csid_device *csid, int vc)
++{
++	int val;
++
++	if (vc > 3) {
++		val = readl(csid->base + CSID_CSI2_RX_CFG1);
++		val |= CSI2_RX_CFG1_VC_MODE;
++		writel(val, csid->base + CSID_CSI2_RX_CFG1);
++	}
++}
++
++static void __csid_ctrl_rdi(struct csid_device *csid, int enable, u8 rdi)
++{
++	int val = 0;
++
++	if (enable)
++		val = RDI_CTRL_START_CMD;
++
++	writel(val, csid->base + CSID_RDI_CTRL(rdi));
++}
++
++static void __csid_configure_rdi_pix_store(struct csid_device *csid, u8 rdi)
++{
++	u32 val;
++
++	/*
++	 * Configure pixel store to allow absorption of hblanking or idle time.
++	 * This helps with horizontal crop and prevents line buffer conflicts.
++	 * Reset state is 0x8 which has MIN_HBI=4, we keep the default MIN_HBI
++	 * and just enable the pixel store functionality.
++	 */
++	val = (4 << RDI_PIX_STORE_CFG0_MIN_HBI) | RDI_PIX_STORE_CFG0_EN;
++	writel(val, csid->base + CSID_RDI_PIX_STORE_CFG0(rdi));
++}
++
++static void __csid_configure_rdi_stream(struct csid_device *csid, u8 enable, u8 port, u8 vc)
++{
++	u8 lane_cnt = csid->phy.lane_cnt;
++	u32 val;
++
++	/* Source pads matching RDI channels on hardware.
++	 * E.g. Pad 1 -> RDI0, Pad 2 -> RDI1, etc.
++	 */
++	struct v4l2_mbus_framefmt *input_format = &csid->fmt[MSM_CSID_PAD_FIRST_SRC + port];
++	const struct csid_format_info *format = csid_get_fmt_entry(csid->res->formats->formats,
++								   csid->res->formats->nformats,
++								   input_format->code);
++
++	if (!lane_cnt)
++		lane_cnt = 4;
++
++	val = RDI_CFG0_TIMESTAMP_EN;
++	val |= RDI_CFG0_TIMESTAMP_STB_SEL;
++	val |= RDI_CFG0_RETIME_BS;
++
++	/* note: for non-RDI path, this should be format->decode_format */
++	val |= DECODE_FORMAT_PAYLOAD_ONLY << RDI_CFG0_DECODE_FORMAT;
++	val |= vc << RDI_CFG0_VC;
++	val |= format->data_type << RDI_CFG0_DT;
++	writel(val, csid->base + CSID_RDI_CFG0(port));
++
++	val = RDI_CFG1_PACKING_FORMAT_MIPI;
++	writel(val, csid->base + CSID_RDI_CFG1(port));
++
++	/* Configure pixel store using dedicated register in gen4 */
++	if (!csid_is_lite(csid))
++		__csid_configure_rdi_pix_store(csid, port);
++
++	val = 0;
++	writel(val, csid->base + CSID_RDI_CTRL(port));
++
++	val = readl(csid->base + CSID_RDI_CFG0(port));
++
++	if (enable)
++		val |= RDI_CFG0_EN;
++
++	writel(val, csid->base + CSID_RDI_CFG0(port));
++}
++
++static void csid_configure_stream(struct csid_device *csid, u8 enable)
++{
++	u8 i, k;
++
++	__csid_configure_rx(csid, &csid->phy);
++
++	for (i = 0; i < MSM_CSID_MAX_SRC_STREAMS_GEN4; i++) {
++		if (csid->phy.en_vc & BIT(i)) {
++			__csid_configure_rdi_stream(csid, enable, i, 0);
++			__csid_configure_rx_vc(csid, 0);
++
++			for (k = 0; k < CAMSS_INIT_BUF_COUNT; k++)
++				__csid_aup_update(csid, i);
++
++			__csid_reg_update(csid, i);
++
++			__csid_ctrl_rdi(csid, enable, i);
++		}
++	}
++}
++
++static int csid_configure_testgen_pattern(struct csid_device *csid, s32 val)
++{
++	return 0;
++}
++
++static void csid_subdev_reg_update(struct csid_device *csid, int port_id,
++				   bool clear)
++{
++	if (clear)
++		__csid_aup_rup_clear(csid, port_id);
++	else
++		__csid_aup_update(csid, port_id);
++}
++
++/**
++ * csid_isr - CSID module interrupt service routine
++ * @irq: Interrupt line
++ * @dev: CSID device
++ *
++ * Return IRQ_HANDLED on success
++ */
++static irqreturn_t csid_isr(int irq, void *dev)
++{
++	struct csid_device *csid = dev;
++	u32 val, buf_done_val;
++	u8 reset_done;
++	int i;
++
++	val = readl(csid->base + CSID_TOP_IRQ_STATUS);
++	writel(val, csid->base + CSID_TOP_IRQ_CLEAR);
++
++	reset_done = val & INFO_RST_DONE;
++
++	buf_done_val = readl(csid->base + CSID_BUF_DONE_IRQ_STATUS);
++	writel(buf_done_val, csid->base + CSID_BUF_DONE_IRQ_CLEAR);
++
++	for (i = 0; i < MSM_CSID_MAX_SRC_STREAMS_GEN4; i++) {
++		if (csid->phy.en_vc & BIT(i)) {
++			val = readl(csid->base + CSID_CSI2_RDIN_IRQ_STATUS(i));
++			writel(val, csid->base + CSID_CSI2_RDIN_IRQ_CLEAR(i));
++
++			if (val & INFO_RUP_DONE)
++				csid_subdev_reg_update(csid, i, true);
++
++			if (buf_done_val & BIT(BUF_DONE_IRQ_STATUS_RDI_OFFSET + i))
++				camss_buf_done(csid->camss, csid->id, i);
++		}
++	}
++
++	val = IRQ_CMD_CLEAR;
++	writel(val, csid->base + CSID_IRQ_CMD);
++
++	if (reset_done)
++		complete(&csid->reset_complete);
++
++	return IRQ_HANDLED;
++}
++
++/**
++ * csid_reset - Trigger reset on CSID module and wait to complete
++ * @csid: CSID device
++ *
++ * Return 0 on success or a negative error code otherwise
++ */
++static int csid_reset(struct csid_device *csid)
++{
++	unsigned long time;
++	u32 val;
++	int i;
++
++	reinit_completion(&csid->reset_complete);
++
++	val = INFO_RST_DONE | BUF_DONE_IRQ_STATUS;
++	writel(val, csid->base + CSID_TOP_IRQ_CLEAR);
++	writel(val, csid->base + CSID_TOP_IRQ_MASK);
++
++	val = 0;
++	for (i = 0; i < MSM_CSID_MAX_SRC_STREAMS_GEN4; i++) {
++		if (csid->phy.en_vc & BIT(i)) {
++			/*
++			 * Only need to clear buf done IRQ status here,
++			 * RUP done IRQ status will be cleared once isr
++			 * strobe generated by CSID_RST_CMD
++			 */
++			val |= BIT(BUF_DONE_IRQ_STATUS_RDI_OFFSET + i);
++		}
++	}
++	writel(val, csid->base + CSID_BUF_DONE_IRQ_CLEAR);
++	writel(val, csid->base + CSID_BUF_DONE_IRQ_MASK);
++
++	/* Clear all IRQ status with CLEAR bits set */
++	val = IRQ_CMD_CLEAR;
++	writel(val, csid->base + CSID_IRQ_CMD);
++
++	val = RST_LOCATION | RST_MODE;
++	writel(val, csid->base + CSID_RST_CFG);
++
++	val = SELECT_HW_RST | SELECT_IRQ_RST;
++	writel(val, csid->base + CSID_RST_CMD);
++
++	time = wait_for_completion_timeout(&csid->reset_complete,
++					   msecs_to_jiffies(CSID_RESET_TIMEOUT_MS));
++
++	if (!time) {
++		dev_err(csid->camss->dev, "CSID reset timeout\n");
++		return -EIO;
++	}
++
++	return 0;
++}
++
++static void csid_subdev_init(struct csid_device *csid)
++{
++	csid->testgen.nmodes = CSID_PAYLOAD_MODE_DISABLED;
++}
++
++const struct csid_hw_ops csid_ops_gen4 = {
++	.configure_stream = csid_configure_stream,
++	.configure_testgen_pattern = csid_configure_testgen_pattern,
++	.hw_version = csid_hw_version,
++	.isr = csid_isr,
++	.reset = csid_reset,
++	.src_pad_code = csid_src_pad_code,
++	.subdev_init = csid_subdev_init,
++	.reg_update = csid_subdev_reg_update,
++};
+diff --git a/drivers/media/platform/qcom/camss/camss-csid.c b/drivers/media/platform/qcom/camss/camss-csid.c
+index 48459b46a..3f3cd0bba 100644
+--- a/drivers/media/platform/qcom/camss/camss-csid.c
++++ b/drivers/media/platform/qcom/camss/camss-csid.c
+@@ -696,44 +696,28 @@ static int csid_set_power(struct v4l2_subdev *sd, int on)
+ 
+ 		ret = pm_runtime_resume_and_get(dev);
+ 		if (ret < 0)
+-			return ret;
++			goto err_put_parent;
+ 
+ 		ret = regulator_bulk_enable(csid->num_supplies,
+ 					    csid->supplies);
+-		if (ret < 0) {
+-			pm_runtime_put_sync(dev);
+-			return ret;
+-		}
++		if (ret < 0)
++			goto err_put_runtime;
+ 
+ 		ret = csid_set_clock_rates(csid);
+-		if (ret < 0) {
+-			regulator_bulk_disable(csid->num_supplies,
+-					       csid->supplies);
+-			pm_runtime_put_sync(dev);
+-			return ret;
+-		}
++		if (ret < 0)
++			goto err_disable_regulators;
+ 
+ 		ret = camss_enable_clocks(csid->nclocks, csid->clock, dev);
+-		if (ret < 0) {
+-			regulator_bulk_disable(csid->num_supplies,
+-					       csid->supplies);
+-			pm_runtime_put_sync(dev);
+-			return ret;
+-		}
++		if (ret < 0)
++			goto err_disable_regulators;
+ 
+ 		csid->phy.need_vc_update = true;
+ 
+ 		enable_irq(csid->irq);
+ 
+ 		ret = csid->res->hw_ops->reset(csid);
+-		if (ret < 0) {
+-			disable_irq(csid->irq);
+-			camss_disable_clocks(csid->nclocks, csid->clock);
+-			regulator_bulk_disable(csid->num_supplies,
+-					       csid->supplies);
+-			pm_runtime_put_sync(dev);
+-			return ret;
+-		}
++		if (ret < 0)
++			goto err_disable_irq;
+ 
+ 		csid->res->hw_ops->hw_version(csid);
+ 	} else {
+@@ -745,6 +729,18 @@ static int csid_set_power(struct v4l2_subdev *sd, int on)
+ 		csid->res->parent_dev_ops->put(camss, csid->id);
+ 	}
+ 
++	return ret;
++
++err_disable_irq:
++	disable_irq(csid->irq);
++	camss_disable_clocks(csid->nclocks, csid->clock);
++err_disable_regulators:
++	regulator_bulk_disable(csid->num_supplies, csid->supplies);
++err_put_runtime:
++	pm_runtime_put_sync(dev);
++err_put_parent:
++	csid->res->parent_dev_ops->put(camss, csid->id);
++
+ 	return ret;
+ }
+ 
+@@ -1315,9 +1311,42 @@ static int csid_link_setup(struct media_entity *entity,
+ 	return 0;
+ }
+ 
++/*
++ * csid_frame_start - Report the start of a frame on a source stream
++ * @csid: CSID device
++ * @port_id: Source stream (RDI) index
++ *
++ * Called from the interrupt handler. The event carries the sequence number
++ * that the frame's buffer will be given, so that userspace can tell which
++ * frame a sensor control written at this point applies to.
++ */
++void csid_frame_start(struct csid_device *csid, int port_id)
++{
++	struct v4l2_event event = {
++		.type = V4L2_EVENT_FRAME_SYNC,
++		.u.frame_sync.frame_sequence =
++			camss_next_sequence(csid->camss, csid->id, port_id),
++	};
++
++	v4l2_event_queue(csid->subdev.devnode, &event);
++}
++
++static int csid_subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh,
++				struct v4l2_event_subscription *sub)
++{
++	struct csid_device *csid = v4l2_get_subdevdata(sd);
++
++	if (sub->type != V4L2_EVENT_FRAME_SYNC)
++		return v4l2_ctrl_subdev_subscribe_event(sd, fh, sub);
++	if (!csid->res->frame_sync)
++		return -EINVAL;
++
++	return v4l2_event_subscribe(fh, sub, 4, NULL);
++}
++
+ static const struct v4l2_subdev_core_ops csid_core_ops = {
+ 	.s_power = csid_set_power,
+-	.subscribe_event = v4l2_ctrl_subdev_subscribe_event,
++	.subscribe_event = csid_subscribe_event,
+ 	.unsubscribe_event = v4l2_event_subdev_unsubscribe,
+ };
+ 
+diff --git a/drivers/media/platform/qcom/camss/camss-csid.h b/drivers/media/platform/qcom/camss/camss-csid.h
+index 5296b10f6..7aa3992cb 100644
+--- a/drivers/media/platform/qcom/camss/camss-csid.h
++++ b/drivers/media/platform/qcom/camss/camss-csid.h
+@@ -141,6 +141,8 @@ struct csid_hw_ops {
+ 
+ struct csid_subdev_resources {
+ 	bool is_lite;
++	/* The interrupt handler reports the start of each frame. */
++	bool frame_sync;
+ 	const struct csid_hw_ops *hw_ops;
+ 	const struct parent_dev_ops *parent_dev_ops;
+ 	const struct csid_formats *formats;
+@@ -154,7 +156,13 @@ struct csid_device {
+ 	void __iomem *base;
+ 	u32 irq;
+ 	char irq_name[30];
+-	u32 reg_update;
++	union {
++		u32 reg_update;
++		struct {
++			u32 rup_update;
++			u32 aup_update;
++		};
++	};
+ 	struct camss_clock *clock;
+ 	int nclocks;
+ 	struct regulator_bulk_data *supplies;
+@@ -196,6 +204,8 @@ const struct csid_format_info *csid_get_fmt_entry(const struct csid_format_info
+ 						  unsigned int nformats,
+ 						  u32 code);
+ 
++void csid_frame_start(struct csid_device *csid, int port_id);
++
+ int msm_csid_subdev_init(struct camss *camss, struct csid_device *csid,
+ 			 const struct camss_subdev_resources *res, u8 id);
+ 
+@@ -216,8 +226,10 @@ extern const struct csid_hw_ops csid_ops_4_1;
+ extern const struct csid_hw_ops csid_ops_4_7;
+ extern const struct csid_hw_ops csid_ops_340;
+ extern const struct csid_hw_ops csid_ops_680;
++extern const struct csid_hw_ops csid_ops_980;
+ extern const struct csid_hw_ops csid_ops_gen2;
+ extern const struct csid_hw_ops csid_ops_gen3;
++extern const struct csid_hw_ops csid_ops_gen4;
+ 
+ /*
+  * csid_is_lite - Check if CSID is CSID lite.
+diff --git a/drivers/media/platform/qcom/camss/camss-csiphy.c b/drivers/media/platform/qcom/camss/camss-csiphy.c
+index 539ac4888..aaed7d030 100644
+--- a/drivers/media/platform/qcom/camss/camss-csiphy.c
++++ b/drivers/media/platform/qcom/camss/camss-csiphy.c
+@@ -13,6 +13,8 @@
+ #include <linux/io.h>
+ #include <linux/kernel.h>
+ #include <linux/of.h>
++#include <linux/of_graph.h>
++#include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_runtime.h>
+ #include <media/media-entity.h>
+@@ -131,10 +133,10 @@ static u8 csiphy_get_bpp(const struct csiphy_format_info *formats,
+ }
+ 
+ /*
+- * csiphy_set_clock_rates - Calculate and set clock rates on CSIPHY module
++ * csiphy_set_clock_rates_legacy - Calculate and set clock rates on CSIPHY module
+  * @csiphy: CSIPHY device
+  */
+-static int csiphy_set_clock_rates(struct csiphy_device *csiphy)
++static int csiphy_set_clock_rates_legacy(struct csiphy_device *csiphy)
+ {
+ 	struct device *dev = csiphy->camss->dev;
+ 	s64 link_freq;
+@@ -200,7 +202,7 @@ static int csiphy_set_clock_rates(struct csiphy_device *csiphy)
+  *
+  * Return 0 on success or a negative error code otherwise
+  */
+-static int csiphy_set_power(struct v4l2_subdev *sd, int on)
++static int csiphy_set_power_legacy(struct v4l2_subdev *sd, int on)
+ {
+ 	struct csiphy_device *csiphy = v4l2_get_subdevdata(sd);
+ 	struct device *dev = csiphy->camss->dev;
+@@ -219,7 +221,7 @@ static int csiphy_set_power(struct v4l2_subdev *sd, int on)
+ 			return ret;
+ 		}
+ 
+-		ret = csiphy_set_clock_rates(csiphy);
++		ret = csiphy_set_clock_rates_legacy(csiphy);
+ 		if (ret < 0) {
+ 			regulator_bulk_disable(csiphy->num_supplies,
+ 					       csiphy->supplies);
+@@ -254,7 +256,7 @@ static int csiphy_set_power(struct v4l2_subdev *sd, int on)
+ }
+ 
+ /*
+- * csiphy_stream_on - Enable streaming on CSIPHY module
++ * csiphy_stream_on_legacy - Enable streaming on CSIPHY module
+  * @csiphy: CSIPHY device
+  *
+  * Helper function to enable streaming on CSIPHY module.
+@@ -262,7 +264,7 @@ static int csiphy_set_power(struct v4l2_subdev *sd, int on)
+  *
+  * Return 0 on success or a negative error code otherwise
+  */
+-static int csiphy_stream_on(struct csiphy_device *csiphy)
++static int csiphy_stream_on_legacy(struct csiphy_device *csiphy)
+ {
+ 	struct csiphy_config *cfg = &csiphy->cfg;
+ 	s64 link_freq;
+@@ -306,11 +308,98 @@ static int csiphy_stream_on(struct csiphy_device *csiphy)
+  *
+  * Helper function to disable streaming on CSIPHY module
+  */
+-static void csiphy_stream_off(struct csiphy_device *csiphy)
++static void csiphy_stream_off_legacy(struct csiphy_device *csiphy)
+ {
+ 	csiphy->res->hw_ops->lanes_disable(csiphy, &csiphy->cfg);
+ }
+ 
++/*
++ * csiphy_stream_on - Enable streaming on CSIPHY module
++ * @csiphy: CSIPHY device
++ *
++ * Helper function to enable streaming on CSIPHY module.
++ * Main configuration of CSIPHY module is also done here.
++ *
++ * Return 0 on success or a negative error code otherwise
++ */
++static int csiphy_stream_on(struct csiphy_device *csiphy)
++{
++	u8 bpp = csiphy_get_bpp(csiphy->res->formats->formats, csiphy->res->formats->nformats,
++				csiphy->fmt[MSM_CSIPHY_PAD_SINK].code);
++	struct csiphy_lanes_cfg *lncfg = &csiphy->cfg.csi2->lane_cfg;
++	struct phy_configure_opts_mipi_dphy *dphy_cfg;
++	union phy_configure_opts dphy_opts = { 0 };
++	struct device *dev = csiphy->camss->dev;
++	u8 num_lanes = lncfg->num_data;
++	s64 link_freq;
++	int ret;
++
++	dphy_cfg = &dphy_opts.mipi_dphy;
++
++	link_freq = camss_get_link_freq(&csiphy->subdev.entity, bpp, num_lanes);
++
++	if (link_freq <= 0) {
++		dev_err(dev,
++			"Cannot get CSI2 transmitter's link frequency\n");
++		return -EINVAL;
++	}
++
++	ret = phy_mipi_dphy_get_default_config_for_hsclk(link_freq, num_lanes,
++							 dphy_cfg);
++	if (ret < 0) {
++		dev_err(dev, "Invalid config for link frequency %lld\n",
++			link_freq);
++		return ret;
++	}
++
++	ret = phy_set_mode(csiphy->phy, PHY_MODE_MIPI_DPHY);
++	if (ret) {
++		dev_err(dev, "Failed to set phy mode\n");
++		return ret;
++	}
++
++	ret = phy_configure(csiphy->phy, &dphy_opts);
++	if (ret) {
++		dev_err(dev, "failed to configure MIPI D-PHY\n");
++		goto error;
++	}
++
++	return phy_power_on(csiphy->phy);
++
++error:
++	return ret;
++}
++
++/*
++ * csiphy_stream_off - Disable streaming on CSIPHY module
++ * @csiphy: CSIPHY device
++ *
++ * Helper function to disable streaming on CSIPHY module
++ */
++static void csiphy_stream_off(struct csiphy_device *csiphy)
++{
++	phy_power_off(csiphy->phy);
++}
++
++/*
++ * csiphy_set_stream - Enable/disable streaming on CSIPHY module
++ * @sd: CSIPHY V4L2 subdevice
++ * @enable: Requested streaming state
++ *
++ * Return 0 on success or a negative error code otherwise
++ */
++static int csiphy_set_stream_legacy(struct v4l2_subdev *sd, int enable)
++{
++	struct csiphy_device *csiphy = v4l2_get_subdevdata(sd);
++	int ret = 0;
++
++	if (enable)
++		ret = csiphy_stream_on_legacy(csiphy);
++	else
++		csiphy_stream_off_legacy(csiphy);
++
++	return ret;
++}
+ 
+ /*
+  * csiphy_set_stream - Enable/disable streaming on CSIPHY module
+@@ -572,16 +661,16 @@ csiphy_match_clock_name(const char *clock_name, const char *format, ...)
+ }
+ 
+ /*
+- * msm_csiphy_subdev_init - Initialize CSIPHY device structure and resources
++ * msm_csiphy_subdev_init_legacy - Initialize CSIPHY device structure and resources
+  * @csiphy: CSIPHY device
+  * @res: CSIPHY module resources table
+  * @id: CSIPHY module id
+  *
+  * Return 0 on success or a negative error code otherwise
+  */
+-int msm_csiphy_subdev_init(struct camss *camss,
+-			   struct csiphy_device *csiphy,
+-			   const struct camss_subdev_resources *res, u8 id)
++int msm_csiphy_subdev_init_legacy(struct camss *camss,
++				  struct csiphy_device *csiphy,
++				  const struct camss_subdev_resources *res, u8 id)
+ {
+ 	struct device *dev = camss->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+@@ -709,6 +798,54 @@ int msm_csiphy_subdev_init(struct camss *camss,
+ 	return ret;
+ }
+ 
++/*
++ * msm_csiphy_subdev_init - Initialize CSIPHY device structure and resources
++ * @camss: CAMSS structure
++ * @port: DT port index
++ *
++ * Return 0 on success or absence of link, negative error code otherwise
++ */
++int msm_csiphy_subdev_init(struct camss *camss, u8 port)
++{
++	const struct camss_subdev_resources *res = &camss->res->csiphy_res[port];
++	struct csiphy_device *csiphy = &camss->csiphy[port];
++	struct device *dev = camss->dev;
++	struct device_node *ep, *remote;
++	int ret;
++
++	ep = of_graph_get_endpoint_by_regs(dev->of_node, port, -1);
++	if (!ep)
++		return 0;
++
++	remote = of_graph_get_remote_port_parent(ep);
++	of_node_put(ep);
++	if (!remote)
++		return 0;
++
++	if (!of_device_is_available(remote)) {
++		of_node_put(remote);
++		return 0;
++	}
++
++	csiphy->phy = devm_phy_get_by_of_node(dev, remote);
++	of_node_put(remote);
++	if (IS_ERR(csiphy->phy)) {
++		ret = PTR_ERR(csiphy->phy);
++		goto done;
++	}
++
++	csiphy->camss = camss;
++	csiphy->id = res->csiphy.id;
++	csiphy->res = &res->csiphy;
++
++	snprintf(csiphy->name, ARRAY_SIZE(csiphy->name), "csi%d", csiphy->id);
++
++	return 0;
++
++done:
++	return ret;
++}
++
+ /*
+  * csiphy_link_setup - Setup CSIPHY connections
+  * @entity: Pointer to media entity structure
+@@ -743,8 +880,12 @@ static int csiphy_link_setup(struct media_entity *entity,
+ 	return 0;
+ }
+ 
+-static const struct v4l2_subdev_core_ops csiphy_core_ops = {
+-	.s_power = csiphy_set_power,
++static const struct v4l2_subdev_core_ops csiphy_core_ops_legacy = {
++	.s_power = csiphy_set_power_legacy,
++};
++
++static const struct v4l2_subdev_video_ops csiphy_video_ops_legacy = {
++	.s_stream = csiphy_set_stream_legacy,
+ };
+ 
+ static const struct v4l2_subdev_video_ops csiphy_video_ops = {
+@@ -758,8 +899,13 @@ static const struct v4l2_subdev_pad_ops csiphy_pad_ops = {
+ 	.set_fmt = csiphy_set_format,
+ };
+ 
++static const struct v4l2_subdev_ops csiphy_v4l2_ops_legacy = {
++	.core = &csiphy_core_ops_legacy,
++	.video = &csiphy_video_ops_legacy,
++	.pad = &csiphy_pad_ops,
++};
++
+ static const struct v4l2_subdev_ops csiphy_v4l2_ops = {
+-	.core = &csiphy_core_ops,
+ 	.video = &csiphy_video_ops,
+ 	.pad = &csiphy_pad_ops,
+ };
+@@ -785,10 +931,15 @@ int msm_csiphy_register_entity(struct csiphy_device *csiphy,
+ {
+ 	struct v4l2_subdev *sd = &csiphy->subdev;
+ 	struct media_pad *pads = csiphy->pads;
+-	struct device *dev = csiphy->camss->dev;
++	struct camss *camss = csiphy->camss;
++	struct device *dev = camss->dev;
+ 	int ret;
+ 
+-	v4l2_subdev_init(sd, &csiphy_v4l2_ops);
++	if (camss->legacy_phy)
++		v4l2_subdev_init(sd, &csiphy_v4l2_ops_legacy);
++	else
++		v4l2_subdev_init(sd, &csiphy_v4l2_ops);
++
+ 	sd->internal_ops = &csiphy_v4l2_internal_ops;
+ 	sd->flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
+ 	snprintf(sd->name, ARRAY_SIZE(sd->name), "%s%d",
+@@ -816,9 +967,22 @@ int msm_csiphy_register_entity(struct csiphy_device *csiphy,
+ 	ret = v4l2_device_register_subdev(v4l2_dev, sd);
+ 	if (ret < 0) {
+ 		dev_err(dev, "Failed to register subdev: %d\n", ret);
+-		media_entity_cleanup(&sd->entity);
++		goto media_entity_err;
++	}
++
++	if (!IS_ERR(csiphy->phy)) {
++		ret = phy_init(csiphy->phy);
++		if (ret) {
++			dev_err(dev, "%s init fail %d\n", csiphy->name, ret);
++			v4l2_device_unregister_subdev(sd);
++			goto media_entity_err;
++		}
+ 	}
+ 
++	return 0;
++
++media_entity_err:
++	media_entity_cleanup(&sd->entity);
+ 	return ret;
+ }
+ 
+@@ -828,6 +992,8 @@ int msm_csiphy_register_entity(struct csiphy_device *csiphy,
+  */
+ void msm_csiphy_unregister_entity(struct csiphy_device *csiphy)
+ {
++	if (!IS_ERR(csiphy->phy))
++		phy_exit(csiphy->phy);
+ 	v4l2_device_unregister_subdev(&csiphy->subdev);
+ 	media_entity_cleanup(&csiphy->subdev.entity);
+ }
+diff --git a/drivers/media/platform/qcom/camss/camss-csiphy.h b/drivers/media/platform/qcom/camss/camss-csiphy.h
+index 9d9657b82..8c3319f2c 100644
+--- a/drivers/media/platform/qcom/camss/camss-csiphy.h
++++ b/drivers/media/platform/qcom/camss/camss-csiphy.h
+@@ -12,6 +12,7 @@
+ 
+ #include <linux/clk.h>
+ #include <linux/interrupt.h>
++#include <linux/phy/phy.h>
+ #include <media/media-entity.h>
+ #include <media/v4l2-device.h>
+ #include <media/v4l2-mediabus.h>
+@@ -20,6 +21,7 @@
+ #define MSM_CSIPHY_PAD_SINK 0
+ #define MSM_CSIPHY_PAD_SRC 1
+ #define MSM_CSIPHY_PADS_NUM 2
++#define MSM_CSIPHY_MAX_DATA_LANE 4
+ 
+ #define CSIPHY_GRP_ID 1
+ 
+@@ -97,6 +99,7 @@ struct csiphy_device_regs {
+ 
+ struct csiphy_device {
+ 	struct camss *camss;
++	struct phy *phy;
+ 	u8 id;
+ 	struct v4l2_subdev subdev;
+ 	struct media_pad pads[MSM_CSIPHY_PADS_NUM];
+@@ -104,6 +107,7 @@ struct csiphy_device {
+ 	void __iomem *base_clk_mux;
+ 	u32 irq;
+ 	char irq_name[30];
++	char name[16];
+ 	struct camss_clock *clock;
+ 	bool *rate_set;
+ 	int nclocks;
+@@ -118,9 +122,11 @@ struct csiphy_device {
+ 
+ struct camss_subdev_resources;
+ 
+-int msm_csiphy_subdev_init(struct camss *camss,
+-			   struct csiphy_device *csiphy,
+-			   const struct camss_subdev_resources *res, u8 id);
++int msm_csiphy_subdev_init_legacy(struct camss *camss,
++				  struct csiphy_device *csiphy,
++				  const struct camss_subdev_resources *res, u8 id);
++
++int msm_csiphy_subdev_init(struct camss *camss, u8 port);
+ 
+ int msm_csiphy_register_entity(struct csiphy_device *csiphy,
+ 			       struct v4l2_device *v4l2_dev);
+diff --git a/drivers/media/platform/qcom/camss/camss-tpg-gen1.c b/drivers/media/platform/qcom/camss/camss-tpg-gen1.c
+index d29de5f93..5c452f7a4 100644
+--- a/drivers/media/platform/qcom/camss/camss-tpg-gen1.c
++++ b/drivers/media/platform/qcom/camss/camss-tpg-gen1.c
+@@ -22,6 +22,8 @@
+ 
+ #define TPG_HW_VER_2_0_0                TPG_HW_VER(2, 0, 0)
+ #define TPG_HW_VER_2_1_0                TPG_HW_VER(2, 1, 0)
++#define TPG_HW_VER_2_3_0                TPG_HW_VER(2, 3, 0)
++#define TPG_HW_VER_2_4_0                TPG_HW_VER(2, 4, 0)
+ 
+ #define TPG_HW_STATUS		0x4
+ 
+@@ -33,7 +35,9 @@
+ # define TPG_CTRL_OVERLAP_SHDR_EN	BIT(10)
+ # define TPG_CTRL_NUM_ACTIVE_VC		GENMASK(31, 30)
+ 
+-#define TPG_CLEAR		0x1F4
++#define TPG_CTRL_CMD		0x1F4
++# define TPG_CTRL_CMD_TEST_EN		BIT(4)
++# define TPG_CTRL_CMD_HW_RESET		BIT(0)
+ 
+ /* TPG VC-based registers */
+ #define TPG_VC_n_GAIN_CFG(n)		(0x60 + (n) * 0x60)
+@@ -164,18 +168,30 @@ static int tpg_stream_on(struct tpg_device *tpg)
+ 	}
+ 
+ 	/* Global TPG control */
+-	val = FIELD_PREP(TPG_CTRL_TEST_EN, 1) |
+-	      FIELD_PREP(TPG_CTRL_NUM_ACTIVE_LANES, lane_cnt - 1) |
++	val = FIELD_PREP(TPG_CTRL_NUM_ACTIVE_LANES, lane_cnt - 1) |
+ 	      FIELD_PREP(TPG_CTRL_NUM_ACTIVE_VC, last_vc);
+-	writel(val, tpg->base + TPG_CTRL);
++
++	if (tpg->hw_version >= TPG_HW_VER_2_3_0) {
++		writel(val, tpg->base + TPG_CTRL);
++		writel(TPG_CTRL_CMD_TEST_EN, tpg->base + TPG_CTRL_CMD);
++	} else {
++		val |= FIELD_PREP(TPG_CTRL_TEST_EN, 1);
++		writel(val, tpg->base + TPG_CTRL);
++	}
+ 
+ 	return 0;
+ }
+ 
+ static int tpg_reset(struct tpg_device *tpg)
+ {
+-	writel(0, tpg->base + TPG_CTRL);
+-	writel(1, tpg->base + TPG_CLEAR);
++	/*
++	 * On TPG older than v2.3.0 test-enable lives in TPG_CTRL, so clear it
++	 * first; v2.3.0+ drives both test-enable and reset through TPG_CTRL_CMD.
++	 */
++	if (tpg->hw_version < TPG_HW_VER_2_3_0)
++		writel(0, tpg->base + TPG_CTRL);
++
++	writel(TPG_CTRL_CMD_HW_RESET, tpg->base + TPG_CTRL_CMD);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/media/platform/qcom/camss/camss-vfe-gen4.c b/drivers/media/platform/qcom/camss/camss-vfe-gen4.c
+new file mode 100644
+index 000000000..46d8e61b9
+--- /dev/null
++++ b/drivers/media/platform/qcom/camss/camss-vfe-gen4.c
+@@ -0,0 +1,201 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * camss-vfe-gen4.c
++ *
++ * Qualcomm MSM Camera Subsystem - VFE (Video Front End) Module gen4
++ *
++ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
++ */
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/iopoll.h>
++
++#include "camss.h"
++#include "camss-vfe.h"
++
++#define IS_VFE_980(vfe)		((vfe)->camss->res->version == CAMSS_8750)
++
++#define BUS_REG_BASE_980	(vfe_is_lite(vfe) ? 0x200 : 0x800)
++#define BUS_REG_BASE_1080	(vfe_is_lite(vfe) ? 0x800 : 0x1000)
++#define BUS_REG_BASE \
++	    (IS_VFE_980(vfe) ? BUS_REG_BASE_980 : BUS_REG_BASE_1080)
++
++#define VFE_BUS_WM_CGC_OVERRIDE			(BUS_REG_BASE + 0x08)
++#define		WM_CGC_OVERRIDE_ALL			(0x7FFFFFF)
++
++#define VFE_BUS_WM_TEST_BUS_CTRL		(BUS_REG_BASE + 0x128)
++
++#define VFE_BUS_WM_CFG(n)			(BUS_REG_BASE + 0x500 + (n) * 0x100)
++#define		WM_CFG_EN				BIT(0)
++#define		WM_VIR_FRM_EN				BIT(1)
++#define		WM_CFG_MODE				BIT(16)
++#define VFE_BUS_WM_IMAGE_ADDR(n)		(BUS_REG_BASE + 0x504 + (n) * 0x100)
++#define VFE_BUS_WM_FRAME_INCR(n)		(BUS_REG_BASE + 0x508 + (n) * 0x100)
++#define VFE_BUS_WM_IMAGE_CFG_0(n)		(BUS_REG_BASE + 0x50C + (n) * 0x100)
++#define		WM_IMAGE_CFG_0_DEFAULT_WIDTH		(0xFFFF)
++#define VFE_BUS_WM_IMAGE_CFG_2(n)		(BUS_REG_BASE + 0x514 + (n) * 0x100)
++#define		WM_IMAGE_CFG_2_DEFAULT_STRIDE		(0xFFFF)
++#define VFE_BUS_WM_PACKER_CFG(n)		(BUS_REG_BASE + 0x518 + (n) * 0x100)
++
++#define VFE_BUS_WM_IRQ_SUBSAMPLE_PERIOD(n)	(BUS_REG_BASE + 0x530 + (n) * 0x100)
++#define VFE_BUS_WM_IRQ_SUBSAMPLE_PATTERN(n)	(BUS_REG_BASE + 0x534 + (n) * 0x100)
++
++/* VFE lite has no such registers */
++#define VFE_BUS_WM_FRAMEDROP_PERIOD(n)		(BUS_REG_BASE + 0x538 + (n) * 0x100)
++#define VFE_BUS_WM_FRAMEDROP_PATTERN(n)		(BUS_REG_BASE + 0x53C + (n) * 0x100)
++
++#define VFE_BUS_WM_MMU_PREFETCH_CFG(n)		(BUS_REG_BASE + 0x560 + (n) * 0x100)
++#define VFE_BUS_WM_MMU_PREFETCH_MAX_OFFSET(n)	(BUS_REG_BASE + 0x564 + (n) * 0x100)
++
++/*
++ * IFE write master client IDs
++ *
++ * VIDEO_FULL			0
++ * VIDEO_DC4_Y			1
++ * VIDEO_DC4_C			2
++ * VIDEO_DC16_Y			3
++ * VIDEO_DC16_C			4
++ * DISPLAY_DS2_Y		5
++ * DISPLAY_DS2_C		6
++ * FD_Y				7
++ * FD_C				8
++ * RAW_OUT(1080)/IR_OUT(980)	9
++ * STATS_AEC_BG			10
++ * STATS_AEC_BHIST		11
++ * STATS_TINTLESS_BG		12
++ * STATS_AWB_BG			13
++ * STATS_AWB_BFW		14
++ * STATS_AF_BHIST		15
++ * STATS_ALSC_BG		16
++ * STATS_FLICKER_BAYERRS	17
++ * STATS_TMC_BHIST		18
++ * PDAF_0			19
++ * PDAF_1			20
++ * PDAF_2			21
++ * PDAF_3			22
++ * RDI0				23
++ * RDI1				24
++ * RDI2				25
++ * RDI3				26
++ * RDI4				27
++ *
++ * IFE Lite write master client IDs
++ *
++ * RDI0			0
++ * RDI1			1
++ * RDI2			2
++ * RDI3			3
++ * GAMMA		4
++ * STATES_BE		5
++ */
++#define RDI_WM(n) ((vfe_is_lite(vfe) ? 0x0 : 0x17) + (n))
++
++static void vfe_wm_start(struct vfe_device *vfe, u8 wm, struct vfe_line *line)
++{
++	struct v4l2_pix_format_mplane *pix =
++		&line->video_out.active_fmt.fmt.pix_mp;
++
++	wm = RDI_WM(wm);
++
++	/* no clock gating at bus input */
++	writel(WM_CGC_OVERRIDE_ALL, vfe->base + VFE_BUS_WM_CGC_OVERRIDE);
++
++	writel(0x0, vfe->base + VFE_BUS_WM_TEST_BUS_CTRL);
++
++	writel(ALIGN(pix->plane_fmt[0].bytesperline, 16) * pix->height >> 8,
++	       vfe->base + VFE_BUS_WM_FRAME_INCR(wm));
++	writel((WM_IMAGE_CFG_0_DEFAULT_WIDTH & 0xFFFF),
++	       vfe->base + VFE_BUS_WM_IMAGE_CFG_0(wm));
++	writel(WM_IMAGE_CFG_2_DEFAULT_STRIDE,
++	       vfe->base + VFE_BUS_WM_IMAGE_CFG_2(wm));
++	writel(0, vfe->base + VFE_BUS_WM_PACKER_CFG(wm));
++
++	/* no dropped frames, one irq per frame */
++	if (!vfe_is_lite(vfe)) {
++		writel(0, vfe->base + VFE_BUS_WM_FRAMEDROP_PERIOD(wm));
++		writel(1, vfe->base + VFE_BUS_WM_FRAMEDROP_PATTERN(wm));
++	}
++
++	writel(0, vfe->base + VFE_BUS_WM_IRQ_SUBSAMPLE_PERIOD(wm));
++	writel(1, vfe->base + VFE_BUS_WM_IRQ_SUBSAMPLE_PATTERN(wm));
++
++	writel(1, vfe->base + VFE_BUS_WM_MMU_PREFETCH_CFG(wm));
++	writel(0xFFFFFFFF, vfe->base + VFE_BUS_WM_MMU_PREFETCH_MAX_OFFSET(wm));
++
++	writel(WM_CFG_EN | WM_CFG_MODE, vfe->base + VFE_BUS_WM_CFG(wm));
++}
++
++static void vfe_wm_stop(struct vfe_device *vfe, u8 wm)
++{
++	wm = RDI_WM(wm);
++	writel(0, vfe->base + VFE_BUS_WM_CFG(wm));
++}
++
++static void vfe_wm_update(struct vfe_device *vfe, u8 wm, u32 addr,
++			  struct vfe_line *line)
++{
++	wm = RDI_WM(wm);
++	writel(addr >> 8, vfe->base + VFE_BUS_WM_IMAGE_ADDR(wm));
++
++	dev_dbg(vfe->camss->dev, "wm:%d, image buf addr:0x%x\n", wm, addr);
++}
++
++static void vfe_reg_update(struct vfe_device *vfe, enum vfe_line_id line_id)
++{
++	int port_id = line_id;
++
++	camss_reg_update(vfe->camss, vfe->id, port_id, false);
++}
++
++static inline void vfe_reg_update_clear(struct vfe_device *vfe,
++					enum vfe_line_id line_id)
++{
++	int port_id = line_id;
++
++	camss_reg_update(vfe->camss, vfe->id, port_id, true);
++}
++
++static const struct camss_video_ops vfe_video_ops_gen4 = {
++	.queue_buffer = vfe_queue_buffer_v2,
++	.flush_buffers = vfe_flush_buffers,
++};
++
++static void vfe_subdev_init(struct device *dev, struct vfe_device *vfe)
++{
++	vfe->video_ops = vfe_video_ops_gen4;
++}
++
++static void vfe_global_reset(struct vfe_device *vfe)
++{
++	vfe_isr_reset_ack(vfe);
++}
++
++static irqreturn_t vfe_isr(int irq, void *dev)
++{
++	/* nop */
++	return IRQ_HANDLED;
++}
++
++static int vfe_halt(struct vfe_device *vfe)
++{
++	/* rely on vfe_disable_output() to stop the VFE */
++	return 0;
++}
++
++const struct vfe_hw_ops vfe_ops_gen4 = {
++	.global_reset = vfe_global_reset,
++	.hw_version = vfe_hw_version,
++	.isr = vfe_isr,
++	.pm_domain_off = vfe_pm_domain_off,
++	.pm_domain_on = vfe_pm_domain_on,
++	.reg_update = vfe_reg_update,
++	.reg_update_clear = vfe_reg_update_clear,
++	.subdev_init = vfe_subdev_init,
++	.vfe_disable = vfe_disable,
++	.vfe_enable = vfe_enable_v2,
++	.vfe_halt = vfe_halt,
++	.vfe_wm_start = vfe_wm_start,
++	.vfe_wm_stop = vfe_wm_stop,
++	.vfe_buf_done = vfe_buf_done,
++	.vfe_wm_update = vfe_wm_update,
++};
+diff --git a/drivers/media/platform/qcom/camss/camss-vfe.c b/drivers/media/platform/qcom/camss/camss-vfe.c
+index 55c0a0ee3..373dc8b18 100644
+--- a/drivers/media/platform/qcom/camss/camss-vfe.c
++++ b/drivers/media/platform/qcom/camss/camss-vfe.c
+@@ -352,7 +352,9 @@ static u32 vfe_src_pad_code(struct vfe_line *line, u32 sink_code,
+ 	case CAMSS_845:
+ 	case CAMSS_8550:
+ 	case CAMSS_8650:
++	case CAMSS_8750:
+ 	case CAMSS_8775P:
++	case CAMSS_KAANAPALI:
+ 	case CAMSS_X1E80100:
+ 		switch (sink_code) {
+ 		case MEDIA_BUS_FMT_YUYV8_1X16:
+@@ -442,6 +444,27 @@ u32 vfe_hw_version(struct vfe_device *vfe)
+ 	return hw_version;
+ }
+ 
++/*
++ * vfe_next_sequence - Sequence number of the next buffer on a write master
++ * @vfe: VFE Device
++ * @wm: Write master id
++ *
++ * Buffers are numbered as they complete, so this is the number the frame
++ * that is starting will carry.
++ */
++u32 vfe_next_sequence(struct vfe_device *vfe, int wm)
++{
++	unsigned long flags;
++	u32 sequence = 0;
++
++	spin_lock_irqsave(&vfe->output_lock, flags);
++	if (vfe->wm_output_map[wm] != VFE_LINE_NONE)
++		sequence = vfe->line[vfe->wm_output_map[wm]].output.sequence;
++	spin_unlock_irqrestore(&vfe->output_lock, flags);
++
++	return sequence;
++}
++
+ /*
+  * vfe_buf_done - Process write master done interrupt
+  * @vfe: VFE Device
+@@ -525,7 +548,8 @@ int vfe_enable_output_v2(struct vfe_line *line)
+ 
+ 	spin_lock_irqsave(&vfe->output_lock, flags);
+ 
+-	ops->reg_update_clear(vfe, line->id);
++	if (ops->reg_update_clear)
++		ops->reg_update_clear(vfe, line->id);
+ 
+ 	if (output->state > VFE_OUTPUT_RESERVED) {
+ 		dev_err(vfe->camss->dev,
+@@ -552,7 +576,9 @@ int vfe_enable_output_v2(struct vfe_line *line)
+ 		output->gen2.active_num++;
+ 		ops->vfe_wm_update(vfe, output->wm_idx[0],
+ 				   output->buf[i]->addr[0], line);
+-		ops->reg_update(vfe, line->id);
++
++		if (!vfe->res->reg_update_after_csid_config)
++			ops->reg_update(vfe, line->id);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&vfe->output_lock, flags);
+@@ -2008,7 +2034,9 @@ static int vfe_bpl_align_rdi(struct vfe_device *vfe)
+ 	case CAMSS_845:
+ 	case CAMSS_8550:
+ 	case CAMSS_8650:
++	case CAMSS_8750:
+ 	case CAMSS_8775P:
++	case CAMSS_KAANAPALI:
+ 	case CAMSS_X1E80100:
+ 		ret = 16;
+ 		break;
+diff --git a/drivers/media/platform/qcom/camss/camss-vfe.h b/drivers/media/platform/qcom/camss/camss-vfe.h
+index ae9dad353..981575685 100644
+--- a/drivers/media/platform/qcom/camss/camss-vfe.h
++++ b/drivers/media/platform/qcom/camss/camss-vfe.h
+@@ -133,6 +133,7 @@ struct vfe_isr_ops {
+ 
+ struct vfe_subdev_resources {
+ 	bool is_lite;
++	bool reg_update_after_csid_config;
+ 	u8 line_num;
+ 	bool has_pd;
+ 	char *pd_name;
+@@ -249,6 +250,7 @@ extern const struct vfe_hw_ops vfe_ops_340;
+ extern const struct vfe_hw_ops vfe_ops_480;
+ extern const struct vfe_hw_ops vfe_ops_680;
+ extern const struct vfe_hw_ops vfe_ops_gen3;
++extern const struct vfe_hw_ops vfe_ops_gen4;
+ 
+ int vfe_get(struct vfe_device *vfe);
+ void vfe_put(struct vfe_device *vfe);
+@@ -284,6 +286,7 @@ int vfe_enable_v2(struct vfe_line *line);
+  * @wm: Write master id
+  */
+ void vfe_buf_done(struct vfe_device *vfe, int wm);
++u32 vfe_next_sequence(struct vfe_device *vfe, int wm);
+ 
+ /*
+  * vfe_get_output_v2 - Get vfe output line
+diff --git a/drivers/media/platform/qcom/camss/camss.c b/drivers/media/platform/qcom/camss/camss.c
+index 68491b16d..1700185c9 100644
+--- a/drivers/media/platform/qcom/camss/camss.c
++++ b/drivers/media/platform/qcom/camss/camss.c
+@@ -34,6 +34,295 @@
+ 
+ static const struct parent_dev_ops vfe_parent_dev_ops;
+ 
++static const struct camss_subdev_resources csiphy_res_kaanapali[] = {
++	/* CSIPHY0 */
++	{
++		.csiphy = {
++			.id = 0,
++			.hw_ops = &csiphy_ops_3ph_1_0,
++			.formats = &csiphy_formats_sdm845
++		},
++	},
++	/* CSIPHY1 */
++	{
++		.csiphy = {
++			.id = 1,
++			.hw_ops = &csiphy_ops_3ph_1_0,
++			.formats = &csiphy_formats_sdm845
++		},
++	},
++	/* CSIPHY2 */
++	{
++		.csiphy = {
++			.id = 2,
++			.hw_ops = &csiphy_ops_3ph_1_0,
++			.formats = &csiphy_formats_sdm845
++		},
++	},
++	/* CSIPHY3 */
++	{
++		.csiphy = {
++			.id = 3,
++			.hw_ops = &csiphy_ops_3ph_1_0,
++			.formats = &csiphy_formats_sdm845
++		},
++	},
++	/* CSIPHY4 */
++	{
++		.csiphy = {
++			.id = 4,
++			.hw_ops = &csiphy_ops_3ph_1_0,
++			.formats = &csiphy_formats_sdm845
++		},
++	},
++	/* CSIPHY5 */
++	{
++		.csiphy = {
++			.id = 5,
++			.hw_ops = &csiphy_ops_3ph_1_0,
++			.formats = &csiphy_formats_sdm845
++		},
++	},
++};
++
++static const struct camss_subdev_resources csid_res_kaanapali[] = {
++	/* CSID0 */
++	{
++		.clock = { "csid", "csid_csiphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid0" },
++		.interrupt = { "csid0" },
++		.csid = {
++			.is_lite = false,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_gen4,
++			.formats = &csid_formats_gen2
++		}
++	},
++	/* CSID1 */
++	{
++		.clock = { "csid", "csid_csiphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid1" },
++		.interrupt = { "csid1" },
++		.csid = {
++			.is_lite = false,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_gen4,
++			.formats = &csid_formats_gen2
++		}
++	},
++	/* CSID2 */
++	{
++		.clock = { "csid", "csid_csiphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid2" },
++		.interrupt = { "csid2" },
++		.csid = {
++			.is_lite = false,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_gen4,
++			.formats = &csid_formats_gen2
++		}
++	},
++	/* CSID_LITE0 */
++	{
++		.clock = { "vfe_lite_csid", "vfe_lite_cphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid_lite0" },
++		.interrupt = { "csid_lite0" },
++		.csid = {
++			.is_lite = true,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_gen4,
++			.formats = &csid_formats_gen2
++		}
++	},
++	/* CSID_LITE1 */
++	{
++		.clock = { "vfe_lite_csid", "vfe_lite_cphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid_lite1" },
++		.interrupt = { "csid_lite1" },
++		.csid = {
++			.is_lite = true,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_gen4,
++			.formats = &csid_formats_gen2
++		}
++	}
++};
++
++/* In Kaanapali, CAMNOC requires all CPAS_TFEX clocks
++ * to operate on any TFE Full.
++ */
++static const struct camss_subdev_resources vfe_res_kaanapali[] = {
++	/* VFE0 - TFE Full */
++	{
++		.clock = { "gcc_axi_hf", "cpas_ahb", "cpas_fast_ahb",
++			   "vfe0_fast_ahb", "vfe0",
++			   "cpas_vfe0", "cpas_vfe1", "cpas_vfe2",
++			   "camnoc_rt_axi", "camnoc_nrt_axi", "qdss_debug_xo" },
++		.clock_rate = { { 0 },
++				{ 0 },
++				{ 0 },
++				{ 0 },
++				{ 360280000, 480000000, 630000000, 716000000,
++				  833000000 },
++				{ 0 },
++				{ 0 },
++				{ 0 },
++				{ 200000000, 300000000, 400000000, 480000000 },
++				{ 0 },
++				{ 0 } },
++		.reg = { "vfe0" },
++		.interrupt = { "vfe0" },
++		.vfe = {
++			.line_num = 3,
++			.is_lite = false,
++			.reg_update_after_csid_config = true,
++			.has_pd = true,
++			.pd_name = "ife0",
++			.hw_ops = &vfe_ops_gen4,
++			.formats_rdi = &vfe_formats_rdi_845,
++			.formats_pix = &vfe_formats_pix_845
++		}
++	},
++	/* VFE1 - TFE Full */
++	{
++		.clock = { "gcc_axi_hf", "cpas_ahb", "cpas_fast_ahb",
++			   "vfe1_fast_ahb", "vfe1",
++			   "cpas_vfe0", "cpas_vfe1", "cpas_vfe2",
++			   "camnoc_rt_axi", "camnoc_nrt_axi", "qdss_debug_xo" },
++		.clock_rate = { { 0 },
++				{ 0 },
++				{ 0 },
++				{ 0 },
++				{ 360280000, 480000000, 630000000, 716000000,
++				  833000000 },
++				{ 0 },
++				{ 0 },
++				{ 0 },
++				{ 200000000, 300000000, 400000000, 480000000 },
++				{ 0 },
++				{ 0 } },
++		.reg = { "vfe1" },
++		.interrupt = { "vfe1" },
++		.vfe = {
++			.line_num = 3,
++			.is_lite = false,
++			.reg_update_after_csid_config = true,
++			.has_pd = true,
++			.pd_name = "ife1",
++			.hw_ops = &vfe_ops_gen4,
++			.formats_rdi = &vfe_formats_rdi_845,
++			.formats_pix = &vfe_formats_pix_845
++		}
++	},
++	/* VFE2 - TFE Full */
++	{
++		.clock = { "gcc_axi_hf", "cpas_ahb", "cpas_fast_ahb",
++			   "vfe2_fast_ahb", "vfe2",
++			   "cpas_vfe0", "cpas_vfe1", "cpas_vfe2",
++			   "camnoc_rt_axi", "camnoc_nrt_axi", "qdss_debug_xo" },
++		.clock_rate = { { 0 },
++				{ 0 },
++				{ 0 },
++				{ 0 },
++				{ 360280000, 480000000, 630000000, 716000000,
++				  833000000 },
++				{ 0 },
++				{ 0 },
++				{ 0 },
++				{ 200000000, 300000000, 400000000, 480000000 },
++				{ 0 },
++				{ 0 } },
++		.reg = { "vfe2" },
++		.interrupt = { "vfe2" },
++		.vfe = {
++			.line_num = 3,
++			.is_lite = false,
++			.reg_update_after_csid_config = true,
++			.has_pd = true,
++			.pd_name = "ife2",
++			.hw_ops = &vfe_ops_gen4,
++			.formats_rdi = &vfe_formats_rdi_845,
++			.formats_pix = &vfe_formats_pix_845
++		}
++	},
++	/* VFE3 - IFE Lite */
++	{
++		.clock = { "gcc_axi_hf", "cpas_ahb", "cpas_fast_ahb",
++			   "vfe_lite_ahb", "vfe_lite",
++			   "cpas_vfe_lite", "camnoc_rt_axi",
++			   "camnoc_nrt_axi", "qdss_debug_xo" },
++		.clock_rate = { { 0 },
++				{ 0 },
++				{ 0 },
++				{ 0 },
++				{ 266666667, 400000000, 480000000 },
++				{ 0 },
++				{ 200000000, 300000000, 400000000, 480000000 },
++				{ 0 },
++				{ 0 } },
++		.reg = { "vfe_lite0" },
++		.interrupt = { "vfe_lite0" },
++		.vfe = {
++			.line_num = 4,
++			.is_lite = true,
++			.reg_update_after_csid_config = true,
++			.hw_ops = &vfe_ops_gen4,
++			.formats_rdi = &vfe_formats_rdi_845,
++			.formats_pix = &vfe_formats_pix_845
++		}
++	},
++	/* VFE4 - IFE Lite */
++	{
++		.clock = { "gcc_axi_hf", "cpas_ahb", "cpas_fast_ahb",
++			   "vfe_lite_ahb", "vfe_lite",
++			   "cpas_vfe_lite", "camnoc_rt_axi",
++			   "camnoc_nrt_axi", "qdss_debug_xo" },
++		.clock_rate = { { 0 },
++				{ 0 },
++				{ 0 },
++				{ 0 },
++				{ 266666667, 400000000, 480000000 },
++				{ 0 },
++				{ 200000000, 300000000, 400000000, 480000000 },
++				{ 0 },
++				{ 0 } },
++		.reg = { "vfe_lite1" },
++		.interrupt = { "vfe_lite1" },
++		.vfe = {
++			.line_num = 4,
++			.is_lite = true,
++			.reg_update_after_csid_config = true,
++			.hw_ops = &vfe_ops_gen4,
++			.formats_rdi = &vfe_formats_rdi_845,
++			.formats_pix = &vfe_formats_pix_845
++		}
++	},
++};
++
++static const struct resources_icc icc_res_kaanapali[] = {
++	{
++		.name = "ahb",
++		.icc_bw_tbl.avg = 150000,
++		.icc_bw_tbl.peak = 300000,
++	},
++	/* Based on 4096 x 3072 30 FPS 2496 Mbps mode */
++	{
++		.name = "hf_mnoc",
++		.icc_bw_tbl.avg = 471860,
++		.icc_bw_tbl.peak = 925857,
++	}
++};
++
+ static const struct camss_subdev_resources csiphy_res_8x16[] = {
+ 	/* CSIPHY0 */
+ 	{
+@@ -4192,6 +4481,96 @@ static const struct resources_icc icc_res_sa8775p[] = {
+ 	},
+ };
+ 
++static const struct camss_subdev_resources csid_res_sm8750[] = {
++	/* CSID0 */
++	{
++		.clock = { "csid", "csid_csiphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid0" },
++		.interrupt = { "csid0" },
++		.csid = {
++			.is_lite = false,
++			.frame_sync = true,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_980,
++			.formats = &csid_formats_gen2
++		}
++	},
++	/* CSID1 */
++	{
++		.clock = { "csid", "csid_csiphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid1" },
++		.interrupt = { "csid1" },
++		.csid = {
++			.is_lite = false,
++			.frame_sync = true,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_980,
++			.formats = &csid_formats_gen2
++		}
++	},
++	/* CSID2 */
++	{
++		.clock = { "csid", "csid_csiphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid2" },
++		.interrupt = { "csid2" },
++		.csid = {
++			.is_lite = false,
++			.frame_sync = true,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_980,
++			.formats = &csid_formats_gen2
++		}
++	},
++	/* CSID_LITE0 */
++	{
++		.clock = { "vfe_lite_csid", "vfe_lite_cphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid_lite0" },
++		.interrupt = { "csid_lite0" },
++		.csid = {
++			.is_lite = true,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_980,
++			.formats = &csid_formats_gen2
++		}
++	},
++	/* CSID_LITE1 */
++	{
++		.clock = { "vfe_lite_csid", "vfe_lite_cphy_rx" },
++		.clock_rate = { { 400000000, 480000000 },
++				{ 400000000, 480000000 } },
++		.reg = { "csid_lite1" },
++		.interrupt = { "csid_lite1" },
++		.csid = {
++			.is_lite = true,
++			.parent_dev_ops = &vfe_parent_dev_ops,
++			.hw_ops = &csid_ops_980,
++			.formats = &csid_formats_gen2
++		}
++	}
++};
++
++static const struct resources_icc icc_res_sm8750[] = {
++	{
++		.name = "ahb",
++		.icc_bw_tbl.avg = 150000,
++		.icc_bw_tbl.peak = 300000,
++	},
++	/* Based on 4096 x 3072 30 FPS 2496 Mbps mode */
++	{
++		.name = "hf_mnoc",
++		.icc_bw_tbl.avg = 471860,
++		.icc_bw_tbl.peak = 925857,
++	},
++};
++
+ static const struct camss_subdev_resources csiphy_res_x1e80100[] = {
+ 	/* CSIPHY0 */
+ 	{
+@@ -4747,7 +5126,8 @@ static const struct parent_dev_ops vfe_parent_dev_ops = {
+  */
+ static int camss_parse_endpoint_node(struct device *dev,
+ 				     struct fwnode_handle *ep,
+-				     struct camss_async_subdev *csd)
++				     struct camss_async_subdev *csd,
++				     u8 lane_base)
+ {
+ 	struct csiphy_lanes_cfg *lncfg = &csd->interface.csi2.lane_cfg;
+ 	struct v4l2_mbus_config_mipi_csi2 *mipi_csi2;
+@@ -4782,7 +5162,14 @@ static int camss_parse_endpoint_node(struct device *dev,
+ 		return -ENOMEM;
+ 
+ 	for (i = 0; i < lncfg->num_data; i++) {
+-		lncfg->data[i].pos = mipi_csi2->data_lanes[i];
++		u8 lane = mipi_csi2->data_lanes[i];
++
++		if (lane < lane_base || lane - lane_base >= MSM_CSIPHY_MAX_DATA_LANE) {
++			dev_err(dev, "invalid data-lane %u\n", lane);
++			return -EINVAL;
++		}
++
++		lncfg->data[i].pos = mipi_csi2->data_lanes[i] - lane_base;
+ 		lncfg->data[i].pol = mipi_csi2->lane_polarities[i + 1];
+ 	}
+ 
+@@ -4799,19 +5186,55 @@ static int camss_parse_ports(struct camss *camss)
+ {
+ 	struct device *dev = camss->dev;
+ 	struct fwnode_handle *fwnode = dev_fwnode(dev), *ep;
++	u8 lane_base = camss->legacy_phy ? 0 : 1;
+ 	int ret;
+ 
+ 	fwnode_graph_for_each_endpoint(fwnode, ep) {
+ 		struct camss_async_subdev *csd;
+ 
+-		csd = v4l2_async_nf_add_fwnode_remote(&camss->notifier, ep,
+-						      typeof(*csd));
++		if (!fwnode_device_is_available(ep))
++			continue;
++
++		if (camss->legacy_phy) {
++			csd = v4l2_async_nf_add_fwnode_remote(&camss->notifier, ep,
++							      typeof(*csd));
++		} else {
++			struct fwnode_handle *phy_out, *phy_node, *phy_in, *sensor_ep;
++
++			phy_out = fwnode_graph_get_remote_endpoint(ep);
++			if (!phy_out)
++				continue;
++
++			phy_node = fwnode_graph_get_port_parent(phy_out);
++			fwnode_handle_put(phy_out);
++			if (!phy_node)
++				continue;
++
++			phy_in = fwnode_graph_get_endpoint_by_id(phy_node, 0, 0, 0);
++			fwnode_handle_put(phy_node);
++			if (!phy_in)
++				continue;
++
++			sensor_ep = fwnode_graph_get_remote_endpoint(phy_in);
++			fwnode_handle_put(phy_in);
++			if (!sensor_ep)
++				continue;
++
++			csd = v4l2_async_nf_add_fwnode(&camss->notifier, sensor_ep,
++						struct camss_async_subdev);
++			fwnode_handle_put(sensor_ep);
++			if (IS_ERR(csd)) {
++				ret = PTR_ERR(csd);
++				goto err_cleanup;
++			}
++		}
++
+ 		if (IS_ERR(csd)) {
+ 			ret = PTR_ERR(csd);
+ 			goto err_cleanup;
+ 		}
+ 
+-		ret = camss_parse_endpoint_node(dev, ep, csd);
++		ret = camss_parse_endpoint_node(dev, ep, csd, lane_base);
+ 		if (ret < 0)
+ 			goto err_cleanup;
+ 	}
+@@ -4824,6 +5247,29 @@ static int camss_parse_ports(struct camss *camss)
+ 	return ret;
+ }
+ 
++static void camss_detect_legacy_phy(struct camss *camss)
++{
++	struct device_node *remote;
++	struct device_node *ep;
++
++	camss->legacy_phy = true;
++
++	/* Find first remote-endpoint and determine if its a PHY */
++	for_each_endpoint_of_node(camss->dev->of_node, ep) {
++		remote = of_graph_get_remote_port_parent(ep);
++		if (!remote)
++			continue;
++
++		camss->legacy_phy = !of_node_name_eq(remote, "phy");
++		of_node_put(remote);
++		of_node_put(ep);
++		break;
++	}
++
++	dev_dbg(camss->dev, "legacy phy mode %s\n",
++		camss->legacy_phy ? "true" : "false");
++}
++
+ /*
+  * camss_init_subdevices - Initialize subdev structures and resources
+  * @camss: CAMSS device
+@@ -4837,14 +5283,21 @@ static int camss_init_subdevices(struct camss *camss)
+ 	unsigned int i;
+ 	int ret;
+ 
++	camss_detect_legacy_phy(camss);
++
+ 	for (i = 0; i < camss->res->csiphy_num; i++) {
+-		ret = msm_csiphy_subdev_init(camss, &camss->csiphy[i],
+-					     &res->csiphy_res[i],
+-					     res->csiphy_res[i].csiphy.id);
++		if (!camss->legacy_phy) {
++			ret = msm_csiphy_subdev_init(camss, i);
++		} else {
++			ret = msm_csiphy_subdev_init_legacy(camss,
++							    &camss->csiphy[i],
++							    &res->csiphy_res[i],
++							    res->csiphy_res[i].csiphy.id);
++		}
++
+ 		if (ret < 0) {
+-			dev_err(camss->dev,
+-				"Failed to init csiphy%d sub-device: %d\n",
+-				i, ret);
++			dev_err(camss->dev, "csiphy %d init fail\n",
++				res->csiphy_res[i].csiphy.id);
+ 			return ret;
+ 		}
+ 	}
+@@ -4922,6 +5375,11 @@ inline void camss_link_err(struct camss *camss,
+ 		ret);
+ }
+ 
++static inline bool csiphy_enabled(struct camss *camss, struct csiphy_device *c)
++{
++	return camss->legacy_phy || c->phy;
++}
++
+ /*
+  * camss_link_entities - Register subdev nodes and create links
+  * @camss: CAMSS device
+@@ -4935,6 +5393,9 @@ static int camss_link_entities(struct camss *camss)
+ 
+ 	for (i = 0; i < camss->res->csiphy_num; i++) {
+ 		for (j = 0; j < camss->res->csid_num; j++) {
++			if (!csiphy_enabled(camss, &camss->csiphy[i]))
++				continue;
++
+ 			ret = media_create_pad_link(&camss->csiphy[i].subdev.entity,
+ 						    MSM_CSIPHY_PAD_SRC,
+ 						    &camss->csid[j].subdev.entity,
+@@ -5049,6 +5510,14 @@ void camss_buf_done(struct camss *camss, int hw_id, int port_id)
+ 	}
+ }
+ 
++u32 camss_next_sequence(struct camss *camss, int hw_id, int port_id)
++{
++	if (hw_id >= camss->res->vfe_num)
++		return 0;
++
++	return vfe_next_sequence(&camss->vfe[hw_id], port_id);
++}
++
+ /*
+  * camss_register_entities - Register subdev nodes and create links
+  * @camss: CAMSS device
+@@ -5061,6 +5530,9 @@ static int camss_register_entities(struct camss *camss)
+ 	int ret;
+ 
+ 	for (i = 0; i < camss->res->csiphy_num; i++) {
++		if (!csiphy_enabled(camss, &camss->csiphy[i]))
++			continue;
++
+ 		ret = msm_csiphy_register_entity(&camss->csiphy[i],
+ 						 &camss->v4l2_dev);
+ 		if (ret < 0) {
+@@ -5136,8 +5608,10 @@ static int camss_register_entities(struct camss *camss)
+ 
+ 	i = camss->res->csiphy_num;
+ err_reg_csiphy:
+-	for (i--; i >= 0; i--)
+-		msm_csiphy_unregister_entity(&camss->csiphy[i]);
++	for (i--; i >= 0; i--) {
++		if (csiphy_enabled(camss, &camss->csiphy[i]))
++			msm_csiphy_unregister_entity(&camss->csiphy[i]);
++	}
+ 
+ 	return ret;
+ }
+@@ -5152,8 +5626,10 @@ static void camss_unregister_entities(struct camss *camss)
+ {
+ 	unsigned int i;
+ 
+-	for (i = 0; i < camss->res->csiphy_num; i++)
+-		msm_csiphy_unregister_entity(&camss->csiphy[i]);
++	for (i = 0; i < camss->res->csiphy_num; i++) {
++		if (csiphy_enabled(camss, &camss->csiphy[i]))
++			msm_csiphy_unregister_entity(&camss->csiphy[i]);
++	}
+ 
+ 	if (camss->tpg) {
+ 		for (i = 0; i < camss->res->tpg_num; i++)
+@@ -5234,6 +5710,17 @@ static const struct media_device_ops camss_media_ops = {
+ 	.link_notify = v4l2_pipeline_link_notify,
+ };
+ 
++static int camss_configure_perf_domains(struct camss *camss)
++{
++	struct dev_pm_domain_list *pd_list;
++
++	if (!camss->res->perf_domains)
++		return 0;
++
++	return devm_pm_domain_attach_list(camss->dev, camss->res->perf_domains,
++					 &pd_list);
++}
++
+ static int camss_configure_pd(struct camss *camss)
+ {
+ 	const struct camss_resources *res = camss->res;
+@@ -5408,6 +5895,10 @@ static int camss_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	ret = camss_configure_perf_domains(camss);
++	if (ret < 0)
++		return dev_err_probe(dev, ret, "Failed to attach performance domains\n");
++
+ 	ret = camss_configure_pd(camss);
+ 	if (ret < 0) {
+ 		dev_err(dev, "Failed to configure power domains: %d\n", ret);
+@@ -5512,6 +6003,21 @@ static void camss_remove(struct platform_device *pdev)
+ 	camss_genpd_cleanup(camss);
+ }
+ 
++static const struct camss_resources kaanapali_resources = {
++	.version = CAMSS_KAANAPALI,
++	.pd_name = "top",
++	.csiphy_res = csiphy_res_kaanapali,
++	.tpg_res = tpg_res_x1e80100,
++	.csid_res = csid_res_kaanapali,
++	.vfe_res = vfe_res_kaanapali,
++	.icc_res = icc_res_kaanapali,
++	.icc_path_num = ARRAY_SIZE(icc_res_kaanapali),
++	.csiphy_num = ARRAY_SIZE(csiphy_res_kaanapali),
++	.tpg_num = ARRAY_SIZE(tpg_res_x1e80100),
++	.csid_num = ARRAY_SIZE(csid_res_kaanapali),
++	.vfe_num = ARRAY_SIZE(vfe_res_kaanapali),
++};
++
+ static const struct camss_resources msm8916_resources = {
+ 	.version = CAMSS_8x16,
+ 	.csiphy_res = csiphy_res_8x16,
+@@ -5728,6 +6234,29 @@ static const struct camss_resources sm8650_resources = {
+ 	.vfe_num = ARRAY_SIZE(vfe_res_sm8650),
+ };
+ 
++static const char * const sm8750_perf_domain_names[] = { "mmcx", "mx", "mxc" };
++
++static const struct dev_pm_domain_attach_data sm8750_perf_domains = {
++	.pd_names = sm8750_perf_domain_names,
++	.num_pd_names = ARRAY_SIZE(sm8750_perf_domain_names),
++};
++
++static const struct camss_resources sm8750_resources = {
++	.version = CAMSS_8750,
++	.perf_domains = &sm8750_perf_domains,
++	.pd_name = "top",
++	.csiphy_res = csiphy_res_kaanapali,
++	.tpg_res = tpg_res_x1e80100,
++	.csid_res = csid_res_sm8750,
++	.vfe_res = vfe_res_kaanapali,
++	.icc_res = icc_res_sm8750,
++	.csiphy_num = ARRAY_SIZE(csiphy_res_kaanapali),
++	.tpg_num = ARRAY_SIZE(tpg_res_x1e80100),
++	.csid_num = ARRAY_SIZE(csid_res_sm8750),
++	.vfe_num = ARRAY_SIZE(vfe_res_kaanapali),
++	.icc_path_num = ARRAY_SIZE(icc_res_sm8750),
++};
++
+ static const struct camss_resources x1e80100_resources = {
+ 	.version = CAMSS_X1E80100,
+ 	.pd_name = "top",
+@@ -5745,6 +6274,7 @@ static const struct camss_resources x1e80100_resources = {
+ };
+ 
+ static const struct of_device_id camss_dt_match[] = {
++	{ .compatible = "qcom,kaanapali-camss", .data = &kaanapali_resources },
+ 	{ .compatible = "qcom,msm8916-camss", .data = &msm8916_resources },
+ 	{ .compatible = "qcom,msm8939-camss", .data = &msm8939_resources },
+ 	{ .compatible = "qcom,msm8953-camss", .data = &msm8953_resources },
+@@ -5762,6 +6292,7 @@ static const struct of_device_id camss_dt_match[] = {
+ 	{ .compatible = "qcom,sm8250-camss", .data = &sm8250_resources },
+ 	{ .compatible = "qcom,sm8550-camss", .data = &sm8550_resources },
+ 	{ .compatible = "qcom,sm8650-camss", .data = &sm8650_resources },
++	{ .compatible = "qcom,sm8750-camss", .data = &sm8750_resources },
+ 	{ .compatible = "qcom,x1e80100-camss", .data = &x1e80100_resources },
+ 	{ }
+ };
+diff --git a/drivers/media/platform/qcom/camss/camss.h b/drivers/media/platform/qcom/camss/camss.h
+index 93d691c8a..58ac221e3 100644
+--- a/drivers/media/platform/qcom/camss/camss.h
++++ b/drivers/media/platform/qcom/camss/camss.h
+@@ -95,7 +95,9 @@ enum camss_version {
+ 	CAMSS_845,
+ 	CAMSS_8550,
+ 	CAMSS_8650,
++	CAMSS_8750,
+ 	CAMSS_8775P,
++	CAMSS_KAANAPALI,
+ 	CAMSS_X1E80100,
+ };
+ 
+@@ -107,6 +109,7 @@ enum icc_count {
+ struct camss_resources {
+ 	enum camss_version version;
+ 	const char *pd_name;
++	const struct dev_pm_domain_attach_data *perf_domains;
+ 	const struct camss_subdev_resources *csiphy_res;
+ 	const struct camss_subdev_resources *tpg_res;
+ 	const struct camss_subdev_resources *csid_res;
+@@ -138,6 +141,7 @@ struct camss {
+ 	struct device_link *genpd_link;
+ 	struct icc_path *icc_path[ICC_SM8250_COUNT];
+ 	const struct camss_resources *res;
++	bool legacy_phy;
+ };
+ 
+ struct camss_camera_interface {
+@@ -177,6 +181,7 @@ int camss_vfe_get(struct camss *camss, int id);
+ void camss_vfe_put(struct camss *camss, int id);
+ void camss_delete(struct camss *camss);
+ void camss_buf_done(struct camss *camss, int hw_id, int port_id);
++u32 camss_next_sequence(struct camss *camss, int hw_id, int port_id);
+ void camss_reg_update(struct camss *camss, int hw_id,
+ 		      int port_id, bool is_clear);
+ 
+diff --git a/drivers/media/platform/qcom/iris/iris_buffer.c b/drivers/media/platform/qcom/iris/iris_buffer.c
+index eb8de60c1..a9a581910 100644
+--- a/drivers/media/platform/qcom/iris/iris_buffer.c
++++ b/drivers/media/platform/qcom/iris/iris_buffer.c
+@@ -865,9 +865,11 @@ static void iris_get_ts_metadata(struct iris_inst *inst, u64 timestamp_ns,
+ 		return;
+ 	}
+ 
++	/* Capture can lag behind the metadata ring. Do not copy metadata from
++	 * an unrelated input, or the next write slot which may be past its end.
++	 */
+ 	vbuf->flags &= ~mask;
+-	vbuf->flags |= inst->tss[inst->metadata_idx].flags;
+-	vbuf->timecode = inst->tss[inst->metadata_idx].tc;
++	memset(&vbuf->timecode, 0, sizeof(vbuf->timecode));
+ }
+ 
+ int iris_vb2_buffer_done(struct iris_inst *inst, struct iris_buffer *buf)
+@@ -896,6 +898,20 @@ int iris_vb2_buffer_done(struct iris_inst *inst, struct iris_buffer *buf)
+ 
+ 	vbuf->flags |= buf->flags;
+ 
++	/* LAST completes the drain even if the final frame has no valid payload.
++	 * Record it before returning an error buffer, otherwise the next capture
++	 * QBUF can emit another LAST into the new resolution's queue.
++	 */
++	if (vbuf->flags & V4L2_BUF_FLAG_LAST) {
++		if (!v4l2_m2m_has_stopped(m2m_ctx)) {
++			const struct v4l2_event ev = { .type = V4L2_EVENT_EOS };
++
++			v4l2_event_queue_fh(&inst->fh, &ev);
++			v4l2_m2m_mark_stopped(m2m_ctx);
++		}
++		inst->last_buffer_dequeued = true;
++	}
++
+ 	if (buf->flags & V4L2_BUF_FLAG_ERROR) {
+ 		state = VB2_BUF_STATE_ERROR;
+ 		vb2_set_plane_payload(vb2, 0, 0);
+@@ -912,16 +928,6 @@ int iris_vb2_buffer_done(struct iris_inst *inst, struct iris_buffer *buf)
+ 		vbuf->sequence = inst->sequence_out++;
+ 	}
+ 
+-	if (vbuf->flags & V4L2_BUF_FLAG_LAST) {
+-		if (!v4l2_m2m_has_stopped(m2m_ctx)) {
+-			const struct v4l2_event ev = { .type = V4L2_EVENT_EOS };
+-
+-			v4l2_event_queue_fh(&inst->fh, &ev);
+-			v4l2_m2m_mark_stopped(m2m_ctx);
+-		}
+-		inst->last_buffer_dequeued = true;
+-	}
+-
+ 	state = VB2_BUF_STATE_DONE;
+ 	vb2->timestamp = buf->timestamp;
+ 	v4l2_m2m_buf_done(vbuf, state);
+diff --git a/drivers/media/platform/qcom/iris/iris_core.c b/drivers/media/platform/qcom/iris/iris_core.c
+index 8c335dbfc..56832df34 100644
+--- a/drivers/media/platform/qcom/iris/iris_core.c
++++ b/drivers/media/platform/qcom/iris/iris_core.c
+@@ -16,7 +16,7 @@ void iris_core_deinit(struct iris_core *core)
+ 
+ 	ret = pm_runtime_resume_and_get(core->dev);
+ 
+-	mutex_lock(&core->lock);
++	iris_acquire_core_lock(core);
+ 	if (core->state != IRIS_CORE_DEINIT) {
+ 		iris_fw_unload(core);
+ 
+@@ -26,7 +26,7 @@ void iris_core_deinit(struct iris_core *core)
+ 		iris_hfi_queues_deinit(core);
+ 		core->state = IRIS_CORE_DEINIT;
+ 	}
+-	mutex_unlock(&core->lock);
++	iris_release_core_lock(core);
+ 
+ 	if (!ret)
+ 		pm_runtime_put_sync(core->dev);
+@@ -53,7 +53,7 @@ int iris_core_init(struct iris_core *core)
+ {
+ 	int ret;
+ 
+-	mutex_lock(&core->lock);
++	iris_acquire_core_lock(core);
+ 	if (core->state == IRIS_CORE_INIT) {
+ 		ret = 0;
+ 		goto exit;
+@@ -90,7 +90,7 @@ int iris_core_init(struct iris_core *core)
+ 	if (ret)
+ 		goto error_unload_fw;
+ 
+-	mutex_unlock(&core->lock);
++	iris_release_core_lock(core);
+ 
+ 	return iris_wait_for_system_response(core);
+ 
+@@ -103,7 +103,7 @@ int iris_core_init(struct iris_core *core)
+ error:
+ 	core->state = IRIS_CORE_DEINIT;
+ exit:
+-	mutex_unlock(&core->lock);
++	iris_release_core_lock(core);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/media/platform/qcom/iris/iris_core.h b/drivers/media/platform/qcom/iris/iris_core.h
+index 3e4cf652b..0b1b9721e 100644
+--- a/drivers/media/platform/qcom/iris/iris_core.h
++++ b/drivers/media/platform/qcom/iris/iris_core.h
+@@ -10,6 +10,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/pm_domain.h>
+ #include <media/v4l2-device.h>
++#include <linux/wait.h>
+ 
+ #include "iris_hfi_common.h"
+ #include "iris_hfi_queue.h"
+@@ -70,6 +71,8 @@ struct qcom_ubwc_cfg_data;
+  * @message_queue: shared interface queue to receive responses from firmware
+  * @debug_queue: shared interface queue to receive debug info from firmware
+  * @lock: a lock for this strucure
++ * @irq_disabling: flag to indicate an IRQ-disable is in-progress
++ * @irq_disable_waitqueue: waitqueue to wait for the IRQ-disable to complete
+  * @response_packet: a pointer to response packet from fw to driver
+  * @header_id: id of packet header
+  * @packet_id: id of packet
+@@ -116,6 +119,8 @@ struct iris_core {
+ 	struct iris_iface_q_info		message_queue;
+ 	struct iris_iface_q_info		debug_queue;
+ 	struct mutex				lock; /* lock for core related operations */
++	bool					irq_disabling;
++	wait_queue_head_t			irq_disable_waitqueue;
+ 	u8					*response_packet;
+ 	u32					header_id;
+ 	u32					packet_id;
+diff --git a/drivers/media/platform/qcom/iris/iris_ctrls.c b/drivers/media/platform/qcom/iris/iris_ctrls.c
+index bf17d310e..3e9570f7c 100644
+--- a/drivers/media/platform/qcom/iris/iris_ctrls.c
++++ b/drivers/media/platform/qcom/iris/iris_ctrls.c
+@@ -154,6 +154,10 @@ static enum platform_inst_fw_cap_type iris_get_cap_id(u32 id)
+ 		return LAYER4_BITRATE_HEVC;
+ 	case V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L5_BR:
+ 		return LAYER5_BITRATE_HEVC;
++	case V4L2_CID_MPEG_VIDEO_DEC_DISPLAY_DELAY_ENABLE:
++		return DISPLAY_DELAY_ENABLE;
++	case V4L2_CID_MPEG_VIDEO_DEC_DISPLAY_DELAY:
++		return DISPLAY_DELAY;
+ 	case V4L2_CID_MPEG_VIDEO_FORCE_KEY_FRAME:
+ 		return REQUEST_SYNC_FRAME;
+ 	default:
+@@ -299,6 +303,10 @@ static u32 iris_get_v4l2_id(enum platform_inst_fw_cap_type cap_id)
+ 		return V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L4_BR;
+ 	case LAYER5_BITRATE_HEVC:
+ 		return V4L2_CID_MPEG_VIDEO_HEVC_HIER_CODING_L5_BR;
++	case DISPLAY_DELAY_ENABLE:
++		return V4L2_CID_MPEG_VIDEO_DEC_DISPLAY_DELAY_ENABLE;
++	case DISPLAY_DELAY:
++		return V4L2_CID_MPEG_VIDEO_DEC_DISPLAY_DELAY;
+ 	case REQUEST_SYNC_FRAME:
+ 		return V4L2_CID_MPEG_VIDEO_FORCE_KEY_FRAME;
+ 	default:
+@@ -399,6 +407,7 @@ int iris_ctrls_init(struct iris_inst *inst)
+ 	if (inst->domain == DECODER) {
+ 		v4l2_ctrl_new_std(&inst->ctrl_handler, NULL,
+ 				  V4L2_CID_MIN_BUFFERS_FOR_CAPTURE, 1, 32, 1, 4);
++
+ 	} else {
+ 		v4l2_ctrl_new_std(&inst->ctrl_handler, NULL,
+ 				  V4L2_CID_MIN_BUFFERS_FOR_OUTPUT, 1, 32, 1, 4);
+diff --git a/drivers/media/platform/qcom/iris/iris_hfi_common.c b/drivers/media/platform/qcom/iris/iris_hfi_common.c
+index 8769ec61f..42fc854d4 100644
+--- a/drivers/media/platform/qcom/iris/iris_hfi_common.c
++++ b/drivers/media/platform/qcom/iris/iris_hfi_common.c
+@@ -109,7 +109,8 @@ irqreturn_t iris_hfi_isr_handler(int irq, void *data)
+ 	iris_vpu_clear_interrupt(core);
+ 	mutex_unlock(&core->lock);
+ 
+-	core->hfi_sys_ops->sys_hfi_response_handler(core);
++	if (core->hfi_sys_ops)
++		core->hfi_sys_ops->sys_hfi_response_handler(core);
+ 
+ 	if (!iris_vpu_watchdog(core, core->intr_status))
+ 		enable_irq(irq);
+diff --git a/drivers/media/platform/qcom/iris/iris_hfi_gen2.c b/drivers/media/platform/qcom/iris/iris_hfi_gen2.c
+index 3b8fbefb8..182b2a6b6 100644
+--- a/drivers/media/platform/qcom/iris/iris_hfi_gen2.c
++++ b/drivers/media/platform/qcom/iris/iris_hfi_gen2.c
+@@ -838,6 +838,22 @@ static const struct platform_inst_fw_cap inst_fw_cap_milos_enc[] = {
+ };
+ 
+ static const struct platform_inst_fw_cap inst_fw_cap_sm8550_dec[] = {
++	{
++		.cap_id = DISPLAY_DELAY_ENABLE,
++		.min = 0,
++		.max = 1,
++		.step_or_mask = 1,
++		.value = 0,
++		.hfi_id = HFI_PROP_DECODE_ORDER_OUTPUT,
++		.flags = CAP_FLAG_INPUT_PORT,
++	},
++	{
++		.cap_id = DISPLAY_DELAY,
++		.min = 0,
++		.max = 0,
++		.step_or_mask = 1,
++		.value = 0,
++	},
+ 	{
+ 		.cap_id = PROFILE_H264,
+ 		.min = V4L2_MPEG_VIDEO_H264_PROFILE_BASELINE,
+@@ -1785,6 +1801,7 @@ static const struct platform_inst_fw_cap inst_fw_cap_sm8550_enc[] = {
+ };
+ 
+ static const u32 sm8550_vdec_input_config_params_default[] = {
++	HFI_PROP_DECODE_ORDER_OUTPUT,
+ 	HFI_PROP_BITSTREAM_RESOLUTION,
+ 	HFI_PROP_CROP_OFFSETS,
+ 	HFI_PROP_LUMA_CHROMA_BIT_DEPTH,
+@@ -1797,6 +1814,7 @@ static const u32 sm8550_vdec_input_config_params_default[] = {
+ };
+ 
+ static const u32 sm8550_vdec_input_config_param_hevc[] = {
++	HFI_PROP_DECODE_ORDER_OUTPUT,
+ 	HFI_PROP_BITSTREAM_RESOLUTION,
+ 	HFI_PROP_CROP_OFFSETS,
+ 	HFI_PROP_LUMA_CHROMA_BIT_DEPTH,
+@@ -1808,6 +1826,7 @@ static const u32 sm8550_vdec_input_config_param_hevc[] = {
+ };
+ 
+ static const u32 sm8550_vdec_input_config_param_vp9[] = {
++	HFI_PROP_DECODE_ORDER_OUTPUT,
+ 	HFI_PROP_BITSTREAM_RESOLUTION,
+ 	HFI_PROP_CROP_OFFSETS,
+ 	HFI_PROP_LUMA_CHROMA_BIT_DEPTH,
+@@ -1817,6 +1836,7 @@ static const u32 sm8550_vdec_input_config_param_vp9[] = {
+ };
+ 
+ static const u32 sm8550_vdec_input_config_param_av1[] = {
++	HFI_PROP_DECODE_ORDER_OUTPUT,
+ 	HFI_PROP_BITSTREAM_RESOLUTION,
+ 	HFI_PROP_CROP_OFFSETS,
+ 	HFI_PROP_LUMA_CHROMA_BIT_DEPTH,
+diff --git a/drivers/media/platform/qcom/iris/iris_hfi_gen2_command.c b/drivers/media/platform/qcom/iris/iris_hfi_gen2_command.c
+index 388a36ff2..a285e6fc8 100644
+--- a/drivers/media/platform/qcom/iris/iris_hfi_gen2_command.c
++++ b/drivers/media/platform/qcom/iris/iris_hfi_gen2_command.c
+@@ -665,6 +665,23 @@ static int iris_hfi_gen2_set_super_block(struct iris_inst *inst, u32 plane)
+ 						  sizeof(u32));
+ }
+ 
++static int iris_hfi_gen2_set_decode_order_output(struct iris_inst *inst, u32 plane)
++{
++	struct platform_inst_fw_cap *cap = &inst->fw_caps[DISPLAY_DELAY_ENABLE];
++	u32 decode_order = cap->value;
++
++	/* Leave the firmware default unchanged unless userspace sets the control. */
++	if (!(cap->flags & CAP_FLAG_CLIENT_SET))
++		return 0;
++
++	return iris_hfi_gen2_session_set_property(inst,
++						  HFI_PROP_DECODE_ORDER_OUTPUT,
++						  HFI_HOST_FLAGS_NONE,
++						  HFI_PORT_BITSTREAM,
++						  HFI_PAYLOAD_U32,
++						  &decode_order, sizeof(decode_order));
++}
++
+ static int iris_hfi_gen2_session_set_config_params(struct iris_inst *inst, u32 plane)
+ {
+ 	const struct iris_firmware_data *fdata = inst->core->iris_firmware_data;
+@@ -691,6 +708,7 @@ static int iris_hfi_gen2_session_set_config_params(struct iris_inst *inst, u32 p
+ 		{HFI_PROP_FRAME_RATE,                 iris_hfi_gen2_set_frame_rate             },
+ 		{HFI_PROP_AV1_FILM_GRAIN_PRESENT,     iris_hfi_gen2_set_film_grain             },
+ 		{HFI_PROP_AV1_SUPER_BLOCK_ENABLED,    iris_hfi_gen2_set_super_block            },
++		{HFI_PROP_DECODE_ORDER_OUTPUT,        iris_hfi_gen2_set_decode_order_output    },
+ 	};
+ 
+ 	if (inst->domain == DECODER) {
+diff --git a/drivers/media/platform/qcom/iris/iris_hfi_gen2_defines.h b/drivers/media/platform/qcom/iris/iris_hfi_gen2_defines.h
+index f43aea100..6302082bf 100644
+--- a/drivers/media/platform/qcom/iris/iris_hfi_gen2_defines.h
++++ b/drivers/media/platform/qcom/iris/iris_hfi_gen2_defines.h
+@@ -132,6 +132,9 @@ enum hfi_flip {
+ #define HFI_PROP_DEC_DEFAULT_HEADER		0x03000168
+ #define HFI_PROP_DEC_START_FROM_RAP_FRAME	0x03000169
+ #define HFI_PROP_NO_OUTPUT			0x0300016a
++/* Qualcomm downstream (hfi_property.h 0x0300015b): enables firmware
++ * decode-order output (payload u32, 1=on; OUTPUT_ORDER cap value) */
++#define HFI_PROP_DECODE_ORDER_OUTPUT		0x0300015b
+ #define HFI_PROP_BUFFER_MARK			0x0300016c
+ #define HFI_PROP_WORST_COMPRESSION_RATIO	0x03000174
+ #define HFI_PROP_WORST_COMPLEXITY_FACTOR	0x03000175
+diff --git a/drivers/media/platform/qcom/iris/iris_hfi_gen2_response.c b/drivers/media/platform/qcom/iris/iris_hfi_gen2_response.c
+index 8c2644c7f..a80f41f7b 100644
+--- a/drivers/media/platform/qcom/iris/iris_hfi_gen2_response.c
++++ b/drivers/media/platform/qcom/iris/iris_hfi_gen2_response.c
+@@ -391,7 +391,7 @@ static int iris_hfi_gen2_handle_output_buffer(struct iris_inst *inst,
+ 	buf->flags = iris_hfi_gen2_get_driver_buffer_flags(inst, hfi_buffer->flags);
+ 
+ 	if (!buf->data_size && inst->state == IRIS_INST_STREAMING &&
+-	    !(hfi_buffer->flags & HFI_BUF_FW_FLAG_LAST)) {
++	    !(hfi_buffer->flags & (HFI_BUF_FW_FLAG_LAST | HFI_BUF_FW_FLAG_PSC_LAST))) {
+ 		buf->flags |= V4L2_BUF_FLAG_ERROR;
+ 	}
+ 
+diff --git a/drivers/media/platform/qcom/iris/iris_platform_common.h b/drivers/media/platform/qcom/iris/iris_platform_common.h
+index 974809509..fac4d2a60 100644
+--- a/drivers/media/platform/qcom/iris/iris_platform_common.h
++++ b/drivers/media/platform/qcom/iris/iris_platform_common.h
+@@ -184,6 +184,8 @@ enum platform_inst_fw_cap_type {
+ 	LAYER3_BITRATE_HEVC,
+ 	LAYER4_BITRATE_HEVC,
+ 	LAYER5_BITRATE_HEVC,
++	DISPLAY_DELAY_ENABLE,
++	DISPLAY_DELAY,
+ 	REQUEST_SYNC_FRAME,
+ 	TIME_DELTA_BASED_RC,
+ 	INST_FW_CAP_MAX,
+diff --git a/drivers/media/platform/qcom/iris/iris_probe.c b/drivers/media/platform/qcom/iris/iris_probe.c
+index 6581a969f..d86d48d52 100644
+--- a/drivers/media/platform/qcom/iris/iris_probe.c
++++ b/drivers/media/platform/qcom/iris/iris_probe.c
+@@ -251,6 +251,8 @@ static void iris_remove(struct platform_device *pdev)
+ 	if (!core)
+ 		return;
+ 
++	cancel_delayed_work_sync(&core->sys_error_handler);
++
+ 	iris_core_deinit(core);
+ 
+ 	video_unregister_device(core->vdev_dec);
+@@ -286,6 +288,7 @@ static int iris_probe(struct platform_device *pdev)
+ 
+ 	core->state = IRIS_CORE_DEINIT;
+ 	mutex_init(&core->lock);
++	init_waitqueue_head(&core->irq_disable_waitqueue);
+ 	init_completion(&core->core_init_done);
+ 
+ 	core->response_packet = devm_kzalloc(core->dev, IFACEQ_CORE_PKT_SIZE, GFP_KERNEL);
+@@ -377,14 +380,14 @@ static int __maybe_unused iris_pm_suspend(struct device *dev)
+ 
+ 	core = dev_get_drvdata(dev);
+ 
+-	mutex_lock(&core->lock);
++	iris_acquire_core_lock(core);
+ 	if (core->state != IRIS_CORE_INIT)
+ 		goto exit;
+ 
+ 	ret = iris_hfi_pm_suspend(core);
+ 
+ exit:
+-	mutex_unlock(&core->lock);
++	iris_release_core_lock(core);
+ 
+ 	return ret;
+ }
+@@ -396,7 +399,7 @@ static int __maybe_unused iris_pm_resume(struct device *dev)
+ 
+ 	core = dev_get_drvdata(dev);
+ 
+-	mutex_lock(&core->lock);
++	iris_acquire_core_lock(core);
+ 	if (core->state != IRIS_CORE_INIT)
+ 		goto exit;
+ 
+@@ -404,7 +407,7 @@ static int __maybe_unused iris_pm_resume(struct device *dev)
+ 	pm_runtime_mark_last_busy(core->dev);
+ 
+ exit:
+-	mutex_unlock(&core->lock);
++	iris_release_core_lock(core);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/media/platform/qcom/iris/iris_resources.c b/drivers/media/platform/qcom/iris/iris_resources.c
+index 2c4d34c7b..7bd8aa7a5 100644
+--- a/drivers/media/platform/qcom/iris/iris_resources.c
++++ b/drivers/media/platform/qcom/iris/iris_resources.c
+@@ -16,6 +16,22 @@
+ 
+ #define BW_THRESHOLD 50000
+ 
++void iris_acquire_core_lock(struct iris_core *core)
++{
++	mutex_lock(&core->lock);
++
++	while (READ_ONCE(core->irq_disabling)) {
++		mutex_unlock(&core->lock);
++		wait_event(core->irq_disable_waitqueue, !READ_ONCE(core->irq_disabling));
++		mutex_lock(&core->lock);
++	}
++}
++
++void iris_release_core_lock(struct iris_core *core)
++{
++	mutex_unlock(&core->lock);
++}
++
+ int iris_set_icc_bw(struct iris_core *core, unsigned long icc_bw)
+ {
+ 	unsigned long bw_kbps = 0, bw_prev = 0;
+diff --git a/drivers/media/platform/qcom/iris/iris_resources.h b/drivers/media/platform/qcom/iris/iris_resources.h
+index 6bfbd2dc6..6e1a5e734 100644
+--- a/drivers/media/platform/qcom/iris/iris_resources.h
++++ b/drivers/media/platform/qcom/iris/iris_resources.h
+@@ -8,6 +8,8 @@
+ 
+ struct iris_core;
+ 
++void iris_acquire_core_lock(struct iris_core *core);
++void iris_release_core_lock(struct iris_core *core);
+ int iris_opp_set_rate(struct device *dev, unsigned long freq);
+ int iris_enable_power_domains(struct iris_core *core, struct device *pd_dev);
+ int iris_disable_power_domains(struct iris_core *core, struct device *pd_dev);
+diff --git a/drivers/media/platform/qcom/iris/iris_vidc.c b/drivers/media/platform/qcom/iris/iris_vidc.c
+index f1d7f1860..a936aae0a 100644
+--- a/drivers/media/platform/qcom/iris/iris_vidc.c
++++ b/drivers/media/platform/qcom/iris/iris_vidc.c
+@@ -122,6 +122,9 @@ iris_m2m_queue_init(void *priv, struct vb2_queue *src_vq, struct vb2_queue *dst_
+ 	dst_vq->drv_priv = inst;
+ 	dst_vq->buf_struct_size = sizeof(struct iris_buffer);
+ 	dst_vq->min_reqbufs_allocation = MIN_BUFFERS;
++	if (inst->domain == DECODER &&
++	    inst->core->iris_firmware_data == &iris_hfi_gen2_data)
++		dst_vq->max_num_buffers = DEFAULT_MAX_HOST_BUF_COUNT;
+ 	dst_vq->dev = inst->core->dev;
+ 	dst_vq->lock = &inst->ctx_q_lock;
+ 
+diff --git a/drivers/media/platform/qcom/iris/iris_vpu_common.c b/drivers/media/platform/qcom/iris/iris_vpu_common.c
+index c9f5dc851..645901ffe 100644
+--- a/drivers/media/platform/qcom/iris/iris_vpu_common.c
++++ b/drivers/media/platform/qcom/iris/iris_vpu_common.c
+@@ -229,15 +229,25 @@ void iris_vpu_power_off_hw(struct iris_core *core)
+ 	iris_disable_power_domains(core, core->pmdomain_tbl->pd_devs[IRIS_HW_POWER_DOMAIN]);
+ }
+ 
++static void iris_vpu_disable_irq(struct iris_core *core)
++{
++	WRITE_ONCE(core->irq_disabling, true);
++	mutex_unlock(&core->lock);
++	disable_irq(core->irq);
++	mutex_lock(&core->lock);
++	WRITE_ONCE(core->irq_disabling, false);
++	wake_up_all(&core->irq_disable_waitqueue);
++}
++
+ void iris_vpu_power_off(struct iris_core *core)
+ {
++	if (!iris_vpu_watchdog(core, core->intr_status))
++		iris_vpu_disable_irq(core);
++
+ 	iris_opp_set_rate(core->dev, 0);
+ 	core->iris_platform_data->vpu_ops->power_off_hw(core);
+ 	core->iris_platform_data->vpu_ops->power_off_controller(core);
+ 	iris_unset_icc_bw(core);
+-
+-	if (!iris_vpu_watchdog(core, core->intr_status))
+-		disable_irq(core->irq);
+ }
+ 
+ int iris_vpu_power_on_controller(struct iris_core *core)
+diff --git a/drivers/phy/qualcomm/phy-qcom-mipi-csi2-3ph-dphy.c b/drivers/phy/qualcomm/phy-qcom-mipi-csi2-3ph-dphy.c
+new file mode 100644
+index 000000000..13ddce987
+--- /dev/null
++++ b/drivers/phy/qualcomm/phy-qcom-mipi-csi2-3ph-dphy.c
+@@ -0,0 +1,430 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Qualcomm MSM Camera Subsystem - CSIPHY Module 3phase v1.0
++ *
++ * Copyright (c) 2011-2015, The Linux Foundation. All rights reserved.
++ * Copyright (C) 2016-2026 Linaro Ltd.
++ */
++
++#include <linux/delay.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/time64.h>
++
++#include "phy-qcom-mipi-csi2.h"
++
++#define CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(offset, n)	((offset) + 0x4 * (n))
++#define CSIPHY_3PH_CMN_CSI_COMMON_CTRL0_PHY_SW_RESET	BIT(0)
++#define CSIPHY_3PH_CMN_CSI_COMMON_CTRL5_CLK_ENABLE	BIT(7)
++#define CSIPHY_3PH_CMN_CSI_COMMON_CTRL6_COMMON_PWRDN_B	BIT(0)
++#define CSIPHY_3PH_CMN_CSI_COMMON_CTRL6_SHOW_REV_ID	BIT(1)
++#define CSIPHY_3PH_CMN_CSI_COMMON_CTRL10_IRQ_CLEAR_CMD	BIT(0)
++#define CSIPHY_3PH_CMN_CSI_COMMON_STATUSn(offset, common_status_offset, n) \
++	((offset) + (common_status_offset) + 0x4 * (n))
++
++#define CSIPHY_2PH_LN_CSI_2PHASE_CTRL9n(n)		((0x200 * (n)) + 0x24)
++
++/*
++ * 3 phase CSI has 19 common status regs with only 0-10 being used
++ * and 11-18 being reserved.
++ */
++#define CSI_COMMON_STATUS_NUM				11
++/*
++ * There are a number of common control registers
++ * The offset to clear the CSIPHY IRQ status starts @ 22
++ * So to clear CSI_COMMON_STATUS0 this is CSI_COMMON_CONTROL22, STATUS1 is
++ * CONTROL23 and so on
++ */
++#define CSI_CTRL_STATUS_INDEX				22
++
++/*
++ * There are 43 COMMON_CTRL registers with regs after # 33 being reserved
++ */
++#define CSI_CTRL_MAX					33
++
++#define CSIPHY_DEFAULT_PARAMS				0
++#define CSIPHY_SETTLE_CNT_LOWER_BYTE			2
++#define CSIPHY_SKEW_CAL					7
++
++/* 4nm 2PH v 2.1.2 2p5Gbps 4 lane DPHY mode */
++static const struct
++mipi_csi2phy_lane_regs lane_regs_x1e80100[] = {
++	/* Power up lanes 2ph mode */
++	{.reg_addr = 0x101c, .reg_data = 0x7a, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x1018, .reg_data = 0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++
++	{.reg_addr = 0x0094, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x00a0, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0090, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0098, .reg_data = 0x08, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0094, .reg_data = 0x07, .delay_us = 0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0030, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0000, .reg_data = 0x8e, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0038, .reg_data = 0xfe, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x002c, .reg_data = 0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0034, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x001c, .reg_data = 0x0a, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0014, .reg_data = 0x60, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x003c, .reg_data = 0xb8, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0004, .reg_data = 0x0c, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0020, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0008, .reg_data = 0x10, .param_type = CSIPHY_SETTLE_CNT_LOWER_BYTE},
++	{.reg_addr = 0x0010, .reg_data = 0x52, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0094, .reg_data = 0xd7, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x005c, .reg_data = 0x00, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x0060, .reg_data = 0xbd, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x0064, .reg_data = 0x7f, .param_type = CSIPHY_SKEW_CAL},
++
++	{.reg_addr = 0x0e94, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0ea0, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e90, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e98, .reg_data = 0x08, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e94, .reg_data = 0x07, .delay_us =  0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e30, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e28, .reg_data = 0x04, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e00, .reg_data = 0x80, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e0c, .reg_data = 0xff, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e38, .reg_data = 0x1f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e2c, .reg_data = 0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e34, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e1c, .reg_data = 0x0a, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e14, .reg_data = 0x60, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e3c, .reg_data = 0xb8, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e04, .reg_data = 0x0c, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e20, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0e08, .reg_data = 0x10, .param_type = CSIPHY_SETTLE_CNT_LOWER_BYTE},
++	{.reg_addr = 0x0e10, .reg_data = 0x52, .param_type = CSIPHY_DEFAULT_PARAMS},
++
++	{.reg_addr = 0x0494, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x04a0, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0490, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0498, .reg_data = 0x08, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0494, .reg_data = 0x07, .delay_us =  0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0430, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0400, .reg_data = 0x8e, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0438, .reg_data = 0xfe, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x042c, .reg_data = 0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0434, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x041c, .reg_data = 0x0a, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0414, .reg_data = 0x60, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x043c, .reg_data = 0xb8, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0404, .reg_data = 0x0c, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0420, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0408, .reg_data = 0x10, .param_type = CSIPHY_SETTLE_CNT_LOWER_BYTE},
++	{.reg_addr = 0x0410, .reg_data = 0x52, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0494, .reg_data = 0xd7, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x045c, .reg_data = 0x00, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x0460, .reg_data = 0xbd, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x0464, .reg_data = 0x7f, .param_type = CSIPHY_SKEW_CAL},
++
++	{.reg_addr = 0x0894, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x08a0, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0890, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0898, .reg_data = 0x08, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0894, .reg_data = 0x07, .delay_us =  0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0830, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0800, .reg_data = 0x8e, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0838, .reg_data = 0xfe, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x082c, .reg_data = 0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0834, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x081c, .reg_data = 0x0a, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0814, .reg_data = 0x60, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x083c, .reg_data = 0xb8, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0804, .reg_data = 0x0c, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0820, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0808, .reg_data = 0x10, .param_type = CSIPHY_SETTLE_CNT_LOWER_BYTE},
++	{.reg_addr = 0x0810, .reg_data = 0x52, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0894, .reg_data = 0xd7, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x085c, .reg_data = 0x00, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x0860, .reg_data = 0xbd, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x0864, .reg_data = 0x7f, .param_type = CSIPHY_SKEW_CAL},
++
++	{.reg_addr = 0x0c94, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0ca0, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c90, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c98, .reg_data = 0x08, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c94, .reg_data = 0x07, .delay_us =  0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c30, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c00, .reg_data = 0x8e, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c38, .reg_data = 0xfe, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c2c, .reg_data = 0x01, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c34, .reg_data = 0x0f, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c1c, .reg_data = 0x0a, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c14, .reg_data = 0x60, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c3c, .reg_data = 0xb8, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c04, .reg_data = 0x0c, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c20, .reg_data = 0x00, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c08, .reg_data = 0x10, .param_type = CSIPHY_SETTLE_CNT_LOWER_BYTE},
++	{.reg_addr = 0x0c10, .reg_data = 0x52, .param_type = CSIPHY_DEFAULT_PARAMS},
++	{.reg_addr = 0x0c94, .reg_data = 0xd7, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x0c5c, .reg_data = 0x00, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x0c60, .reg_data = 0xbd, .param_type = CSIPHY_SKEW_CAL},
++	{.reg_addr = 0x0c64, .reg_data = 0x7f, .param_type = CSIPHY_SKEW_CAL},
++};
++
++static inline const struct mipi_csi2phy_device_regs *
++csi2phy_dev_to_regs(struct mipi_csi2phy_device *csi2phy)
++{
++	return &csi2phy->soc_cfg->reg_info;
++}
++
++static void phy_qcom_mipi_csi2_hw_version_read(struct mipi_csi2phy_device *csi2phy)
++{
++	const struct mipi_csi2phy_device_regs *regs = csi2phy_dev_to_regs(csi2phy);
++	u32 tmp;
++
++	writel(CSIPHY_3PH_CMN_CSI_COMMON_CTRL6_SHOW_REV_ID, csi2phy->base +
++	       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, 6));
++
++	tmp = readl_relaxed(csi2phy->base +
++			    CSIPHY_3PH_CMN_CSI_COMMON_STATUSn(regs->common_regs_offset,
++							      regs->common_status_offset, 12));
++	csi2phy->hw_version = tmp;
++
++	tmp = readl_relaxed(csi2phy->base +
++			    CSIPHY_3PH_CMN_CSI_COMMON_STATUSn(regs->common_regs_offset,
++							      regs->common_status_offset, 13));
++	csi2phy->hw_version |= (tmp << 8) & 0xFF00;
++
++	tmp = readl_relaxed(csi2phy->base +
++			    CSIPHY_3PH_CMN_CSI_COMMON_STATUSn(regs->common_regs_offset,
++							      regs->common_status_offset, 14));
++	csi2phy->hw_version |= (tmp << 16) & 0xFF0000;
++
++	tmp = readl_relaxed(csi2phy->base +
++			    CSIPHY_3PH_CMN_CSI_COMMON_STATUSn(regs->common_regs_offset,
++							      regs->common_status_offset, 15));
++	csi2phy->hw_version |= (tmp << 24) & 0xFF000000;
++
++	dev_dbg_once(csi2phy->dev, "CSIPHY 3PH HW Version = 0x%08x\n", csi2phy->hw_version);
++}
++
++/*
++ * phy_qcom_mipi_csi2_reset - Perform software reset on CSIPHY module
++ * @phy_qcom_mipi_csi2: CSIPHY device
++ */
++static void phy_qcom_mipi_csi2_reset(struct mipi_csi2phy_device *csi2phy)
++{
++	const struct mipi_csi2phy_device_regs *regs = csi2phy_dev_to_regs(csi2phy);
++
++	writel(CSIPHY_3PH_CMN_CSI_COMMON_CTRL0_PHY_SW_RESET,
++	       csi2phy->base + CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, 0));
++	usleep_range(5000, 8000);
++	writel(0x0, csi2phy->base +
++	       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, 0));
++}
++
++/*
++ * phy_qcom_mipi_csi2_settle_cnt_calc - Calculate settle count value
++ *
++ * Helper function to calculate settle count value. This is
++ * based on the CSI2 T_hs_settle parameter which in turn
++ * is calculated based on the CSI2 transmitter link frequency.
++ *
++ * Return settle count.
++ */
++static u8 phy_qcom_mipi_csi2_settle_cnt_calc(s64 link_freq, u32 timer_clk_rate)
++{
++	u32 t_hs_prepare_max_ps;
++	u32 timer_period_ps;
++	u32 t_hs_settle_ps;
++	u8 settle_cnt;
++	u32 ui_ps;
++
++	ui_ps = div64_u64(PSEC_PER_SEC, link_freq);
++	ui_ps /= 2;
++	t_hs_prepare_max_ps = 85000 + 6 * ui_ps;
++	t_hs_settle_ps = t_hs_prepare_max_ps;
++
++	timer_period_ps = div_u64(PSEC_PER_SEC, timer_clk_rate);
++
++	if ((t_hs_settle_ps / timer_period_ps) < 6)
++		return 0;
++
++	settle_cnt = t_hs_settle_ps / timer_period_ps - 6;
++
++	return settle_cnt;
++}
++
++static void
++phy_qcom_mipi_csi2_gen2_config_lanes(struct mipi_csi2phy_device *csi2phy,
++				     u8 settle_cnt)
++{
++	const struct mipi_csi2phy_device_regs *regs = csi2phy_dev_to_regs(csi2phy);
++	const struct mipi_csi2phy_lane_regs *r = regs->init_seq;
++	int i, array_size = regs->lane_array_size;
++	u32 val;
++
++	for (i = 0; i < array_size; i++, r++) {
++		switch (r->param_type) {
++		case CSIPHY_SETTLE_CNT_LOWER_BYTE:
++			val = settle_cnt & 0xff;
++			break;
++		case CSIPHY_SKEW_CAL:
++			/* TODO: support application of skew from dt flag */
++			continue;
++		default:
++			val = r->reg_data;
++			break;
++		}
++		writel(val, csi2phy->base + r->reg_addr);
++		if (r->delay_us)
++			udelay(r->delay_us);
++	}
++}
++
++static int phy_qcom_mipi_csi2_lanes_enable(struct mipi_csi2phy_device *csi2phy,
++					   struct mipi_csi2phy_stream_cfg *cfg)
++{
++	const struct mipi_csi2phy_device_regs *regs = csi2phy_dev_to_regs(csi2phy);
++	struct mipi_csi2phy_lanes_cfg *lane_cfg = &cfg->lane_cfg;
++	u8 settle_cnt;
++	u8 val;
++	int i;
++
++	if (cfg->link_freq <= 0)
++		return -EINVAL;
++
++	settle_cnt = phy_qcom_mipi_csi2_settle_cnt_calc(cfg->link_freq, csi2phy->timer_clk_rate);
++	if (!settle_cnt)
++		return -ENODEV;
++
++	/*
++	 * CSI_COMMON_CTRL5 is a physical lane power-up bitmap:
++	 * - Bits [0,2,4,6] → D-PHY data lanes(LN0, LN2, LN4, LN6)
++	 * - Bits [1,3,5] → C-PHY trio lanes(LN1, LN3, LN5)
++	 * - Bit [7] → D-PHY clock lane(LNCK) dedicated clock enable
++	 */
++	val = BIT(lane_cfg->clk.pos);
++	for (i = 0; i < cfg->num_data_lanes; i++)
++		val |= BIT(lane_cfg->data[i].pos * 2);
++
++	writel(val, csi2phy->base +
++	       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, 5));
++
++	/* Lane configuration for polarity @ CSIPHY-base + CTRL9 */
++	for (i = 0; i < cfg->num_data_lanes; i++) {
++		if (lane_cfg->data[i].pol) {
++			u8 pos = lane_cfg->data[i].pos;
++
++			writel(BIT(2), csi2phy->base + CSIPHY_2PH_LN_CSI_2PHASE_CTRL9n(pos * 2));
++		}
++	}
++
++	if (lane_cfg->clk.pol)
++		writel(BIT(2), csi2phy->base + CSIPHY_2PH_LN_CSI_2PHASE_CTRL9n(lane_cfg->clk.pos));
++
++	val = CSIPHY_3PH_CMN_CSI_COMMON_CTRL6_COMMON_PWRDN_B;
++	writel(val, csi2phy->base +
++	       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, 6));
++
++	val = 0x02;
++	writel(val, csi2phy->base +
++	       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, 7));
++
++	val = 0x00;
++	writel(val, csi2phy->base +
++	       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, 0));
++
++	phy_qcom_mipi_csi2_gen2_config_lanes(csi2phy, settle_cnt);
++
++	/* IRQ_MASK registers - disable all interrupts */
++	for (i = CSI_COMMON_STATUS_NUM; i < CSI_CTRL_STATUS_INDEX; i++) {
++		writel(0, csi2phy->base +
++		       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, i));
++	}
++
++	return 0;
++}
++
++static void
++phy_qcom_mipi_csi2_lanes_disable(struct mipi_csi2phy_device *csi2phy,
++				 struct mipi_csi2phy_stream_cfg *cfg)
++{
++	const struct mipi_csi2phy_device_regs *regs = csi2phy_dev_to_regs(csi2phy);
++
++	writel(0, csi2phy->base +
++	       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, 5));
++
++	writel(0, csi2phy->base +
++	       CSIPHY_3PH_CMN_CSI_COMMON_CTRLn(regs->common_regs_offset, 6));
++}
++
++static const struct mipi_csi2phy_hw_ops phy_qcom_mipi_csi2_ops_3ph_1_0 = {
++	.hw_version_read = phy_qcom_mipi_csi2_hw_version_read,
++	.reset = phy_qcom_mipi_csi2_reset,
++	.lanes_enable = phy_qcom_mipi_csi2_lanes_enable,
++	.lanes_disable = phy_qcom_mipi_csi2_lanes_disable,
++};
++
++static const char * const x1e_clks[] = {
++	"core",
++	"timer",
++	"ahb"
++};
++
++static const char * const x1e_supplies[] = {
++	"vdda-0p9",
++	"vdda-1p2"
++};
++
++static struct mipi_csi2_genpd x1e_genpds[] = {
++	{ .name = "top", .scaled = false },
++	{ .name = "mmcx", .scaled = true },
++	{ .name = "mx", .scaled = true },
++};
++
++const struct mipi_csi2phy_soc_cfg mipi_csi2_dphy_4nm_x1e = {
++	.ops = &phy_qcom_mipi_csi2_ops_3ph_1_0,
++	.reg_info = {
++		.init_seq = lane_regs_x1e80100,
++		.lane_array_size = ARRAY_SIZE(lane_regs_x1e80100),
++		.common_regs_offset = 0x1000,
++		.common_status_offset = 0xb0,
++	},
++	.supply_names = (const char **)x1e_supplies,
++	.num_supplies = ARRAY_SIZE(x1e_supplies),
++	.clk_names = (const char **)x1e_clks,
++	.num_clk = ARRAY_SIZE(x1e_clks),
++	.genpds = x1e_genpds,
++	.num_genpds = ARRAY_SIZE(x1e_genpds),
++};
++
++const struct mipi_csi2phy_soc_cfg mipi_csi2_dphy_3nm_kaanapali = {
++	.ops = &phy_qcom_mipi_csi2_ops_3ph_1_0,
++	.reg_info = {
++		.init_seq = lane_regs_x1e80100,
++		.lane_array_size = ARRAY_SIZE(lane_regs_x1e80100),
++		.common_regs_offset = 0x1000,
++		.common_status_offset = 0x138,
++	},
++	.supply_names = (const char **)x1e_supplies,
++	.num_supplies = ARRAY_SIZE(x1e_supplies),
++	.clk_names = (const char **)x1e_clks,
++	.num_clk = ARRAY_SIZE(x1e_clks),
++	.genpds = x1e_genpds,
++	.num_genpds = ARRAY_SIZE(x1e_genpds),
++};
++
++static struct mipi_csi2_genpd sm8750_genpds[] = {
++	{ .name = "top", .scaled = false },
++	{ .name = "mmcx", .scaled = true },
++	{ .name = "mx", .scaled = true },
++	{ .name = "mxc", .scaled = true },
++};
++
++const struct mipi_csi2phy_soc_cfg mipi_csi2_dphy_3nm_sm8750 = {
++	.ops = &phy_qcom_mipi_csi2_ops_3ph_1_0,
++	.reg_info = {
++		.init_seq = lane_regs_x1e80100,
++		.lane_array_size = ARRAY_SIZE(lane_regs_x1e80100),
++		.common_regs_offset = 0x1000,
++		.common_status_offset = 0x138,
++	},
++	.supply_names = (const char **)x1e_supplies,
++	.num_supplies = ARRAY_SIZE(x1e_supplies),
++	.clk_names = (const char **)x1e_clks,
++	.num_clk = ARRAY_SIZE(x1e_clks),
++	.genpds = sm8750_genpds,
++	.num_genpds = ARRAY_SIZE(sm8750_genpds),
++};
+diff --git a/drivers/phy/qualcomm/phy-qcom-mipi-csi2-core.c b/drivers/phy/qualcomm/phy-qcom-mipi-csi2-core.c
+new file mode 100644
+index 000000000..e303a64b1
+--- /dev/null
++++ b/drivers/phy/qualcomm/phy-qcom-mipi-csi2-core.c
+@@ -0,0 +1,465 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2026, Linaro Ltd.
++ */
++
++#include <dt-bindings/media/video-interfaces.h>
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/err.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/pm_opp.h>
++#include <linux/phy/phy.h>
++#include <linux/phy/phy-mipi-dphy.h>
++#include <linux/platform_device.h>
++#include <linux/pm_domain.h>
++#include <linux/pm_runtime.h>
++#include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
++#include <linux/reset.h>
++#include <linux/slab.h>
++
++#include "phy-qcom-mipi-csi2.h"
++
++static int
++phy_qcom_mipi_csi2_set_clock_rates(struct mipi_csi2phy_device *csi2phy,
++				   s64 link_freq)
++{
++	struct device *dev = csi2phy->dev;
++	unsigned long opp_rate = link_freq / 4;
++	struct dev_pm_opp *opp;
++	long timer_rate;
++	int i, pstate;
++	int ret;
++
++	opp = dev_pm_opp_find_freq_ceil(dev, &opp_rate);
++	if (IS_ERR(opp)) {
++		dev_err(csi2phy->dev, "Couldn't find ceiling for %lld Hz\n",
++			link_freq);
++		return PTR_ERR(opp);
++	}
++
++	pstate = 0;
++	for (i = 0; i < csi2phy->pd_list->num_pds; i++) {
++		unsigned int perf;
++
++		if (!csi2phy->soc_cfg->genpds[i].scaled)
++			continue;
++
++		perf = dev_pm_opp_get_required_pstate(opp, pstate);
++		pstate += 1;
++
++		ret = dev_pm_genpd_set_performance_state(csi2phy->pd_list->pd_devs[i], perf);
++		if (ret) {
++			dev_err(csi2phy->dev, "Couldn't set perf state %u\n",
++				perf);
++			dev_pm_opp_put(opp);
++			goto unset_pstate;
++		}
++	}
++	dev_pm_opp_put(opp);
++
++	ret = dev_pm_opp_set_rate(dev, opp_rate);
++	if (ret) {
++		dev_err(csi2phy->dev, "dev_pm_opp_set_rate() fail\n");
++		goto unset_opp_rate;
++	}
++
++	timer_rate = clk_round_rate(csi2phy->timer_clk, link_freq / 4);
++	if (timer_rate <= 0) {
++		ret = -ENODEV;
++		goto unset_opp_rate;
++	}
++
++	ret = clk_set_rate(csi2phy->timer_clk, timer_rate);
++	if (ret)
++		goto unset_opp_rate;
++
++	csi2phy->timer_clk_rate = timer_rate;
++
++	return 0;
++
++unset_opp_rate:
++	dev_pm_opp_set_rate(dev, 0);
++
++unset_pstate:
++	while (i--) {
++		if (!csi2phy->soc_cfg->genpds[i].scaled)
++			continue;
++
++		dev_pm_genpd_set_performance_state(csi2phy->pd_list->pd_devs[i], 0);
++	}
++
++	return ret;
++}
++
++static int phy_qcom_mipi_csi2_configure(struct phy *phy,
++					union phy_configure_opts *opts)
++{
++	struct mipi_csi2phy_device *csi2phy = phy_get_drvdata(phy);
++	struct phy_configure_opts_mipi_dphy *dphy_cfg = &opts->mipi_dphy;
++	struct mipi_csi2phy_stream_cfg *stream_cfg = &csi2phy->stream_cfg;
++	int ret;
++
++	ret = phy_mipi_dphy_config_validate(dphy_cfg);
++	if (ret)
++		return ret;
++
++	if (dphy_cfg->lanes < 1 || dphy_cfg->lanes > CSI2_MAX_DATA_LANES)
++		return -EINVAL;
++
++	if (dphy_cfg->lanes != stream_cfg->num_data_lanes)
++		return -EINVAL;
++
++	stream_cfg->link_freq = dphy_cfg->hs_clk_rate;
++
++	return 0;
++}
++
++static int phy_qcom_mipi_csi2_set_mode(struct phy *phy,
++				       enum phy_mode mode, int submode)
++{
++	struct mipi_csi2phy_device *csi2phy = phy_get_drvdata(phy);
++
++	if (mode != PHY_MODE_MIPI_DPHY)
++		return -EOPNOTSUPP;
++
++	csi2phy->phy_mode = mode;
++	return 0;
++}
++
++static int phy_qcom_mipi_csi2_power_on(struct phy *phy)
++{
++	struct mipi_csi2phy_device *csi2phy = phy_get_drvdata(phy);
++	const struct mipi_csi2phy_hw_ops *ops = csi2phy->soc_cfg->ops;
++	int i, ret;
++
++	ret = regulator_bulk_enable(csi2phy->soc_cfg->num_supplies,
++				    csi2phy->supplies);
++	if (ret)
++		return ret;
++
++	ret = pm_runtime_resume_and_get(csi2phy->dev);
++	if (ret < 0)
++		goto disable_regulators;
++
++	ret = phy_qcom_mipi_csi2_set_clock_rates(csi2phy, csi2phy->stream_cfg.link_freq);
++	if (ret)
++		goto poweroff_phy;
++
++	ret = clk_bulk_prepare_enable(csi2phy->soc_cfg->num_clk,
++				      csi2phy->clks);
++	if (ret) {
++		dev_err(csi2phy->dev, "failed to enable clocks, %d\n", ret);
++		goto unset_rate;
++	}
++
++	ops->reset(csi2phy);
++
++	ops->hw_version_read(csi2phy);
++
++	ret = ops->lanes_enable(csi2phy, &csi2phy->stream_cfg);
++	if (ret)
++		goto unset_clocks;
++
++	return 0;
++
++unset_clocks:
++	clk_bulk_disable_unprepare(csi2phy->soc_cfg->num_clk,
++				   csi2phy->clks);
++
++unset_rate:
++	dev_pm_opp_set_rate(csi2phy->dev, 0);
++
++	for (i = 0; i < csi2phy->pd_list->num_pds; i++) {
++		if (!csi2phy->soc_cfg->genpds[i].scaled)
++			continue;
++
++		dev_pm_genpd_set_performance_state(csi2phy->pd_list->pd_devs[i], 0);
++	}
++
++poweroff_phy:
++	pm_runtime_put_sync(csi2phy->dev);
++
++disable_regulators:
++	regulator_bulk_disable(csi2phy->soc_cfg->num_supplies,
++			       csi2phy->supplies);
++
++	return ret;
++}
++
++static int phy_qcom_mipi_csi2_power_off(struct phy *phy)
++{
++	struct mipi_csi2phy_device *csi2phy = phy_get_drvdata(phy);
++	const struct mipi_csi2phy_hw_ops *ops = csi2phy->soc_cfg->ops;
++	int i;
++
++	ops->lanes_disable(csi2phy, &csi2phy->stream_cfg);
++
++	clk_bulk_disable_unprepare(csi2phy->soc_cfg->num_clk,
++				   csi2phy->clks);
++
++	dev_pm_opp_set_rate(csi2phy->dev, 0);
++
++	for (i = 0; i < csi2phy->pd_list->num_pds; i++) {
++		if (!csi2phy->soc_cfg->genpds[i].scaled)
++			continue;
++
++		dev_pm_genpd_set_performance_state(csi2phy->pd_list->pd_devs[i], 0);
++	}
++
++	pm_runtime_put_sync(csi2phy->dev);
++
++	regulator_bulk_disable(csi2phy->soc_cfg->num_supplies,
++			       csi2phy->supplies);
++
++	return 0;
++}
++
++static const struct phy_ops phy_qcom_mipi_csi2_ops = {
++	.configure	= phy_qcom_mipi_csi2_configure,
++	.set_mode	= phy_qcom_mipi_csi2_set_mode,
++	.power_on	= phy_qcom_mipi_csi2_power_on,
++	.power_off	= phy_qcom_mipi_csi2_power_off,
++	.owner		= THIS_MODULE,
++};
++
++static int phy_qcom_mipi_csi2_attach_pm_domains(struct mipi_csi2phy_device *csi2phy)
++{
++	struct dev_pm_domain_attach_data pd_data = { 0 };
++	const char **pd_names;
++	int i;
++
++	pd_names = devm_kzalloc(csi2phy->dev,
++				sizeof(char *) * csi2phy->soc_cfg->num_genpds,
++				GFP_KERNEL);
++	if (!pd_names)
++		return -ENOMEM;
++
++	for (i = 0; i < csi2phy->soc_cfg->num_genpds; i++)
++		pd_names[i] = csi2phy->soc_cfg->genpds[i].name;
++
++	pd_data.pd_names = pd_names;
++	pd_data.num_pd_names = csi2phy->soc_cfg->num_genpds;
++
++	return devm_pm_domain_attach_list(csi2phy->dev, &pd_data,
++					  &csi2phy->pd_list);
++}
++
++static int phy_qcom_mipi_csi2_parse_routing(struct mipi_csi2phy_device *csi2phy)
++{
++	struct mipi_csi2phy_stream_cfg *stream_cfg = &csi2phy->stream_cfg;
++	u32 lane_polarities[CSI2_MAX_DATA_LANES + 1];
++	u32 data_lanes[CSI2_MAX_DATA_LANES];
++	struct device *dev = csi2phy->dev;
++	struct fwnode_handle *ep;
++	int num_polarities;
++	int num_data_lanes;
++	u32 bus_type;
++	int i, ret;
++
++	ep = fwnode_graph_get_endpoint_by_id(dev_fwnode(dev), 0, 1, 0);
++	if (ep) {
++		fwnode_handle_put(ep);
++		dev_err(dev, "DPHY split mode is not supported\n");
++		return -EOPNOTSUPP;
++	}
++
++	ep = fwnode_graph_get_endpoint_by_id(dev_fwnode(dev), 0, 0, 0);
++	if (!ep) {
++		dev_err(dev, "Missing port@0\n");
++		return -ENODEV;
++	}
++
++	/* bus-type is optional, D-PHY is the default */
++	bus_type = MEDIA_BUS_TYPE_CSI2_DPHY;
++	fwnode_property_read_u32(ep, "bus-type", &bus_type);
++
++	if (bus_type != MEDIA_BUS_TYPE_CSI2_DPHY) {
++		ret = -EOPNOTSUPP;
++		dev_err(dev, "Unsupported bus-type %u\n", bus_type);
++		goto out_put;
++	}
++
++	num_data_lanes = fwnode_property_count_u32(ep, "data-lanes");
++	if (num_data_lanes < 1 || num_data_lanes > CSI2_MAX_DATA_LANES) {
++		ret = -EINVAL;
++		dev_err(dev, "Invalid data-lanes count: %d\n", num_data_lanes);
++		goto out_put;
++	}
++	stream_cfg->num_data_lanes = num_data_lanes;
++
++	ret = fwnode_property_read_u32_array(ep, "data-lanes", data_lanes,
++					     stream_cfg->num_data_lanes);
++	if (ret) {
++		dev_err(dev, "Failed to read data-lanes: %d\n", ret);
++		goto out_put;
++	}
++
++	/* lane-polarities: optional, up to num_data_lanes + 1 entries */
++	memset(lane_polarities, 0x00, sizeof(lane_polarities));
++	num_polarities = fwnode_property_count_u32(ep, "lane-polarities");
++	if (num_polarities > 0) {
++		if (num_polarities != stream_cfg->num_data_lanes + 1) {
++			ret = -EINVAL;
++			dev_err(dev, "clock+data-lane %d/polarities %d mismatch\n",
++				stream_cfg->num_data_lanes + 1, num_polarities);
++			goto out_put;
++		}
++
++		ret = fwnode_property_read_u32_array(ep, "lane-polarities", lane_polarities,
++						     num_polarities);
++		if (ret) {
++			dev_err(dev, "Failed to read lane-polarities: %d\n", ret);
++			goto out_put;
++		}
++	}
++
++	csi2phy->stream_cfg.lane_cfg.clk.pos = CSI2_DEFAULT_CLK_LANE;
++	csi2phy->stream_cfg.lane_cfg.clk.pol = lane_polarities[0];
++
++	for (i = 0; i < csi2phy->stream_cfg.num_data_lanes; i++) {
++		if (data_lanes[i] < 1 || data_lanes[i] > CSI2_MAX_DATA_LANES) {
++			dev_err(dev, "Invalid lane %d\n", data_lanes[i]);
++			ret = -EINVAL;
++			goto out_put;
++		}
++
++		/* Convert data-lanes = <1 2 3 4> to bit positions */
++		csi2phy->stream_cfg.lane_cfg.data[i].pos = data_lanes[i] - 1;
++		csi2phy->stream_cfg.lane_cfg.data[i].pol = lane_polarities[i + 1];
++	}
++
++	ret = 0;
++
++out_put:
++	fwnode_handle_put(ep);
++
++	return ret;
++}
++
++static int phy_qcom_mipi_csi2_probe(struct platform_device *pdev)
++{
++	unsigned int i, num_clk, num_supplies;
++	struct mipi_csi2phy_device *csi2phy;
++	struct phy_provider *phy_provider;
++	struct device *dev = &pdev->dev;
++	struct phy *generic_phy;
++	int ret;
++
++	csi2phy = devm_kzalloc(dev, sizeof(*csi2phy), GFP_KERNEL);
++	if (!csi2phy)
++		return -ENOMEM;
++
++	csi2phy->dev = dev;
++	dev_set_drvdata(dev, csi2phy);
++
++	csi2phy->soc_cfg = device_get_match_data(&pdev->dev);
++
++	if (!csi2phy->soc_cfg)
++		return -EINVAL;
++
++	num_clk = csi2phy->soc_cfg->num_clk;
++
++	ret = phy_qcom_mipi_csi2_parse_routing(csi2phy);
++	if (ret)
++		return ret;
++
++	ret = phy_qcom_mipi_csi2_attach_pm_domains(csi2phy);
++	if (ret < 0 || csi2phy->pd_list == NULL) {
++		if (ret == 0)
++			ret = -ENODEV;
++		return dev_err_probe(dev, ret, "Failed to attach power-domain list\n");
++	}
++
++	ret = devm_pm_runtime_enable(dev);
++	if (ret < 0)
++		return dev_err_probe(dev, ret, "Failed to enable pm runtime\n");
++
++	ret = devm_clk_bulk_get_all(dev, &csi2phy->clks);
++	if (ret < 0)
++		return dev_err_probe(dev, ret, "Failed to get clocks\n");
++
++	if (num_clk != ret) {
++		return dev_err_probe(dev, -ENODEV, "clock count %d expected %d\n",
++				     ret, num_clk);
++	}
++
++	for (i = 0; i < num_clk; i++) {
++		if (!csi2phy->clks[i].id)
++			return dev_err_probe(dev, -EINVAL, "Missing clock-names\n");
++
++		if (!strcmp(csi2phy->clks[i].id, "timer")) {
++			csi2phy->timer_clk = csi2phy->clks[i].clk;
++			break;
++		}
++	}
++	if (!csi2phy->timer_clk)
++		return dev_err_probe(dev, -ENODEV, "no timer clock\n");
++
++	ret = devm_pm_opp_set_clkname(dev, "core");
++	if (ret)
++		return dev_err_probe(dev, ret, "Failed to set opp clkname\n");
++
++	ret = devm_pm_opp_of_add_table(dev);
++	if (ret)
++		return dev_err_probe(dev, ret, "invalid OPP table in device tree\n");
++
++	num_supplies = csi2phy->soc_cfg->num_supplies;
++	csi2phy->supplies = devm_kzalloc(dev, sizeof(*csi2phy->supplies) * num_supplies,
++					 GFP_KERNEL);
++	if (!csi2phy->supplies)
++		return -ENOMEM;
++
++	for (i = 0; i < num_supplies; i++)
++		csi2phy->supplies[i].supply = csi2phy->soc_cfg->supply_names[i];
++
++	ret = devm_regulator_bulk_get(dev, num_supplies, csi2phy->supplies);
++	if (ret)
++		return dev_err_probe(dev, ret,
++				     "failed to get regulator supplies\n");
++
++	csi2phy->base = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(csi2phy->base))
++		return PTR_ERR(csi2phy->base);
++
++	generic_phy = devm_phy_create(dev, NULL, &phy_qcom_mipi_csi2_ops);
++	if (IS_ERR(generic_phy)) {
++		ret = PTR_ERR(generic_phy);
++		return dev_err_probe(dev, ret, "failed to create phy\n");
++	}
++	csi2phy->phy = generic_phy;
++
++	phy_set_drvdata(generic_phy, csi2phy);
++
++	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
++	if (!IS_ERR(phy_provider))
++		dev_dbg(dev, "Registered MIPI CSI2 PHY device\n");
++
++	return PTR_ERR_OR_ZERO(phy_provider);
++}
++
++static const struct of_device_id phy_qcom_mipi_csi2_of_match_table[] = {
++	{ .compatible	= "qcom,x1e80100-csi2-phy", .data = &mipi_csi2_dphy_4nm_x1e },
++	{ .compatible	= "qcom,kaanapali-csi2-phy", .data = &mipi_csi2_dphy_3nm_kaanapali },
++	{ .compatible	= "qcom,sm8750-csi2-phy", .data = &mipi_csi2_dphy_3nm_sm8750 },
++	{ }
++};
++MODULE_DEVICE_TABLE(of, phy_qcom_mipi_csi2_of_match_table);
++
++static struct platform_driver phy_qcom_mipi_csi2_driver = {
++	.probe		= phy_qcom_mipi_csi2_probe,
++	.driver = {
++		.name	= "qcom-mipi-csi2-phy",
++		.of_match_table = phy_qcom_mipi_csi2_of_match_table,
++	},
++};
++
++module_platform_driver(phy_qcom_mipi_csi2_driver);
++
++MODULE_DESCRIPTION("Qualcomm MIPI CSI2 PHY driver");
++MODULE_AUTHOR("Bryan O'Donoghue <bod@kernel.org>");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/phy/qualcomm/phy-qcom-mipi-csi2.h b/drivers/phy/qualcomm/phy-qcom-mipi-csi2.h
+new file mode 100644
+index 000000000..59f41e561
+--- /dev/null
++++ b/drivers/phy/qualcomm/phy-qcom-mipi-csi2.h
+@@ -0,0 +1,100 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ *
++ * Qualcomm MIPI CSI2 CPHY/DPHY driver
++ *
++ * Copyright (C) 2025 Linaro Ltd.
++ */
++#ifndef __PHY_QCOM_MIPI_CSI2_H__
++#define __PHY_QCOM_MIPI_CSI2_H__
++
++#include <linux/phy/phy.h>
++
++#define CSI2_MAX_DATA_LANES	4
++#define CSI2_DEFAULT_CLK_LANE	7
++
++struct mipi_csi2phy_lane {
++	u8 pos;
++	u8 pol;
++};
++
++struct mipi_csi2phy_lanes_cfg {
++	struct mipi_csi2phy_lane data[CSI2_MAX_DATA_LANES];
++	struct mipi_csi2phy_lane clk;
++};
++
++struct mipi_csi2phy_stream_cfg {
++	s64 link_freq;
++	u8 num_data_lanes;
++	struct mipi_csi2phy_lanes_cfg lane_cfg;
++};
++
++struct mipi_csi2phy_device;
++
++struct mipi_csi2phy_hw_ops {
++	void (*hw_version_read)(struct mipi_csi2phy_device *csi2phy_dev);
++	void (*reset)(struct mipi_csi2phy_device *csi2phy_dev);
++	int (*lanes_enable)(struct mipi_csi2phy_device *csi2phy_dev,
++			    struct mipi_csi2phy_stream_cfg *cfg);
++	void (*lanes_disable)(struct mipi_csi2phy_device *csi2phy_dev,
++			      struct mipi_csi2phy_stream_cfg *cfg);
++};
++
++struct mipi_csi2phy_lane_regs {
++	const s32 reg_addr;
++	const s32 reg_data;
++	const u32 delay_us;
++	const u32 param_type;
++};
++
++struct mipi_csi2phy_device_regs {
++	const struct mipi_csi2phy_lane_regs *init_seq;
++	const int lane_array_size;
++	const u32 common_regs_offset;
++	const u32 common_status_offset;
++};
++
++struct mipi_csi2_genpd {
++	const char *name;
++	bool scaled;
++};
++
++struct mipi_csi2phy_soc_cfg {
++	const struct mipi_csi2phy_hw_ops *ops;
++	const struct mipi_csi2phy_device_regs reg_info;
++
++	const char ** const supply_names;
++	const unsigned int num_supplies;
++
++	const char ** const clk_names;
++	const unsigned int num_clk;
++
++	const struct mipi_csi2_genpd *genpds;
++	const unsigned int num_genpds;
++};
++
++struct mipi_csi2phy_device {
++	struct device *dev;
++	u8 phy_mode;
++
++	struct phy *phy;
++	void __iomem *base;
++
++	struct clk_bulk_data *clks;
++	struct clk *timer_clk;
++	u32 timer_clk_rate;
++
++	struct regulator_bulk_data *supplies;
++	struct dev_pm_domain_list *pd_list;
++
++	const struct mipi_csi2phy_soc_cfg *soc_cfg;
++	struct mipi_csi2phy_stream_cfg stream_cfg;
++
++	u32 hw_version;
++};
++
++extern const struct mipi_csi2phy_soc_cfg mipi_csi2_dphy_4nm_x1e;
++extern const struct mipi_csi2phy_soc_cfg mipi_csi2_dphy_3nm_kaanapali;
++extern const struct mipi_csi2phy_soc_cfg mipi_csi2_dphy_3nm_sm8750;
++
++#endif /* __PHY_QCOM_MIPI_CSI2_H__ */

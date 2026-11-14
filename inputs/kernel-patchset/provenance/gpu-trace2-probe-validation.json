@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-11-13T18:40:34.375261+00:00",
+  "kernel_release": "7.3.4-erhai-p2",
+  "scope": "QEMU validates new probe definitions and console printing only; no physical GPU coverage.",
+  "params": [
+    "console=tty0",
+    "mem_sleep_default=s2idle",
+    "trace_event=qcom_scm:*",
+    "tp_printk",
+    "kprobe_event=p:erhai/hw_init,a8xx_hw_init;r:erhai/zap_image_done,adreno_zap_shader_load,ret=$retval:s32;r:erhai/zap_done,a6xx_zap_shader_init,ret=$retval:s32;p:erhai/flush,a6xx_flush;p:erhai/idle,a8xx_idle;r:erhai/idle_done,a8xx_idle,ok=$retval:u8;p:erhai/fence,a6xx_fenced_write,reg=$arg2:u32,val=$arg3:u32;p:erhai/preempt,a8xx_preempt_hw_init;p:erhai/gmu_done,a6xx_gmu_clear_oob;r:erhai/gmu_return,a6xx_gmu_clear_oob;r:erhai/hw_return,a8xx_hw_init,ret=$retval:s32;r:erhai/msm_return,msm_gpu_hw_init,ret=$retval:s32;r:erhai/gpu_loaded,adreno_load_gpu;p:erhai/runtime_suspend,adreno_runtime_suspend;p:erhai/gmu_stop,a6xx_gmu_stop;r:erhai/gmu_stopped,a6xx_gmu_stop,ret=$retval:s32;p:erhai/fb_probe,msm_fbdev_driver_fbdev_probe;r:erhai/fb_return,msm_fbdev_driver_fbdev_probe,ret=$retval:s32",
+    "nr_cpus=1",
+    "nokaslr",
+    "arm64.nohaft",
+    "arm64.nowfxt",
+    "irqchip.gicv3_pseudo_nmi=0",
+    "ignore_loglevel",
+    "initcall_debug",
+    "log_buf_len=8M",
+    "panic=0",
+    "root=fstab",
+    "loglevel=6",
+    "lsm=landlock,yama,bpf"
+  ],
+  "definition_registration": "passed; no Failed to add event",
+  "host_probe_output": "present",
+  "no_rootfs_panic": "expected",
+  "log_sha256": "45c55b7369b45c00768cf64b338ce058516a3edbedfdbb38623a627583ff7dfe",
+  "publication": {
+    "system": "/nix/store/1m8jh4gil7qmvr8fxyg0i8vr1fq8gvfz-nixos-system-pad2pro-erhai-p2-gpu-trace2",
+    "boot_id": "nixos-cad8ce652de320da03683acb1a25d9a7",
+    "kernel_dtb_initrd": "same p2 payloads",
+    "boot_mount": "ro,noatime",
+    "cleanup": "Only original current, previous and this diagnostic entry remain",
+    "default": "nixos/current",
+    "hardware_result": "immediate reset; all GPU and framebuffer-creation returns succeeded; see gpu-trace2-device-boot.json",
+    "menu_entry": "replaced by display-trace"
+  }
+}

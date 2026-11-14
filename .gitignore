@@ -1,0 +1,7 @@
+.work/
+artifacts/
+inputs/local/
+result*
+__pycache__/
+*.pyc
+hosts/pad2pro/local.nix

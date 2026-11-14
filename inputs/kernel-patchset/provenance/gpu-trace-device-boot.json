@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-11-13T18:39:41.249768+00:00",
+  "release": "7.3.4-erhai-p2",
+  "system": "/nix/store/rs9yljf9wp5p63sn8z4dck135gs2p1dr-nixos-system-pad2pro-erhai-p2-gpu-trace",
+  "boot_id": "nixos-e536371cb687e281dc6847531d0926a3",
+  "result": "immediate reset; user returned to original current",
+  "recovery_boot_id": "f4e25386-7da8-4e01-8cba-6d4df81f306d",
+  "pstore": {
+    "bytes": 262128,
+    "sha256": "76e3823137a923e7a03792274746513b72340bfcccb913c85e61c4e528ab31b4",
+    "corrupted": true,
+    "nul_bytes": 687,
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-gpu-trace-recovery/var/lib/systemd/pstore/console-ramoops-0"
+  },
+  "readable_probes": [
+    "a8xx_hw_init entered around 0.893457s",
+    "initial flush and idle completed with ok=1",
+    "adreno_zap_shader_load returned ret=0",
+    "a6xx_zap_shader_init returned ret=0",
+    "flush and idle after secure-mode command completed with ok=1",
+    "later yield flush and idle completed with ok=1",
+    "last readable probe: a6xx_gmu_clear_oob entry around 0.921080s"
+  ],
+  "interpretation": "Zap helper return and secure-mode transition completed. Entry into GMU OOB clear is confirmed, but its return and the enclosing hardware-init return were not probed, so do not yet identify the OOB register write as the fault. Display initialization after GPU loading remains possible.",
+  "next": "Add return probes for GMU clear and enclosing GPU functions, plus framebuffer-probe entry/return and runtime GPU suspend.",
+  "hardware_accepted": false
+}

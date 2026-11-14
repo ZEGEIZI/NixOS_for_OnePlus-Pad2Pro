@@ -1,0 +1,34 @@
+{
+  "version": "7.3.4",
+  "patch_head": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+  "configfile": "/nix/store/rw2a18932v0d8lxxgjqlvrsj4jmdgisp-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-dev/lib/modules/7.3.4-erhai-p2/build/.config",
+  "checks": {
+    "full_fragment_requirements": "passed",
+    "official_replay": "passed; current manifest head verified",
+    "wifi_firmware": "passed",
+    "cps8601_firmware": "8 mock failure/update scenarios passed",
+    "publication": "85 unit/integration tests passed",
+    "brahma_protocol": "passed complete and malformed exchanges, receive timeouts and send failures",
+    "dpu_dither": "passed opt-in/refcounts/6/8/10bpc matrix and temporal-disable",
+    "ath12k_regulatory": "11 cases passed",
+    "ath12k_range_scan": "passed ordered ranges, TX drain, timeout, cancellation, failures",
+    "critical_driver_objects": "64 objects plus Erhai DTB passed",
+    "wifi_driver_objects": "9 objects plus Erhai DTB passed",
+    "board_frequency_policy": "passed compiled DTB, 20 MHz edges, private channels and actual cfg80211 updates",
+    "binding_schema_documents": "25 changed bindings pass dt-doc-validate 2026.09",
+    "final_driver_regression": "passed brahma, dither, ath12k regulatory/range/compiled-DTB policies and board identity/address checks"
+  },
+  "full_build": "final p2 kernel, modules, DTB, full system, initrd and boot tree passed",
+  "hardware": "p1 and p2 immediate reset; early-debug also resets; new corrupted pstore reaches GMU firmware load; gpu-off diagnostic published for manual testing",
+  "dtb_sha256": "755c3106765db18caca1ceb6c3af6b0cf037ffcb05667270a45e695db59023cd",
+  "device_tree_warnings": "14 shared unit-address groups checked: each has at most one enabled sibling; see dtb-validation.json. Full-board dt-schema conformance is not claimed.",
+  "previous_full_build": {
+    "patch_head": "adc175d99163bcfd25cbc856ba58c7fa31a73c46",
+    "kernel_drv": "/nix/store/401g4qndkdk6qx974yccpl8klzmwgk4c-linux-erhai-aarch64-unknown-linux-gnu-7.3.4.drv",
+    "status": "passed",
+    "image_sha256": "954454831dec1100fef7137c90a4912221ccc05813b8b8383c8ac56b621f106d",
+    "BTF": "present in vmlinux",
+    "modules_release": "7.3.4-erhai-p1"
+  },
+  "release": "7.3.4-erhai-p2"
+}

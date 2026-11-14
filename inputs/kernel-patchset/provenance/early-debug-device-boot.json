@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-11-13T17:47:58.161133+00:00",
+  "kernel_release": "7.3.4-erhai-p2",
+  "system": "/nix/store/3hxhfmx7xk0pd5hmzxcfdz94nj9p2fim-nixos-system-pad2pro-erhai-p2-early-debug",
+  "boot_entry": "nixos-85fbb14e4aefdb0f873f474661b69756",
+  "user_report": "仍然立即重启",
+  "diagnostic_parameters": [
+    "nr_cpus=1",
+    "nokaslr",
+    "arm64.nohaft",
+    "arm64.nowfxt",
+    "irqchip.gicv3_pseudo_nmi=0",
+    "ignore_loglevel",
+    "initcall_debug",
+    "log_buf_len=8M",
+    "panic=0"
+  ],
+  "recovery_kernel": "7.2.15-nixos-erhai-efc39b9d9726-upstream4-ebpf1",
+  "recovery_boot_id": "97739802-eb5b-4b9b-bca6-a1c9863e76d0",
+  "pstore": {
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-early-debug-recovery/var/lib/systemd/pstore/console-ramoops-0",
+    "bytes": 249481,
+    "sha256": "9ba545f8daf9a761655edb6c703774fcd1313cd8b7179f0247e8e4a26d341fc5",
+    "corrupted": true,
+    "nul_bytes": 921,
+    "identity_evidence": "Corrupted version line identifies p2; cmdline identifies early-debug system, nr_cpus=1 and nokaslr; CPU count is clipped to 1.",
+    "last_readable_progress": [
+      "UFS devices and partitions detected",
+      "SoCCP remote processor started",
+      "DRM MSM initialized",
+      "gen80000 SQE, GMU and AQE firmware requested",
+      "Loaded GMU firmware v5.1.25 around 0.867 seconds"
+    ],
+    "panic_or_backtrace": "No readable panic or call trace found; corruption prevents stronger absence claims."
+  },
+  "interpretation": "Adding msm.skip_gpu=1 allows this diagnostic system to boot. Fault scope includes GPU startup and the coupled DRM component graph; next gather SCM request/completion printk trace with GPU enabled.",
+  "next_diagnostic": "Same p2 kernel and early-debug parameters, adding only msm.skip_gpu=1; retain daily current and normal global boot default.",
+  "hardware_accepted": false,
+  "gpu_off_diagnostic": {
+    "system": "/nix/store/z47dq3m9fyjkcskjxfdn003kr5ckj1nl-nixos-system-pad2pro-erhai-p2-gpu-off-debug",
+    "boot_id": "nixos-af6d9449383d9354b06708ee397f65e1",
+    "added_parameter": "msm.skip_gpu=1",
+    "same_kernel_dtb_initrd_as_early_debug": true,
+    "manifest_and_payload_hashes": "passed",
+    "published": true,
+    "global_default": "nixos/current",
+    "hardware_result": "booted; exact system and cmdline verified by SSH",
+    "observed_at": "2026-11-13T18:03:32.914102+00:00",
+    "boot_instance": "5d657132-24ca-4047-96b0-ae7992231256",
+    "online_cpus": "0",
+    "wifi_and_ssh": "connected",
+    "systemd_failed_units": 0,
+    "limitations": "No /dev/dri and no soundcards: GMU remains in the shared component match while its registration is skipped. This also blocks display KMS and its audio dependency. No normal graphics/audio acceptance is claimed.",
+    "logs": {
+      "dmesg.log": "b1acaf47935e79c198fe3cc98ec4a9aa90dc0e693234026f7a71d8f538f568ec",
+      "journal.log": "5febbc8e6fa2dee6409fbf45d4ab43be655fcd9d51592b9f8ee05ae01b3c2c57",
+      "state.log": "de640afb7992a6fcb13df8daa7da505d468020de166eebb7d76ef0264e2618c3"
+    },
+    "user_report": "我试了是黑屏，但没有重启，我刚才强行重启了"
+  },
+  "additional_source_checks": {
+    "register_audit": "gmu-register-audit.json: GBIF_CX_CONFIG offset is unchanged after symbol rename",
+    "firmware_loader_review": "qcom_mdt_pas_load keeps WC mapping and the same carveout bounds; new PAS contexts use the existing has_iommu policy on SM8750. No change made without hardware evidence.",
+    "available_next_trace": {
+      "parameters": [
+        "trace_event=qcom_scm:*",
+        "tp_printk"
+      ],
+      "evidence": "Both SCM request and completion tracepoints are built into the p2 Image; request event precedes arm_smccc_smc_quirk. These parameters can expose a secure-monitor call that never returns.",
+      "status": "Built, validated and published as scm_trace_diagnostic"
+    }
+  },
+  "recovery_incident": {
+    "user_report": "现在kshimc已经看不到 nixos的启动项了，不知道什么原因",
+    "status": "Repaired and physical menu/original current confirmed by user",
+    "source_evidence": "NhExtOpen rejects ext4 RECOVER incompat bit and filesystem state other than clean. This explains a possible failure mode after forced reset but the physical superblock has not yet been read.",
+    "diagnostic_configuration_change": "Future early-debug derivatives mount /boot ro and disable automatic boot cleanup; Image and hardware support unchanged.",
+    "partition": "KShinC_BOOT",
+    "partuuid": "d4d95497-250b-4023-98eb-a8977664e385",
+    "android_boot_partitions_written": false,
+    "record": "boot-filesystem-recovery.json"
+  },
+  "scm_trace_diagnostic": {
+    "system": "/nix/store/msl5jns711wlji6pzix8j9hg6zfphfns-nixos-system-pad2pro-erhai-p2-scm-trace",
+    "boot_id": "nixos-60aadb6082b357e8521f6c90614a45ce",
+    "kernel_dtb_initrd_identical_to_early_debug": true,
+    "additional_parameters": [
+      "trace_event=qcom_scm:*",
+      "tp_printk"
+    ],
+    "gpu_skip": false,
+    "boot_filesystem": "ro,noatime; automatic kShim cleanup disabled",
+    "published": true,
+    "default": "nixos/current",
+    "hardware_result": "immediate reset, user returned directly to original current; new pstore captured",
+    "record": "scm-trace-device-boot.json"
+  }
+}

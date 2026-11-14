@@ -1,0 +1,107 @@
+{
+  "date": "2026-11-12",
+  "runtime": {
+    "kernel_release": "7.2.15-nixos-erhai-870167fad062-brahma1",
+    "boot_id": "857334d2-2865-47c1-817a-77c24ad2ef46",
+    "system": "/nix/store/wffzawniq22s875dh2snxn0pa1618zgd-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+    "first_setup_completed_at_seconds": 3.555044,
+    "all_setup_completion_times_seconds": [
+      3.555044,
+      8.528283
+    ],
+    "peripheral_bootstrap_successes": 2,
+    "bluetooth_timeout_or_frame_errors": false,
+    "oem_patch_download_observed": true,
+    "oem_default_nvm_download_observed": true,
+    "ganges_firmware_download_observed": false,
+    "factory_address_service": {
+      "Result": "success",
+      "NRestarts": "0",
+      "ExecMainStatus": "0"
+    },
+    "factory_identity_verified": true,
+    "fiio_connected": true,
+    "audio_nodes": [
+      {
+        "media.class": "Audio/Sink",
+        "node.name": "alsa_output.platform-sound.HiFi__Speaker__sink",
+        "alsa.card_name": "OnePlus-Pad-2-Pro"
+      },
+      {
+        "media.class": "Audio/Source",
+        "node.name": "alsa_input.platform-sound.HiFi__Mic__source",
+        "alsa.card_name": "OnePlus-Pad-2-Pro"
+      },
+      {
+        "media.class": "Audio/Sink",
+        "api.bluez5.codec": "ldac",
+        "api.bluez5.profile": "a2dp-sink"
+      }
+    ],
+    "wifi_state": "100 (connected)",
+    "failed_system_units": "",
+    "failed_user_units": ""
+  },
+  "boot_generation": "nixos-7c5d9bdd25f14bba4832f2cd2cdfd562",
+  "wireplumber_configuration": {
+    "monitor.bluez.rules": [
+      {
+        "matches": [
+          {
+            "device.name": "~bluez_card.*"
+          }
+        ],
+        "actions": {
+          "update-props": {
+            "bluez5.auto-connect": [
+              "a2dp_sink"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "source_findings": {
+    "pipewire_version": "1.6.11",
+    "pipewire_default_reconnect_profiles": "SPA_BT_PROFILE_NULL",
+    "pipewire_files": [
+      "spa/plugins/bluez5/bluez5-dbus.c",
+      "spa/plugins/bluez5/bluez5-device.c"
+    ],
+    "bluez_version": "5.87",
+    "bluez_policy_file": "plugins/policy.c",
+    "bluez_autoenable": "powers adapters; does not initiate startup A2DP connections",
+    "native_connection_guards": [
+      "paired",
+      "trusted",
+      "not blocked"
+    ]
+  },
+  "dbus_policy_activation_test": {
+    "connect_profile_calls": 1,
+    "a2dp_sink_uuid_observed": true,
+    "first_attempt_failed_while_receiver_unavailable": "Host is down"
+  },
+  "wireplumber_start_test": {
+    "receiver_powered_on": true,
+    "session_manager_restarted": true,
+    "manual_connect_command_used": false,
+    "connected_and_default_sink": true,
+    "codec": "ldac"
+  },
+  "reboot_test": {
+    "new_boot_observed": true,
+    "manual_connect_command_used": false,
+    "user_confirmed_no_manual_connect": true,
+    "user_confirmed_automatic_connection_and_normal_playback": true
+  },
+  "kernel_modules_dtb_initrd_unchanged": true,
+  "no_device_address_hardcoded_in_configuration": true,
+  "no_backup_created": true,
+  "boot_payload_hashes_and_sizes_verified": true,
+  "system_profile_and_gc_root_match_running": true,
+  "boot_read_only": true,
+  "runtime_auto_connect_property": [
+    "a2dp_sink"
+  ]
+}

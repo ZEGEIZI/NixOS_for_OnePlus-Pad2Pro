@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-11-13T23:33:05.577915+00:00",
+  "release": "7.3.4-erhai-p5",
+  "patch_head": "4a4041f5921c6cbe29946bf36a1035b601ff3400",
+  "fragment_checks": "both native and cross passed, including final release override",
+  "config_difference": {
+    "CONFIG_CC_VERSION_TEXT": {
+      "cross": "\"aarch64-unknown-linux-gnu-gcc (GCC) 16.2.0\"",
+      "native": "\"gcc (GCC) 16.2.0\""
+    }
+  },
+  "native_sha256": "b08cbb6c49dfb7dd1e46adeedf74c8c03a0b751cfe5ae1ecb04e08e1ec0bcd5c",
+  "cross_sha256": "1eca5d4ecb3dad261540515000fbd373e8deef23f3fc4e235330aa9fd0256595",
+  "configuration_build_environment": "rootless ARM Nix 2.35.6 under QEMU-user 11.1.2 / proot 5.5.0",
+  "scope": "ARM configuration and source preparation under user-mode emulation only; complete physical native kernel and hardware acceptance remain pending",
+  "complete_native_kernel_built": false,
+  "hardware_verified": false
+}

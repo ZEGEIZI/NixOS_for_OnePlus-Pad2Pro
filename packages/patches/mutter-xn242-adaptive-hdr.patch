@@ -1,0 +1,1001 @@
+--- a/clutter/clutter/clutter-color-op.c
++++ b/clutter/clutter/clutter-color-op.c
+@@ -1011,6 +1011,7 @@
+ {
+   ClutterColorOp parent_instance;
+   float knee;
++  float source_peak;
+ };
+ 
+ G_DEFINE_TYPE (ClutterColorOpHdrShoulder, clutter_color_op_hdr_shoulder,
+@@ -1031,6 +1032,7 @@
+ {
+   float knee = CLUTTER_COLOR_OP_HDR_SHOULDER (op)->knee;
+   float headroom = 1.0f - knee;
++  float source_peak = CLUTTER_COLOR_OP_HDR_SHOULDER (op)->source_peak;
+ 
+   for (size_t i = 0; i < n_pixels; i++, data += 4)
+     {
+@@ -1039,7 +1041,34 @@
+       if (peak > knee)
+         {
+           float excess = peak - knee;
+-          float scale = (knee + headroom * (excess / (excess + headroom))) / peak;
++          float mapped;
++          if (fabsf (source_peak) > knee)
++            {
++              gboolean unknown = source_peak < 0;
++              float source_span = fabsf (source_peak) - knee;
++              float target_span = headroom * (unknown ? 0.94f : 1.0f);
++              float t = MIN (excess / source_span, 1.0f);
++              float derivative;
++              if (source_span < target_span)
++                {
++                  mapped = source_span * t + (target_span - source_span) * t * t;
++                  derivative = 2.0f * target_span / source_span - 1.0f;
++                }
++              else
++                {
++                  mapped = source_span * t / (1.0f - t + source_span * t / target_span);
++                  derivative = (target_span / source_span) * (target_span / source_span);
++                }
++              if (unknown && excess > source_span)
++                {
++                  float tail = headroom - target_span;
++                  mapped = target_span + tail * (1.0f - expf (-(excess - source_span) * derivative / tail));
++                }
++              mapped += knee;
++            }
++          else
++            mapped = knee + headroom * (excess / (excess + headroom));
++          float scale = mapped / peak;
+ 
+           data[0] *= scale;
+           data[1] *= scale;
+@@ -1069,6 +1098,20 @@
+ 
+   op->knee = CLAMP (knee, 0.001f, 0.95f);
+   return CLUTTER_COLOR_OP (op);
++}
++
++ClutterColorOp *
++clutter_color_op_hdr_shoulder_new_full (float knee, float source_peak)
++{
++  ClutterColorOp *op = clutter_color_op_hdr_shoulder_new (knee);
++  CLUTTER_COLOR_OP_HDR_SHOULDER (op)->source_peak = source_peak;
++  return op;
++}
++
++float
++clutter_color_op_hdr_shoulder_get_source_peak (ClutterColorOp *op)
++{
++  return CLUTTER_COLOR_OP_HDR_SHOULDER (op)->source_peak;
+ }
+ 
+ float
+--- a/clutter/clutter/clutter-color-op.h
++++ b/clutter/clutter/clutter-color-op.h
+@@ -202,6 +202,9 @@
+ CLUTTER_EXPORT
+ ClutterColorOp * clutter_color_op_hdr_shoulder_new (float knee);
+ float clutter_color_op_hdr_shoulder_get_knee (ClutterColorOp *op);
++CLUTTER_EXPORT
++ClutterColorOp * clutter_color_op_hdr_shoulder_new_full (float knee, float source_peak);
++float clutter_color_op_hdr_shoulder_get_source_peak (ClutterColorOp *op);
+ 
+ #define CLUTTER_TYPE_COLOR_OP_MULTIPLY (clutter_color_op_multiply_get_type ())
+ CLUTTER_EXPORT
+--- a/clutter/clutter/clutter-color-pipeline-shader.c
++++ b/clutter/clutter/clutter-color-pipeline-shader.c
+@@ -317,13 +317,32 @@
+   "}\n";
+ 
+ static const char hdr_shoulder_source[] =
+-  "vec3 hdr_shoulder (vec3 color, float knee)\n"
++  "vec3 hdr_shoulder (vec3 color, float knee, float source_peak)\n"
+   "{\n"
+   "  float peak = max (color.r, max (color.g, color.b));\n"
+   "  if (peak <= knee) return color;\n"
+   "  float headroom = 1.0 - knee;\n"
+   "  float excess = peak - knee;\n"
+-  "  float mapped = knee + headroom * (excess / (excess + headroom));\n"
++  "  float mapped;\n"
++  "  if (abs(source_peak) > knee) {\n"
++  "    bool unknown = source_peak < 0.0;\n"
++  "    float source_span = abs(source_peak) - knee;\n"
++  "    float target_span = headroom * (unknown ? 0.94 : 1.0);\n"
++  "    float t = min(excess / source_span, 1.0);\n"
++  "    float derivative;\n"
++  "    if (source_span < target_span) {\n"
++  "      mapped = source_span*t + (target_span-source_span)*t*t;\n"
++  "      derivative = 2.0*target_span/source_span - 1.0;\n"
++  "    } else {\n"
++  "      mapped = source_span*t / (1.0-t+source_span*t/target_span);\n"
++  "      derivative = (target_span/source_span)*(target_span/source_span);\n"
++  "    }\n"
++  "    if (unknown && excess > source_span) {\n"
++  "      float tail = headroom - target_span;\n"
++  "      mapped = target_span + tail * (1.0-exp(-(excess-source_span)*derivative/tail));\n"
++  "    }\n"
++  "    mapped += knee;\n"
++  "  } else mapped = knee + headroom * (excess / (excess + headroom));\n"
+   "  return color * (mapped / peak);\n"
+   "}\n";
+ 
+@@ -668,14 +687,14 @@
+ get_hdr_shoulder_declarations (ClutterColorOp *op,
+                            size_t          op_id)
+ {
+-  return g_strdup_printf ("uniform float hdr_shoulder_param_%zu;\n", op_id);
++  return g_strdup_printf ("uniform vec2 hdr_shoulder_param_%zu;\n", op_id);
+ }
+ 
+ static char *
+ get_hdr_shoulder_invocation (ClutterColorOp *op,
+                          size_t          op_id)
+ {
+-  return g_strdup_printf ("vec4 (hdr_shoulder (color.rgb, hdr_shoulder_param_%zu), color.a)", op_id);
++  return g_strdup_printf ("vec4 (hdr_shoulder (color.rgb, hdr_shoulder_param_%zu.x, hdr_shoulder_param_%zu.y), color.a)", op_id, op_id);
+ }
+ 
+ static void
+@@ -691,7 +710,8 @@
+   uniform_name = g_strdup_printf ("hdr_shoulder_param_%zu", op_id);
+   uniform_location = cogl_pipeline_get_uniform_location (pipeline,
+                                                          uniform_name);
+-  cogl_pipeline_set_uniform_1f (pipeline, uniform_location, value);
++  float values[2] = { value, clutter_color_op_hdr_shoulder_get_source_peak (op) };
++  cogl_pipeline_set_uniform_float (pipeline, uniform_location, 2, 1, values);
+ }
+ 
+ typedef struct _ShaderOpInfo
+--- a/clutter/clutter/clutter-color-transform.c
++++ b/clutter/clutter/clutter-color-transform.c
+@@ -326,7 +326,8 @@
+ static void
+ add_params_from_linear_bt2020_ops (ClutterColorPipeline    *pipeline,
+                                    ClutterColorStateParams *params,
+-                                   float                   hdr_knee)
++                                   float                   hdr_knee,
++                                   float                   hdr_source_peak)
+ {
+   const ClutterEOTF *eotf;
+   graphene_matrix_t from_linear_bt2020_stack;
+@@ -344,7 +345,7 @@
+ 
+   if (hdr_knee > 0.0f)
+     clutter_color_pipeline_take_op (pipeline,
+-                                    clutter_color_op_hdr_shoulder_new (hdr_knee));
++                                    clutter_color_op_hdr_shoulder_new_full (hdr_knee, hdr_source_peak));
+ 
+   /* 2. Apply inverse EOTF */
+   {
+@@ -985,13 +986,14 @@
+ static void
+ add_from_linear_bt2020_ops (ClutterColorPipeline *pipeline,
+                             ClutterColorState    *color_state,
+-                            float                 hdr_knee)
++                            float                 hdr_knee,
++                            float                 hdr_source_peak)
+ {
+   if (CLUTTER_IS_COLOR_STATE_PARAMS (color_state))
+     {
+       add_params_from_linear_bt2020_ops (pipeline,
+                                          CLUTTER_COLOR_STATE_PARAMS (color_state),
+-                                         hdr_knee);
++                                         hdr_knee, hdr_source_peak);
+     }
+   else if (CLUTTER_IS_COLOR_STATE_ICC (color_state))
+     {
+@@ -1044,6 +1046,7 @@
+   else
+     {
+       float hdr_knee = 0.0f;
++      float hdr_source_peak = 0.0f;
+ 
+       if (CLUTTER_IS_COLOR_STATE_PARAMS (target_color_state))
+         {
+@@ -1061,13 +1064,21 @@
+               target_lum->type == CLUTTER_LUMINANCE_TYPE_EXPLICIT &&
+               target_lum->max > target_lum->ref &&
+               source_lum->mastering_max > source_lum->ref)
+-            hdr_knee = target_lum->ref / target_lum->max;
++            {
++              float content_peak = source_lum->mastering_max;
++              /* The PQ coding limit is not evidence of a 10000-nit master.
++               * Use 1000 nit when the client supplies no more useful peak. */
++              if (content_peak >= 9999.0f)
++                content_peak = -1000.0f; /* Unknown: nominal pivot with a soft tail. */
++              hdr_knee = target_lum->ref / target_lum->max;
++              hdr_source_peak = (content_peak / source_lum->ref) * hdr_knee;
++            }
+         }
+ 
+       /* source → linear BT.2020 D65 → target */
+       add_to_linear_bt2020_ops (pipeline, source_color_state);
+       add_luminance_mapping_op (pipeline, source_color_state, target_color_state);
+-      add_from_linear_bt2020_ops (pipeline, target_color_state, hdr_knee);
++      add_from_linear_bt2020_ops (pipeline, target_color_state, hdr_knee, hdr_source_peak);
+       if (hdr_knee > 0.0f)
+         clutter_color_pipeline_take_op (pipeline, clutter_color_op_clamp_unit_new ());
+     }
+--- a/clutter/clutter/clutter-stage-view.c
++++ b/clutter/clutter/clutter-stage-view.c
+@@ -60,6 +60,7 @@
+ enum
+ {
+   DESTROY,
++  ADAPTIVE_HDR_SAMPLE,
+   N_SIGNALS
+ };
+ 
+@@ -84,6 +85,15 @@
+   gboolean output_frc_enabled;
+   unsigned int output_frc_phase;
+   int output_frc_phase_uniform;
++  gboolean adaptive_hdr_enabled;
++  float adaptive_hdr_peak;
++  float adaptive_hdr_reference;
++  int adaptive_hdr_uniform;
++  gint64 adaptive_hdr_last_sample;
++  guint adaptive_hdr_sample_timeout;
++  CoglOffscreen *adaptive_hdr_levels[12];
++  CoglPipeline *adaptive_hdr_reduction;
++
+ 
+   gboolean use_shadowfb;
+   struct {
+@@ -175,6 +185,8 @@
+ }
+ 
+ static gboolean uses_output_frc (ClutterStageViewPrivate *priv);
++static gboolean uses_adaptive_hdr (ClutterStageViewPrivate *priv);
++
+ 
+ static void
+ ensure_stage_view_offscreen (ClutterStageView *view)
+@@ -303,6 +315,145 @@
+     cogl_pipeline_get_uniform_location (pipeline, "output_frc_phase");
+ }
+ 
++
++static gboolean
++uses_adaptive_hdr (ClutterStageViewPrivate *priv)
++{
++  const ClutterEOTF *eotf;
++  if (!priv->adaptive_hdr_enabled ||
++      !CLUTTER_IS_COLOR_STATE_PARAMS (priv->color_state))
++    return FALSE;
++  eotf = clutter_color_state_params_get_eotf (CLUTTER_COLOR_STATE_PARAMS (priv->color_state));
++  return eotf->type == CLUTTER_EOTF_TYPE_NAMED &&
++         eotf->tf_name == CLUTTER_TRANSFER_FUNCTION_GAMMA22;
++}
++
++static void
++add_adaptive_hdr (ClutterStageViewPrivate *priv,
++                  CoglPipeline            *pipeline)
++{
++  g_autoptr (CoglSnippet) snippet = cogl_snippet_new (
++    COGL_SNIPPET_HOOK_FRAGMENT,
++    "uniform highp vec2 xn242_backlight;\n",
++    "highp vec3 light = pow(max(cogl_color_out.rgb, vec3(0.0)), vec3(2.2)) * 561.5;\n"
++    "highp float peak = max(light.r, max(light.g, light.b));\n"
++    "highp float available = max(xn242_backlight.x, 0.01);\n"
++    "highp float knee = max(min(xn242_backlight.y, available * 0.98), available * 0.95);\n"
++    /* Temporary monotonic shoulder while hardware is catching up. SDR white
++     * below available stays unchanged; saturated RGB is scaled together. */
++    "if (peak > knee && available < 561.0) {\n"
++    "  highp float span = max(available - knee, 0.001);\n"
++    "  highp float mapped = knee + span * (1.0 - exp(-(peak-knee)/span));\n"
++    "  light *= mapped / peak;\n"
++    "}\n"
++    "cogl_color_out.rgb = pow(clamp(light / available, 0.0, 1.0), vec3(1.0/2.2));\n");
++  float values[2] = { priv->adaptive_hdr_peak, priv->adaptive_hdr_reference };
++  cogl_pipeline_add_snippet (pipeline, snippet);
++  priv->adaptive_hdr_uniform = cogl_pipeline_get_uniform_location (pipeline, "xn242_backlight");
++  cogl_pipeline_set_uniform_float (pipeline, priv->adaptive_hdr_uniform, 2, 1, values);
++}
++
++/* Exact maximum reduction, not a sparse thumbnail: a one-pixel highlight
++ * survives all 4x4 stages. Only four bytes reach the CPU, at most ten times a
++ * second and only on an already painted frame. This never drives an idle view
++ * at the refresh rate. Sampling precedes physical-backlight compensation/FRC. */
++static gboolean
++queue_adaptive_hdr_sample (gpointer data)
++{
++  ClutterStageView *view = data;
++  ClutterStageViewPrivate *priv = clutter_stage_view_get_instance_private (view);
++  priv->adaptive_hdr_sample_timeout = 0;
++  if (uses_adaptive_hdr (priv))
++    {
++      clutter_stage_view_add_redraw_clip (view, NULL);
++      clutter_stage_view_schedule_update (view);
++    }
++  return G_SOURCE_REMOVE;
++}
++
++static void
++sample_adaptive_hdr (ClutterStageView *view)
++{
++  ClutterStageViewPrivate *priv = clutter_stage_view_get_instance_private (view);
++  CoglTexture *texture = cogl_offscreen_get_texture (priv->offscreen);
++  CoglContext *ctx = cogl_framebuffer_get_context (priv->framebuffer);
++  gint64 now = g_get_monotonic_time ();
++  uint8_t result[4];
++  int level;
++
++  if (!uses_adaptive_hdr (priv))
++    return;
++  if (now - priv->adaptive_hdr_last_sample < 100000)
++    {
++      if (!priv->adaptive_hdr_sample_timeout)
++        priv->adaptive_hdr_sample_timeout = g_timeout_add (
++          (100000 - (now - priv->adaptive_hdr_last_sample)) / 1000 + 1,
++          queue_adaptive_hdr_sample, view);
++      return;
++    }
++  g_clear_handle_id (&priv->adaptive_hdr_sample_timeout, g_source_remove);
++  priv->adaptive_hdr_last_sample = now;
++  if (!priv->adaptive_hdr_reduction)
++    {
++      g_autoptr (CoglSnippet) snippet = cogl_snippet_new (
++        COGL_SNIPPET_HOOK_FRAGMENT,
++        "uniform highp vec4 xn242_size;\n", NULL);
++      cogl_snippet_set_replace (snippet,
++        "highp vec2 base = floor(cogl_tex_coord0_in.st * xn242_size.zw) * 4.0;\n"
++        "highp vec3 peak = vec3(0.0);\n"
++        "for (int y=0; y<4; y++) for (int x=0; x<4; x++) {\n"
++        "  highp vec2 uv = (base + vec2(float(x),float(y)) + 0.5) / xn242_size.xy;\n"
++        "  peak = max(peak, texture2D(cogl_sampler0, uv).rgb);\n"
++        "}\n"
++        "cogl_color_out = vec4(peak, 1.0);\n");
++      priv->adaptive_hdr_reduction = cogl_pipeline_new (ctx);
++      cogl_pipeline_add_snippet (priv->adaptive_hdr_reduction, snippet);
++      cogl_pipeline_set_blend (priv->adaptive_hdr_reduction, "RGBA = ADD (SRC_COLOR, 0)", NULL);
++      cogl_pipeline_set_layer_filters (priv->adaptive_hdr_reduction, 0,
++                                       COGL_PIPELINE_FILTER_NEAREST, COGL_PIPELINE_FILTER_NEAREST);
++      cogl_pipeline_set_layer_wrap_mode (priv->adaptive_hdr_reduction, 0,
++                                         COGL_PIPELINE_WRAP_MODE_CLAMP_TO_EDGE);
++    }
++  for (level = 0; level < 12; level++)
++    {
++      int width = cogl_texture_get_width (texture);
++      int height = cogl_texture_get_height (texture);
++      int next_width = (width + 3) / 4;
++      int next_height = (height + 3) / 4;
++      CoglFramebuffer *fb;
++      float dimensions[4] = { width, height, next_width, next_height };
++      int location;
++      if (!priv->adaptive_hdr_levels[level])
++        {
++          CoglPixelFormat format = COGL_PIXEL_FORMAT_RGBA_8888_PRE;
++          priv->adaptive_hdr_levels[level] = cogl_offscreen_new_from_formats (
++            ctx, &format, 1, next_width, next_height, NULL);
++          if (!priv->adaptive_hdr_levels[level])
++            return;
++        }
++      fb = COGL_FRAMEBUFFER (priv->adaptive_hdr_levels[level]);
++      cogl_framebuffer_set_dither_enabled (fb, FALSE);
++      cogl_framebuffer_orthographic (fb, 0, 0, next_width, next_height, -1, 1);
++      cogl_pipeline_set_layer_texture (priv->adaptive_hdr_reduction, 0, texture);
++      location = cogl_pipeline_get_uniform_location (priv->adaptive_hdr_reduction, "xn242_size");
++      cogl_pipeline_set_uniform_float (priv->adaptive_hdr_reduction, location, 4, 1, dimensions);
++      cogl_framebuffer_draw_textured_rectangle (fb, priv->adaptive_hdr_reduction,
++                                                 0, 0, next_width, next_height, 0, 0, 1, 1);
++      texture = cogl_offscreen_get_texture (priv->adaptive_hdr_levels[level]);
++      if (next_width == 1 && next_height == 1)
++        {
++          if (cogl_framebuffer_read_pixels (fb, 0, 0, 1, 1, COGL_PIXEL_FORMAT_RGBA_8888, result))
++            {
++              float code = MAX (result[0], MAX (result[1], result[2])) / 255.0f;
++              /* Round the quantized maximum upward rather than miss a peak. */
++              double peak = pow (MIN (1.0f, code + 0.5f / 255), 2.2) * 561.5;
++              g_signal_emit (view, stage_view_signals[ADAPTIVE_HDR_SAMPLE], 0, peak);
++            }
++          break;
++        }
++    }
++}
++
+ static void
+ ensure_stage_view_offscreen_pipeline (ClutterStageView *view)
+ {
+@@ -338,6 +489,8 @@
+                                                  priv->output_color_state,
+                                                  CLUTTER_COLOR_STATE_TRANSFORM_OPAQUE);
+ 
++  if (uses_adaptive_hdr (priv))
++    add_adaptive_hdr (priv, pipeline);
+   if (uses_output_frc (priv))
+     add_output_frc (priv, pipeline);
+ 
+@@ -370,7 +523,7 @@
+       clutter_stage_view_schedule_update (view);
+     }
+ 
+-  if (!uses_output_frc (priv) &&
++  if (!uses_output_frc (priv) && !uses_adaptive_hdr (priv) &&
+       priv->transform == MTK_MONITOR_TRANSFORM_NORMAL &&
+       !clutter_color_pipeline_shader_needs_color_state (priv->color_state,
+                                                         priv->output_color_state,
+@@ -400,12 +553,51 @@
+ void
+ clutter_stage_view_enable_output_frc (ClutterStageView *view)
+ {
+-  ClutterStageViewPrivate *priv =
+-    clutter_stage_view_get_instance_private (view);
+-
+-  priv->output_frc_enabled = TRUE;
++  clutter_stage_view_set_output_frc (view, TRUE);
++}
++
++void
++clutter_stage_view_set_output_frc (ClutterStageView *view,
++                                   gboolean          enabled)
++{
++  ClutterStageViewPrivate *priv = clutter_stage_view_get_instance_private (view);
++  if (priv->output_frc_enabled == enabled)
++    return;
++  priv->output_frc_enabled = enabled;
+   clutter_stage_view_invalidate_offscreen (view);
+ }
++
++gboolean
++clutter_stage_view_get_output_frc (ClutterStageView *view)
++{
++  return uses_output_frc (clutter_stage_view_get_instance_private (view));
++}
++
++void
++clutter_stage_view_set_adaptive_hdr (ClutterStageView *view,
++                                     gboolean          enabled,
++                                     float             peak,
++                                     float             reference)
++{
++  ClutterStageViewPrivate *priv = clutter_stage_view_get_instance_private (view);
++  gboolean changed = priv->adaptive_hdr_enabled != enabled;
++  gboolean levels_changed = fabsf (priv->adaptive_hdr_peak - peak) > 0.001f ||
++                            fabsf (priv->adaptive_hdr_reference - reference) > 0.001f;
++  priv->adaptive_hdr_enabled = enabled;
++  priv->adaptive_hdr_peak = MAX (peak, 0.01f);
++  priv->adaptive_hdr_reference = MAX (reference, 0.01f);
++  if (changed)
++    clutter_stage_view_invalidate_offscreen (view);
++  else if (levels_changed && priv->offscreen_pipeline)
++    {
++      float values[2] = { priv->adaptive_hdr_peak, priv->adaptive_hdr_reference };
++      cogl_pipeline_set_uniform_float (priv->offscreen_pipeline,
++                                        priv->adaptive_hdr_uniform, 2, 1, values);
++      clutter_stage_view_add_redraw_clip (view, NULL);
++      clutter_stage_view_schedule_update (view);
++    }
++}
++
+ 
+ static void
+ set_color_state (ClutterStageView   *view,
+@@ -602,6 +794,7 @@
+ 
+   if (priv->offscreen)
+     {
++      sample_adaptive_hdr (view);
+       CoglFramebuffer *destination = priv->framebuffer;
+       gboolean output_frc = uses_output_frc (priv);
+       gboolean gl_dither_enabled = FALSE;
+@@ -936,7 +1129,7 @@
+   ClutterStageViewPrivate *priv =
+     clutter_stage_view_get_instance_private (view);
+ 
+-  if (uses_output_frc (priv))
++  if (uses_output_frc (priv) || uses_adaptive_hdr (priv))
+     scanout = NULL;
+   g_set_object (&priv->next_scanout, scanout);
+ }
+@@ -947,7 +1140,7 @@
+   ClutterStageViewPrivate *priv =
+     clutter_stage_view_get_instance_private (view);
+ 
+-  if (uses_output_frc (priv))
++  if (uses_output_frc (priv) || uses_adaptive_hdr (priv))
+     g_clear_object (&priv->next_scanout);
+   return g_steal_pointer (&priv->next_scanout);
+ }
+@@ -1409,6 +1602,10 @@
+   g_clear_pointer (&priv->name, g_free);
+ 
+   g_clear_object (&priv->shadow.framebuffer);
++  g_clear_handle_id (&priv->adaptive_hdr_sample_timeout, g_source_remove);
++  g_clear_object (&priv->adaptive_hdr_reduction);
++  for (int i = 0; i < 12; i++)
++    g_clear_object (&priv->adaptive_hdr_levels[i]);
+ 
+   g_clear_object (&priv->color_state);
+   g_clear_object (&priv->offscreen);
+@@ -1540,6 +1737,10 @@
+ 
+   g_object_class_install_properties (object_class, PROP_LAST, obj_props);
+ 
++  stage_view_signals[ADAPTIVE_HDR_SAMPLE] =
++    g_signal_new ("adaptive-hdr-sample", G_TYPE_FROM_CLASS (klass),
++                  G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_DOUBLE);
++
+   stage_view_signals[DESTROY] =
+     g_signal_new ("destroy",
+                   G_TYPE_FROM_CLASS (object_class),
+--- a/clutter/clutter/clutter-stage-view.h
++++ b/clutter/clutter/clutter-stage-view.h
+@@ -97,3 +97,11 @@
+ 
+ CLUTTER_EXPORT
+ int clutter_stage_view_get_priority (ClutterStageView *view);
++
++CLUTTER_EXPORT
++void clutter_stage_view_set_output_frc (ClutterStageView *view, gboolean enabled);
++CLUTTER_EXPORT
++gboolean clutter_stage_view_get_output_frc (ClutterStageView *view);
++CLUTTER_EXPORT
++void clutter_stage_view_set_adaptive_hdr (ClutterStageView *view, gboolean enabled,
++                                          float peak, float reference);
+--- a/src/backends/meta-backlight-ref-white.c
++++ b/src/backends/meta-backlight-ref-white.c
+@@ -23,6 +23,7 @@
+ 
+ #include "backends/meta-backend-private.h"
+ #include "backends/meta-color-device.h"
++#include "backends/meta-xn242-hdr.h"
+ #include "backends/meta-color-manager.h"
+ #include "backends/meta-monitor-private.h"
+ #include "mtk/mtk.h"
+@@ -160,7 +161,7 @@
+   backlight = g_object_new (META_TYPE_BACKLIGHT_REF_WHITE,
+                             "backend", backend,
+                             "name", meta_monitor_get_connector (monitor),
+-                            "brightness-min", 10,
++                            "brightness-min", meta_xn242_adaptive_hdr_enabled (meta_output_get_info (meta_monitor_get_main_output (monitor))) ? 1 : 10,
+                             "brightness-max", 210,
+                             NULL);
+   backlight->monitor = monitor;
+--- /dev/null
++++ b/src/backends/meta-xn242-hdr.c
+@@ -0,0 +1,264 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#include "config.h"
++#include <math.h>
++#include <unistd.h>
++#include "backends/meta-xn242-hdr.h"
++#include "backends/meta-xn242-hdr-policy.h"
++#include "backends/meta-backend-private.h"
++#include "backends/meta-backlight-sysfs-private.h"
++#include "backends/meta-color-device.h"
++#include "backends/meta-monitor-manager-private.h"
++#include "backends/meta-monitor-private.h"
++#include "meta/meta-backlight.h"
++#include "clutter/clutter-mutter.h"
++
++typedef struct
++{
++  ClutterStageView *view; /* Owned by the view, never reference the owner. */
++  MetaBackend *backend;
++  MetaColorDevice *color_device;
++  MetaBacklight *hardware;
++  gboolean hdr;
++  float refresh;
++  double observed_peak;
++  double held_peak;
++  double available;
++  double reference;
++  gint64 last_highlight;
++  gint64 last_tick;
++  guint tick_id;
++  int actual_code;
++  int target_code;
++} Xn242Controller;
++
++static Xn242Controller *active;
++static guint requested_precision = 10;
++static gboolean last_hdr;
++static guint bus_owner;
++
++static int
++read_backlight (const char *attribute, int fallback)
++{
++  g_autofree char *path = g_build_filename ("/sys/class/backlight/backlight", attribute, NULL);
++  g_autofree char *text = NULL;
++  if (!g_file_get_contents (path, &text, NULL, NULL))
++    return fallback;
++  return (int) g_ascii_strtoll (text, NULL, 10);
++}
++
++gboolean
++meta_xn242_adaptive_hdr_enabled (const MetaOutputInfo *info)
++{
++  return meta_xn242_has_native_hdr (info) &&
++         g_file_test ("/etc/mutter/xn242-adaptive-hdr", G_FILE_TEST_IS_REGULAR);
++}
++
++static void schedule_tick (Xn242Controller *controller);
++
++static gboolean
++controller_tick (gpointer user_data)
++{
++  Xn242Controller *c = user_data;
++  gint64 now = g_get_monotonic_time ();
++  double elapsed = MIN (0.2, MAX (0.001, (now - c->last_tick) / 1000000.0));
++  double reference = 203.0 * meta_color_device_get_reference_luminance_factor (c->color_device);
++  int next;
++
++  c->tick_id = 0;
++  c->last_tick = now;
++  if (!c->hdr || !c->hardware ||
++      meta_monitor_manager_get_power_save_mode (meta_backend_get_monitor_manager (c->backend)) != META_POWER_SAVE_ON ||
++      read_backlight ("bl_power", 4) != 0)
++    return G_SOURCE_REMOVE;
++
++  c->reference = CLAMP (reference, 1.0, XN242_PEAK_NITS * 0.95);
++  if (c->observed_peak >= c->held_peak)
++    {
++      c->held_peak = c->observed_peak;
++      c->last_highlight = now;
++    }
++  else if (now - c->last_highlight > XN242_HIGHLIGHT_HOLD_US)
++    c->held_peak = c->observed_peak + (c->held_peak - c->observed_peak) * exp (-elapsed / 0.45);
++
++  c->actual_code = read_backlight ("actual_brightness", c->actual_code);
++  if (c->actual_code <= 0)
++    return G_SOURCE_REMOVE;
++  c->available = xn242_peak_for_code (c->actual_code);
++  c->target_code = xn242_code_for_peak (xn242_target_peak (c->reference, c->held_peak));
++  clutter_stage_view_set_adaptive_hdr (c->view, TRUE, c->available, c->reference);
++  next = xn242_slew_code (c->actual_code, c->target_code);
++  if (next != c->actual_code && !meta_backlight_has_pending (c->hardware))
++    meta_backlight_set_brightness (c->hardware, next);
++
++  if (next != c->actual_code || fabs (c->held_peak - c->observed_peak) > 0.05 ||
++      meta_backlight_has_pending (c->hardware))
++    schedule_tick (c);
++  return G_SOURCE_REMOVE;
++}
++
++static void
++schedule_tick (Xn242Controller *c)
++{
++  if (!c->tick_id && c->hdr)
++    c->tick_id = g_timeout_add (25, controller_tick, c);
++}
++
++static void
++on_sample (ClutterStageView *view, double peak, Xn242Controller *c)
++{
++  c->observed_peak = isfinite (peak) ? CLAMP (peak, 0, XN242_PEAK_NITS) : XN242_PEAK_NITS;
++  schedule_tick (c);
++}
++
++static void
++on_reference_changed (MetaColorDevice *device, Xn242Controller *c)
++{
++  schedule_tick (c);
++}
++
++static void
++on_hardware_changed (MetaBacklight *backlight, GParamSpec *pspec, Xn242Controller *c)
++{
++  schedule_tick (c);
++}
++
++static void
++controller_free (gpointer data)
++{
++  Xn242Controller *c = data;
++  if (active == c)
++    active = NULL;
++  g_clear_handle_id (&c->tick_id, g_source_remove);
++  g_signal_handlers_disconnect_by_data (c->view, c);
++  g_signal_handlers_disconnect_by_data (c->color_device, c);
++  if (c->hardware)
++    g_signal_handlers_disconnect_by_data (c->hardware, c);
++  g_clear_object (&c->hardware);
++  g_clear_object (&c->color_device);
++  g_free (c);
++}
++
++static void
++on_view_destroy (ClutterStageView *view, Xn242Controller *c)
++{
++  g_object_set_data (G_OBJECT (view), "xn242-controller", NULL);
++}
++
++static const char dbus_xml[] =
++  "<node><interface name='org.gnome.Mutter.Xn242'>"
++  "<method name='SetPrecision'><arg name='bits' type='u' direction='in'/></method>"
++  "<method name='GetState'><arg name='state' type='a{sv}' direction='out'/></method>"
++  "</interface></node>";
++
++static void
++handle_method (GDBusConnection *connection, const char *sender, const char *path,
++                const char *interface, const char *method, GVariant *parameters,
++                GDBusMethodInvocation *invocation, gpointer data)
++{
++  Xn242Controller *c = active;
++  if (!c)
++    {
++      g_dbus_method_invocation_return_error (invocation, G_IO_ERROR, G_IO_ERROR_NOT_CONNECTED,
++                                              "XN242 output is not active");
++      return;
++    }
++  if (g_str_equal (method, "SetPrecision"))
++    {
++      guint bits;
++      g_variant_get (parameters, "(u)", &bits);
++      if ((bits != 10 && bits != 12) || !c->hdr || (bits == 12 && c->refresh < 100))
++        {
++          g_dbus_method_invocation_return_error (invocation, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT,
++            "Enable HDR first; precision must be 10 or 12, and 12 requires at least 100 Hz");
++          return;
++        }
++      requested_precision = bits;
++      clutter_stage_view_set_output_frc (c->view, bits == 12);
++      g_message ("XN242 HDR precision selected: %u-bit", bits);
++      g_dbus_method_invocation_return_value (invocation, NULL);
++    }
++  else if (g_str_equal (method, "GetState"))
++    {
++      GVariantBuilder b;
++      gboolean asleep = read_backlight ("bl_power", 4) != 0;
++      guint bits = clutter_stage_view_get_output_frc (c->view) ? 12 : 10;
++      g_variant_builder_init (&b, G_VARIANT_TYPE_VARDICT);
++      g_variant_builder_add (&b, "{sv}", "connector", g_variant_new_string ("DSI-1"));
++      g_variant_builder_add (&b, "{sv}", "compositor-pid", g_variant_new_uint32 (getpid ()));
++      g_variant_builder_add (&b, "{sv}", "hdr", g_variant_new_boolean (c->hdr));
++      g_variant_builder_add (&b, "{sv}", "precision", g_variant_new_uint32 (c->hdr ? bits : 10));
++      g_variant_builder_add (&b, "{sv}", "requested-precision", g_variant_new_uint32 (requested_precision));
++      g_variant_builder_add (&b, "{sv}", "adaptive-backlight", g_variant_new_boolean (c->hdr && c->hardware != NULL));
++      g_variant_builder_add (&b, "{sv}", "asleep", g_variant_new_boolean (asleep));
++      g_variant_builder_add (&b, "{sv}", "backlight-code", g_variant_new_int32 (read_backlight ("actual_brightness", 0)));
++      g_variant_builder_add (&b, "{sv}", "target-backlight-code", g_variant_new_int32 (c->target_code));
++      g_variant_builder_add (&b, "{sv}", "estimated-available-nits", g_variant_new_double (c->available));
++      g_variant_builder_add (&b, "{sv}", "estimated-reference-nits", g_variant_new_double (c->reference));
++      g_variant_builder_add (&b, "{sv}", "mapped-content-peak-nits", g_variant_new_double (c->observed_peak));
++      g_variant_builder_add (&b, "{sv}", "panel-peak-reference-nits", g_variant_new_double (XN242_PEAK_NITS));
++      g_variant_builder_add (&b, "{sv}", "luminance-calibrated", g_variant_new_boolean (FALSE));
++      g_dbus_method_invocation_return_value (invocation, g_variant_new ("(a{sv})", &b));
++    }
++}
++
++static const GDBusInterfaceVTable dbus_vtable = { .method_call = handle_method };
++
++static void
++on_bus_acquired (GDBusConnection *connection, const char *name, gpointer data)
++{
++  GDBusNodeInfo *info = g_dbus_node_info_new_for_xml (dbus_xml, NULL);
++  g_dbus_connection_register_object (connection, "/org/gnome/Mutter/Xn242",
++                                      info->interfaces[0], &dbus_vtable, NULL, NULL, NULL);
++  g_dbus_node_info_unref (info);
++}
++
++void
++meta_xn242_attach_output (ClutterStageView *view, MetaBackend *backend,
++                          MetaColorDevice *device, MetaMonitor *monitor,
++                          gboolean hdr, float refresh)
++{
++  Xn242Controller *c = g_new0 (Xn242Controller, 1);
++  MetaBacklight *virtual_backlight = meta_monitor_get_backlight (monitor);
++  c->view = view;
++  c->backend = backend;
++  c->color_device = g_object_ref (device);
++  c->hdr = hdr;
++  c->refresh = refresh;
++  c->reference = CLAMP (203.0 * meta_color_device_get_reference_luminance_factor (device), 1, XN242_PEAK_NITS * 0.95);
++  c->observed_peak = c->reference;
++  c->held_peak = c->reference;
++  c->actual_code = read_backlight ("actual_brightness", XN242_MAX_CODE);
++  c->available = xn242_peak_for_code (c->actual_code);
++  c->last_tick = g_get_monotonic_time ();
++  if (hdr)
++    {
++      if (virtual_backlight)
++        c->hardware = g_object_get_data (G_OBJECT (virtual_backlight), "-mutter-output-kms-sysfs");
++      if (c->hardware)
++        g_object_ref (c->hardware);
++      else
++        c->hardware = META_BACKLIGHT (meta_backlight_sysfs_new (backend,
++          meta_output_get_info (meta_monitor_get_main_output (monitor)), NULL));
++    }
++  if (hdr && !last_hdr)
++    requested_precision = g_file_test ("/etc/mutter/xn242-output-frc", G_FILE_TEST_IS_REGULAR) ? 12 : 10;
++  last_hdr = hdr;
++  active = c;
++  g_object_set_data_full (G_OBJECT (view), "xn242-controller", c, controller_free);
++  g_signal_connect (view, "destroy", G_CALLBACK (on_view_destroy), c);
++  clutter_stage_view_set_output_frc (view, hdr && requested_precision == 12 && refresh >= 100);
++  if (hdr && c->hardware)
++    {
++      clutter_stage_view_set_adaptive_hdr (view, TRUE, c->available, c->reference);
++      g_signal_connect (view, "adaptive-hdr-sample", G_CALLBACK (on_sample), c);
++      g_signal_connect (device, "color-state-changed", G_CALLBACK (on_reference_changed), c);
++      g_signal_connect (c->hardware, "notify::brightness", G_CALLBACK (on_hardware_changed), c);
++      schedule_tick (c);
++    }
++  if (!bus_owner)
++    bus_owner = g_bus_own_name (G_BUS_TYPE_SESSION, "org.gnome.Mutter.Xn242",
++                                 G_BUS_NAME_OWNER_FLAGS_NONE, on_bus_acquired, NULL, NULL, NULL, NULL);
++  g_message ("XN242 adaptive output: HDR=%d precision=%u reference=%.2f estimated nit, backlight=%d",
++               hdr, hdr && requested_precision == 12 && refresh >= 100 ? 12 : 10,
++               c->reference, c->actual_code);
++}
+--- a/src/backends/meta-xn242-hdr.h
++++ b/src/backends/meta-xn242-hdr.h
+@@ -43,3 +43,11 @@
+ 
+   return enabled;
+ }
++
++#include "backends/meta-backend-types.h"
++#include "clutter/clutter-types.h"
++
++gboolean meta_xn242_adaptive_hdr_enabled (const MetaOutputInfo *info);
++void meta_xn242_attach_output (ClutterStageView *view, MetaBackend *backend,
++                              MetaColorDevice *device, MetaMonitor *monitor,
++                              gboolean hdr, float refresh);
+--- a/src/backends/native/meta-output-kms.c
++++ b/src/backends/native/meta-output-kms.c
+@@ -33,6 +33,7 @@
+ #include "backends/meta-crtc.h"
+ #include "backends/meta-monitor-private.h"
+ #include "backends/meta-xn242-hdr.h"
++#include "backends/meta-xn242-hdr-policy.h"
+ #include "backends/meta-output.h"
+ #include "backends/native/meta-crtc-kms.h"
+ #include "backends/native/meta-crtc-mode-kms.h"
+@@ -409,10 +410,12 @@
+     meta_color_manager_get_color_device (color_manager, monitor);
+   const MetaOutputInfo *output_info = meta_output_get_info (output);
+   MetaColorMode color_mode = meta_output_get_color_mode (output);
++  gboolean adaptive = meta_xn242_adaptive_hdr_enabled (output_info);
+   g_autoptr (MetaBacklightSysfs) backlight_sysfs = NULL;
+   g_autoptr (GError) local_error = NULL;
+ 
+-  meta_color_device_set_reference_luminance_factor (color_device, 1.0);
++  if (!adaptive || color_mode != META_COLOR_MODE_BT2100)
++    meta_color_device_set_reference_luminance_factor (color_device, 1.0);
+ 
+   /* Unfortunately we don't know if a sysfs backlight actually works in
+    * HDR modes. Ideally a new KMS backlight API would allow us to get this
+@@ -423,6 +426,17 @@
+     {
+       g_autoptr (MetaBacklightRefWhite) backlight_ref_white = NULL;
+ 
++      if (adaptive && !output_kms->have_xn242_sdr_brightness)
++        {
++          g_autofree char *contents = NULL;
++          if (g_file_get_contents ("/sys/class/backlight/backlight/brightness", &contents, NULL, NULL))
++            {
++              output_kms->xn242_sdr_brightness = CLAMP (g_ascii_strtoll (contents, NULL, 10), 1, 2047);
++              output_kms->have_xn242_sdr_brightness = TRUE;
++              meta_color_device_set_reference_luminance_factor (color_device,
++                CLAMP (xn242_peak_for_code (output_kms->xn242_sdr_brightness) / 203.0, 0.01, 2.1));
++            }
++        }
+       backlight_ref_white = meta_backlight_ref_white_new (backend, monitor);
+ 
+       /* Even more unfortunately, this also means we have to reset the sysfs
+@@ -442,7 +456,8 @@
+               output_kms->have_xn242_sdr_brightness = TRUE;
+             }
+           meta_backlight_get_brightness_info (bl, NULL, &brightness_max);
+-          meta_backlight_set_brightness (bl, brightness_max);
++          if (!adaptive)
++            meta_backlight_set_brightness (bl, brightness_max);
+ 
+           /* and because this is all async, we need to keep it alive */
+           g_object_set_data_full (G_OBJECT (backlight_ref_white),
+--- a/src/backends/native/meta-renderer-native.c
++++ b/src/backends/native/meta-renderer-native.c
+@@ -970,6 +970,12 @@
+     }
+ 
+   if (META_IS_ONSCREEN_NATIVE (framebuffer) &&
++      meta_xn242_adaptive_hdr_enabled (meta_output_get_info (output)))
++    meta_xn242_attach_output (CLUTTER_STAGE_VIEW (view_native), backend,
++                              color_device, monitor,
++                              meta_output_get_color_mode (output) == META_COLOR_MODE_BT2100,
++                              crtc_mode_info->refresh_rate);
++  else if (META_IS_ONSCREEN_NATIVE (framebuffer) &&
+       crtc_mode_info->refresh_rate >= 100.0f &&
+       meta_xn242_has_native_hdr (meta_output_get_info (output)) &&
+       g_file_test ("/etc/mutter/xn242-output-frc", G_FILE_TEST_IS_REGULAR))
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -152,6 +152,7 @@
+   'backends/meta-barrier-private.h',
+   'backends/meta-color-calibration-session.c',
+   'backends/meta-color-calibration-session.h',
++  'backends/meta-xn242-hdr.c',
+   'backends/meta-color-device.c',
+   'backends/meta-color-device.h',
+   'backends/meta-color-manager.c',
+--- a/src/wayland/meta-wayland-color-management.c
++++ b/src/wayland/meta-wayland-color-management.c
+@@ -137,6 +137,10 @@
+   gboolean is_colorimetry_set;
+   gboolean is_eotf_set;
+   gboolean is_luminance_set;
++  gboolean is_max_cll_set;
++  gboolean is_max_fall_set;
++  uint32_t max_cll;
++  uint32_t max_fall;
+ } MetaWaylandCreatorParams;
+ 
+ typedef struct _MetaWaylandCreatorIcc
+@@ -1276,6 +1280,34 @@
+       return;
+     }
+ 
++  /* libplacebo uses zero for unknown stream light metadata. Keep that
++   * interoperable, while still rejecting duplicate/conflicting known values. */
++  if (creator_params->is_max_cll_set && creator_params->max_cll > 0 &&
++      creator_params->is_max_fall_set && creator_params->max_fall > creator_params->max_cll)
++    {
++      wl_resource_post_error (resource, WP_IMAGE_DESCRIPTION_CREATOR_PARAMS_V1_ERROR_INVALID_LUMINANCE,
++                              "Invalid MaxCLL/MaxFALL relationship");
++      return;
++    }
++  if (creator_params->is_max_cll_set || creator_params->is_max_fall_set)
++    {
++      ClutterLuminance lum = creator_params->is_luminance_set ? creator_params->lum :
++                            *clutter_eotf_get_default_luminance (creator_params->eotf);
++      if ((creator_params->is_max_cll_set && creator_params->max_cll > 0 &&
++           (creator_params->max_cll <= lum.min || creator_params->max_cll > lum.max)) ||
++          (creator_params->is_max_fall_set && creator_params->max_fall > 0 &&
++           (creator_params->max_fall <= lum.min || creator_params->max_fall > lum.max)))
++        {
++          wl_resource_post_error (resource, WP_IMAGE_DESCRIPTION_CREATOR_PARAMS_V1_ERROR_INVALID_LUMINANCE,
++                                  "Content light metadata exceeds the target luminance volume");
++          return;
++        }
++      lum.type = CLUTTER_LUMINANCE_TYPE_EXPLICIT;
++      if (creator_params->is_max_cll_set && creator_params->max_cll > 0)
++        lum.mastering_max = creator_params->max_cll;
++      creator_params->lum = lum;
++    }
++
+   image_desc_resource =
+     wl_resource_create (client,
+                         &wp_image_description_v1_interface,
+@@ -1540,8 +1572,15 @@
+                             struct wl_resource *resource,
+                             uint32_t            max_cll)
+ {
+-  /* ignoring for now */
+-  /* FIXME: technically we must send errors in some cases */
++  MetaWaylandCreatorParams *params = wl_resource_get_user_data (resource);
++  if (params->is_max_cll_set)
++    {
++      wl_resource_post_error (resource, WP_IMAGE_DESCRIPTION_CREATOR_PARAMS_V1_ERROR_ALREADY_SET,
++                              "MaxCLL was already set");
++      return;
++    }
++  params->is_max_cll_set = TRUE;
++  params->max_cll = max_cll;
+ }
+ 
+ static void
+@@ -1549,8 +1588,17 @@
+                              struct wl_resource *resource,
+                              uint32_t            max_fall)
+ {
+-  /* ignoring for now */
+-  /* FIXME: technically we must send errors in some cases */
++  MetaWaylandCreatorParams *params = wl_resource_get_user_data (resource);
++  if (params->is_max_fall_set)
++    {
++      wl_resource_post_error (resource, WP_IMAGE_DESCRIPTION_CREATOR_PARAMS_V1_ERROR_ALREADY_SET,
++                              "MaxFALL was already set");
++      return;
++    }
++  /* MaxFALL describes a whole stream, not this frame. Validate it, but never
++   * drive the LCD backlight from it; the visible-pixel maximum does that. */
++  params->is_max_fall_set = TRUE;
++  params->max_fall = max_fall;
+ }
+ 
+ static const struct wp_image_description_creator_params_v1_interface

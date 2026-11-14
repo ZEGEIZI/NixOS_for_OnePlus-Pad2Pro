@@ -1,0 +1,81 @@
+This project independently maintains NixOS integration for OnePlus Pad 2 Pro.
+
+Current device dependencies:
+- linux-sm8750-erhai-patchset, mirrored in inputs/kernel-patchset/ with its
+  manifest, original patch authorship, licenses and provenance. Official Linux
+  is fetched through nixpkgs; Linux driver notices remain unchanged.
+- kShimC-oneplus-pad2-pro, mirrored in inputs/kshim-protocol/. Its source.json
+  pins the upstream revision, local publisher extension and effective hashes.
+
+Locally maintained audio sources in packages/audio/ were imported from
+https://github.com/yzddmr6/onepluspad-2pro-mainline revision
+4cc3570c7c14689d77e58c081d2430170288f72a (BSD-3-Clause). The board topology,
+TDM/MFC helpers and UCM no longer require fetching that project. The bundled
+linux-msm/audioreach-topology archive is revision
+993a17dcb672357998a463a73f120064d6c74f4f; its BSD license and source manifest
+are installed with the package. NixOS uses amplifier level 270 (-22.5 dB).
+The WirePlumber speaker volume rule was adapted from the same source's
+MIT-licensed 51-erhai-speaker.conf.
+
+Firmware provenance is maintained in inputs/firmware/. The original base
+inventory was imported from the same device-source revision; its source and
+license notices remain in ORIGINAL-NOTICES.md. Wi-Fi and Bluetooth inventories
+were initially verified using ArmadaOS's OPD2413 records, revision
+937d88a2c28a67153d572bcf7f89049eaada93f2. These are provenance references,
+not build or runtime dependencies. Firmware archives are bundled as ordinary Git files under inputs/firmware/archives/
+and retain their original vendor licenses. They are not relicensed under the kernel GPL.
+No per-unit factory data, addresses or pairing keys are included in Git.
+
+Historical frozen kernel configurations and patches are retained under
+docs/history/kernel/ and do not participate in current builds.
+
+tools/bluetooth-address.py and tests/test_bluetooth_address.py are adapted
+from ArmadaOS devices/oneplus-pad2pro/rootfs/overlay/usr/libexec/armada/
+opd2413-btaddr and tests/test_btaddr.py (MIT). The NixOS service supplies
+the tablet's separately provisioned factory public address before BlueZ
+starts. Per-device identity stays in /var/lib/oneplus-pad2pro/bt-address,
+outside the Nix store, and is not generated or shared between devices.
+
+Automatic OPD2413 factory identity extraction (tools/bluetooth_factory.py)
+and the direct Linux MGMT client (tools/bluetooth_mgmt.py) are MIT licensed.
+The factory record format and address byte order were independently verified
+against this tablet's Android 16 nvram_server, nvram_qmi and Bluetooth HAL.
+No proprietary Android code, binaries, device serials or factory records
+are included. The decoder reads and validates the unit's own nonmodemst1/2
+partitions; the per-device address is recovered at runtime, not built into
+the package. Python cryptography retains its upstream licenses.
+
+kShimC external boot protocol and inputs/kshim-protocol/boot_files.py:
+https://github.com/ZEGEIZI/kShimC-oneplus-pad2-pro
+Revision: 471c93186579566bf135fed0b34caa632b1da115.
+The local optional payload-sharing extension is recorded in
+inputs/kshim-protocol/patches/shared-payloads.patch. The runtime boot protocol
+is unchanged; the source license is in inputs/kshim-protocol/LICENSE.
+
+The source references below describe historical imports; the imported code is
+maintained locally or in the independent device patchset.
+
+Adreno 830 Mesa patches in packages/mesa/ are imported unchanged from
+onepluspad-2pro-mainline revision 4cc3570c7c14689d77e58c081d2430170288f72a,
+packaging/mesa/shared/mesa/. The original source manifest is preserved as
+upstream-source.json, including SHA-256 digests and upstream attribution.
+These patches are MIT licensed; original patch authorship notices remain.
+Mesa itself is fetched by nixpkgs and retains its upstream licenses.
+
+Opt-in DPU 8-bpc output dithering in docs/history/kernel/patches/dpu-xn242-8bpc-dither.patch
+is adapted from ArmadaOS patch 0049-drm-msm-dpu-panel-opt-in-8bpc-dither.patch,
+by enjihn <150061999+enjihn@users.noreply.github.com>, at ArmadaOS revision
+937d88a2c28a67153d572bcf7f89049eaada93f2. The original Linux DRM GPL-2.0 notices remain; the opt-in
+property is renamed to qcom,dpu-8bpc-dither for distribution independence.
+This patch does not include Lenovo-specific 10-bpc panel initialization or
+advertise BT.2100/PQ support on the OnePlus panel.
+
+OPD2413 OEM Bluetooth bootstrap and UART handling are adapted in the shared
+linux-sm8750-erhai tree from ArmadaOS reference 937d88a2c28a67153d572bcf7f89049eaada93f2,
+devices/oneplus-pad2pro/kernel/current/final-modules (GPL-2.0-only).
+docs/history/kernel/patches/opd2413-brahma-bluetooth.patch exports its driver and DT
+runtime changes against the historical frozen source; the adjacent source manifest
+records the port and shared file hashes. Existing driver notices remain.
+OEM Bluetooth binaries are separate bundled proprietary archives, pinned
+by inputs/firmware/bluetooth.json; no redistribution grant is implied.
+Factory identity and pairing keys are excluded.

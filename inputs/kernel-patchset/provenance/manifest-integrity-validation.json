@@ -1,0 +1,6 @@
+{
+  "valid_release": "passed",
+  "changed_patch": "rejected",
+  "changed_hardware_configuration": "rejected",
+  "changed_patch_order": "rejected"
+}

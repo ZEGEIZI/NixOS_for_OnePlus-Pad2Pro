@@ -1,0 +1,24 @@
+{
+  "reference": "https://github.com/ZEGEIZI/armadaos-freedom",
+  "reference_revision": "937d88a2c28a67153d572bcf7f89049eaada93f2",
+  "reference_directory": "devices/oneplus-pad2pro/kernel/current/final-modules",
+  "license": "GPL-2.0-only",
+  "shared_kernel_base": "22674ec24224cd0fc5305484f9181e1aed79692b",
+  "nix_kernel_base": "40f9157a563afa50bdfa8e823efc1839cd12b040",
+  "patch_sha256": "529f517b5e70eb053d59e5646dbd7c2a2e47292de1a448bb37b8160855d19e9d",
+  "shared_files": {
+    "arch/arm64/boot/dts/qcom/sm8750-erhai.dts": "230ded611dc2fe840c09079231dac06eedc497c673fe4a4b47d1c1cb3b0b44d3",
+    "drivers/bluetooth/brahma_peripheral.h": "fe99a2e2842bc33264a0497eef04c4cdbab04b70d33f3a9aed47adfff5b6ea9d",
+    "drivers/bluetooth/btqca.c": "0646068b67c97be0d6e1900796c917516767b32c38fa0852e238885f4d14e10c",
+    "drivers/bluetooth/btqca.h": "9dad962e3f0b848d882903d6b6ce45deabb7141428d3db04e4b69c4cb4750995",
+    "drivers/bluetooth/hci_qca.c": "6a89de3649c97cdf79859395fcc3c3f8306430c20437a122812610e98a30a880",
+    "drivers/bluetooth/hci_serdev.c": "855e70b48f8ee68ef425bf59afaf1a4e7edc706aa166f0830e3b89f151d409a4",
+    "drivers/tty/serial/qcom_geni_serial.c": "d648f6a5bd79bd2a4fcd36ddf0aa01031ec6c2644c070e363c41d67ab443d284"
+  },
+  "port_notes": [
+    "Generic WCN7860 support retained beside the board-specific Brahma type.",
+    "Existing 7.2.15 IBS power-off and UART suspend/BW behavior retained.",
+    "UART diagnostic tracing omitted; protocol diagnostics remain bounded.",
+    "The Nix patch exports driver and DT runtime changes; schemas, selftests and kernel documentation are maintained in the shared kernel repository."
+  ]
+}

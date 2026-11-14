@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-11-13T19:48:58.936490+00:00",
+  "release": "7.3.4-erhai-p2",
+  "system": "/nix/store/5f04jzks24az5migmwihk5wffs9sc8mj-nixos-system-pad2pro-erhai-p2-manual-drm",
+  "boot_id": "nixos-2c1dafdebe8edae4967696fa40b86280",
+  "same_p2_payloads": true,
+  "cmdline_bytes": 439,
+  "empty_client_selection_preserved": true,
+  "parameter_evidence": [
+    "Actual Image contains drm_client_lib.active and drm_kms_helper.fbdev_emulation",
+    "drm_client_setup.c skips setup for an empty client selection",
+    "drm_fb_helper.c HANG DEBUGGING documents disabling fbdev emulation",
+    "systemd multi-user target and display-manager mask defer graphical login"
+  ],
+  "drm_registration": "retained; skip_gpu is absent",
+  "boot_readonly": true,
+  "menu_entries": 3,
+  "default": "nixos/current",
+  "modetest": "/nix/store/vlcssnd1rfinms1v4bmyldb24s2kigf7-libdrm-2.4.134-bin/bin/modetest",
+  "result": "Headless NixOS boot reached SSH; controlled atomic modeset later reset the device",
+  "hardware_accepted": false,
+  "runtime_boot_id": "d4e95813-56fd-417c-b378-16ff24e23777",
+  "observed": {
+    "drm_client": "empty selection confirmed",
+    "fbdev_emulation": "N",
+    "dri": [
+      "card0",
+      "renderD128"
+    ],
+    "sound_card": "OnePlus-Pad-2-Pro present; functionality not tested",
+    "failed_units": 0,
+    "gpu_initial_runtime_status": "unsupported (firmware/hardware init not yet requested)",
+    "gpu_open": "renderD128 opened successfully in 0.03347 s; GPU runtime active with power/control=on",
+    "resource_query": "modetest enumeration succeeded; DSI-1 3392x2400@120, connector 36, CRTC 106, primary plane 46",
+    "atomic_modeset": "Explicit plane command reached panel prepare and VDDIO enable then device reset, even with GPU runtime PM forbidden",
+    "post_reset": "User entered Android before returning to same headless entry; crash pstore not treated as retained"
+  },
+  "interpretation": "GPU auto-suspend is not required for the first-modeset reset. Focus on the panel supply path. Headless boot is a diagnostic only; graphics, rendering and audio are not accepted.",
+  "next": "Repeat from headless boot with RPMh regulator request addresses/data and entry/return tracing before enabling the panel",
+  "repeat_boot_id": "59d2d37c-bef4-4ea2-8fb9-0e3d0366272b",
+  "live_evidence": {
+    "baseline.json": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-running/baseline.json",
+      "bytes": 2704,
+      "sha256": "f18c31f354f19a67413ba0c1c657969ecb60056e34f67fb2904a775d2ed879a5"
+    },
+    "gpu-open.json": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-running/gpu-open.json",
+      "bytes": 253,
+      "sha256": "49d7aa19a502a25c2722b282d682c6774f6deac0927763e6e9322d0f988e3dc3"
+    },
+    "modetest-resources.json": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-running/modetest-resources.json",
+      "bytes": 32596,
+      "sha256": "f9aa85d1658859d80e3555ccb7a0f1c8e8c8fecf55eb7f7ad4edc0ad484246d5"
+    },
+    "atomic-modeset.log": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-running/atomic-modeset.log",
+      "bytes": 180,
+      "sha256": "da2945a25a51c1861e7b21c32968ef677bd8981e53bda6c8b231bdbb40760a63"
+    },
+    "live-dmesg.log": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-running/live-dmesg.log",
+      "bytes": 338179,
+      "sha256": "6035b8488c9625b6d0b14d70cb47c364b58cd3ea254c25300e0cd4a1e2f88ca2"
+    },
+    "live-trace.log": {
+      "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-manual-drm-running/live-trace.log",
+      "bytes": 1046090,
+      "sha256": "6ba6b82449293afd2fd102fe739c4d00263a8f40cba6f02aa74bee9411ad127d"
+    }
+  }
+}

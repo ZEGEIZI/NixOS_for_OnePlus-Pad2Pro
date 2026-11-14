@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-11-13T19:33:37.363534+00:00",
+  "kernel_release": "7.3.4-erhai-p2",
+  "params": [
+    "console=tty0",
+    "mem_sleep_default=s2idle",
+    "trace_event=rpm:*,clk:clk_disable,clk:clk_disable_complete,clk:clk_unprepare,clk:clk_unprepare_complete,regulator:*",
+    "tp_printk",
+    "fb.lockless_register_fb=1",
+    "cpuidle.off=1",
+    "kprobe_event=p:erhai/runtime_suspend,adreno_runtime_suspend;r:erhai/runtime_suspended,adreno_runtime_suspend,ret=$retval:s32;p:erhai/panel,novatek_nt36536_prepare;r:erhai/panel_return,novatek_nt36536_prepare,ret=$retval:s32;p:erhai/sleep,usleep_range_state,min=$arg1:u64,max=$arg2:u64;r:erhai/awake,usleep_range_state;p:erhai/pm_suspend,genpd_runtime_suspend;r:erhai/pm_done,genpd_runtime_suspend,ret=$retval:s32;p:erhai/pd_off,genpd_power_off,name=+0(+1160($arg1)):string;r:erhai/pd_done,genpd_power_off;p:erhai/pd_switch,_genpd_power_off,name=+0(+1160($arg1)):string;r:erhai/pd_switched,_genpd_power_off,ret=$retval:s32;p:erhai/gdsc,gdsc_disable;r:erhai/gdsc_done,gdsc_disable,ret=$retval:s32;p:erhai/smmu,arm_smmu_runtime_suspend;r:erhai/smmu_done,arm_smmu_runtime_suspend,ret=$retval:s32;p:erhai/perf,rpmhpd_set_performance_state,name=+0(+1160($arg1)):string,state=$arg2:u32;r:erhai/perf_done,rpmhpd_set_performance_state,ret=$retval:s32",
+    "nr_cpus=1",
+    "nokaslr",
+    "arm64.nohaft",
+    "arm64.nowfxt",
+    "irqchip.gicv3_pseudo_nmi=0",
+    "ignore_loglevel",
+    "initcall_debug",
+    "log_buf_len=8M",
+    "panic=0",
+    "root=fstab",
+    "loglevel=6",
+    "lsm=landlock,yama,bpf"
+  ],
+  "scope": "Actual p2 Image under QEMU: validates probe/tracepoint registration and console output. Nested fetch independently returns driver_register dev_driver.name=\"virtio-mmio\". Expected no-rootfs panic; no physical GPU/domain coverage.",
+  "definition_registration": "passed",
+  "host_probe_printed": true,
+  "known_nested_string": "virtio-mmio",
+  "log_sha256": "0afaf85de50df1092215cb6b736ee857fb5b5c267eab5dcf7cc199234abf9ccc",
+  "layout": {
+    "type": "generic_pm_domain",
+    "name_offset_bytes": 1160,
+    "validation": "Actual p2 vmlinux BTF inspected with pahole; no assumed source-level layout"
+  },
+  "change": "Additional runtime PM, domain, SMMU and clock traces; retains cpuidle.off=1; no payload changes.",
+  "publication": {
+    "system": "/nix/store/hjk148aznanmlc0cmj7m7rp0d950c3w5-nixos-system-pad2pro-erhai-p2-rpm-trace",
+    "boot_id": "nixos-5ef2ee0d002793019dec6250297bcf01",
+    "cmdline_bytes": 1408,
+    "same_p2_payloads": true,
+    "boot_readonly": true,
+    "menu_entries": 3,
+    "replaced": [
+      "nixos-a9496e2caf46a448c4588a694b81d0da"
+    ],
+    "default": "nixos/current",
+    "hardware_result": "reset; see rpm-trace-device-boot.json",
+    "menu_entry": "replaced by manual-drm"
+  }
+}

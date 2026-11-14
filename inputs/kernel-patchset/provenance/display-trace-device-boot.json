@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-11-13T18:58:08.205679+00:00",
+  "release": "7.3.4-erhai-p2",
+  "system": "/nix/store/wf78cl3ka0d1mj3r3qm63zz8ihyd459f-nixos-system-pad2pro-erhai-p2-display-trace",
+  "boot_id": "nixos-3ec7d1f3ac80948587c8a5b6d285234c",
+  "result": "immediate reset; original current recovered",
+  "recovery_boot_id": "6d2e5081-abf3-4b73-8181-2c3c6235dc89",
+  "pstore": {
+    "bytes": 262132,
+    "sha256": "81fadc5f767041ebef7fa09fa083b52042039c3845a4fe098ccd8c7be1578acb",
+    "corrupted": true,
+    "nul_bytes": 706,
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-display-trace-recovery/var/lib/systemd/pstore/console-ramoops-0"
+  },
+  "readable_progress": [
+    "GPU init and framebuffer creation returned success",
+    "register_framebuffer entered, then drm_client_modeset_commit_atomic",
+    "DPU CRTC enable and DSI bridge pre-enable started",
+    "Both msm_dsi_phy_enable calls returned 0",
+    "Both msm_dsi_host_power_on calls returned 0",
+    "GPU runtime suspend started and a6xx_gmu_stop returned 0",
+    "Last readable probe: novatek_nt36536_prepare entry around 1.017024s"
+  ],
+  "interpretation": "Console-lock bypass exposed further first-modeset progress. Next inspect panel supply/reset/DCS transfer; no panic/call trace is readable yet.",
+  "panel_forward_source_audit": "Isolated panel code differs from the old custom driver only in DSC packet flag API and device/driver names; power/reset/on-command routines are unchanged.",
+  "next": "Enable regulator and GPIO tracepoints and DCS/DSI transfer entry/return probes; retain lockless framebuffer registration only for diagnostics.",
+  "hardware_accepted": false
+}

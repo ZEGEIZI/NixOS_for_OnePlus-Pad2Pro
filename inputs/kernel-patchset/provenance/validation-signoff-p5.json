@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-11-14T05:23:53.985495+00:00",
+  "release": "p5",
+  "patch_head": "4a4041f5921c6cbe29946bf36a1035b601ff3400",
+  "exported_manifest_sha256_at_strict_replay": "3884bdfc2ff4984b380c5d6448e8b18b1f5e586b370ab44fe5a80c44a807bf00",
+  "validated_manifest_sha256": "f22a81cbb8375c17528b43682bff148c8e375161cb2bbf65915abd559329a42d",
+  "only_manifest_validation_metadata_changed": true,
+  "patch_order_hashes_configs_and_result_hashes_unchanged": true,
+  "evidence": {
+    "full_build": "passed; provenance/full-native-system-p5-validation.json",
+    "hardware": "passed; provenance/native-p5-device-acceptance.json",
+    "installation": "passed; provenance/daily-p5-installation.json"
+  },
+  "note": "Strict replay report keeps the original exported manifest hash. The validation field was updated after actual build, hardware acceptance and default reboot; all source inputs are unchanged."
+}

@@ -1,0 +1,487 @@
+{
+  "schema": 1,
+  "project": "linux-sm8750-erhai-patchset",
+  "release": "p4",
+  "series": "7.3",
+  "minimum_version": "7.3.4",
+  "upstream": {
+    "version": "7.3.4",
+    "tag": "v7.3.4",
+    "commit": "7595a62d45ee1a2297eafa5f2ef5d0a45142d84d",
+    "url": "https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.3.4.tar.xz",
+    "sha256": "b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f"
+  },
+  "branch": "patchset-7.3",
+  "head": "bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb",
+  "patches": [
+    {
+      "file": "patches/0001-erhai-port-bindings-and-documentation-to-Linux-7.3.patch",
+      "commit": "5faf1dbecc2f83a67b875358dc4286d2e9bf72c7",
+      "sha256": "e3c843719f6ce4850eca5d3c786de217bee89a26d9851860b57682a491b15837",
+      "depends_on": [],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0002-erhai-port-platform-dependencies-to-Linux-7.3.patch",
+      "commit": "3bf8b72db4395cca113fc89698111b98ad793095",
+      "sha256": "f3d620021e344d80a7258158be6954cccb5aebfeff266c55384d7ae90e6a414a",
+      "depends_on": [
+        "5faf1dbecc2f83a67b875358dc4286d2e9bf72c7"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0003-erhai-port-backlight-and-thermal-to-Linux-7.3.patch",
+      "commit": "64eb7a5d84525bef4c5eeb5364e244a5a782ef32",
+      "sha256": "c50ddbbacade1a05fd81aec8316915e47aa6932810a1ca54d7e5744854f86ae5",
+      "depends_on": [
+        "3bf8b72db4395cca113fc89698111b98ad793095"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0004-erhai-port-display-and-gpu-to-Linux-7.3.patch",
+      "commit": "41b9c7c45ed80beeb122491602a3f16faddd4ab5",
+      "sha256": "78671e995b7832684af0d5f78f69ef0f41830d4170d6bf07721898655159253d",
+      "depends_on": [
+        "64eb7a5d84525bef4c5eeb5364e244a5a782ef32"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0005-erhai-port-input-to-Linux-7.3.patch",
+      "commit": "78d9b1303b781bdbb98c8beab4e2ec38e2abc883",
+      "sha256": "91b47d4f86e49bc79b4d6a8400a6f74d0765533f37f49d0f47f36251637c0425",
+      "depends_on": [
+        "41b9c7c45ed80beeb122491602a3f16faddd4ab5"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0006-erhai-port-power-supply-to-Linux-7.3.patch",
+      "commit": "753cbf840cb47182a3c7dc1b06e206445c1b4642",
+      "sha256": "fdf7612c0c88725867c0dea59a427d3ce6eb0cc606fc1133b8cdd651761c397c",
+      "depends_on": [
+        "78d9b1303b781bdbb98c8beab4e2ec38e2abc883"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0007-erhai-port-audio-to-Linux-7.3.patch",
+      "commit": "770d10b2bf5470d25381b0a7052d41dc3ab5300a",
+      "sha256": "90bff4b9b23095a38f0fee2bef697335ff6eb0dd358734fec1a8bf86fd3551d2",
+      "depends_on": [
+        "753cbf840cb47182a3c7dc1b06e206445c1b4642"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0008-erhai-port-wifi-to-Linux-7.3.patch",
+      "commit": "58b8070b16bd0e6032158c0a76fd87ee2d0653dc",
+      "sha256": "b2f40981826ce3b1947001829521e4bb78cc8d584ce9b6be75f5c3d2673f2040",
+      "depends_on": [
+        "770d10b2bf5470d25381b0a7052d41dc3ab5300a"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0009-erhai-port-bluetooth-to-Linux-7.3.patch",
+      "commit": "3d7e7d26192c726c088ca72e28ed594269ecbc71",
+      "sha256": "22b2fc6a1ad44ebad717203b4cdf3d68c2b55909b3403ceb8d41aa5e9adcef42",
+      "depends_on": [
+        "58b8070b16bd0e6032158c0a76fd87ee2d0653dc"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0010-erhai-port-usb-and-uart-to-Linux-7.3.patch",
+      "commit": "ac9329880dae74ae6dd4399b2160dd9572db1f30",
+      "sha256": "ed9ed66695fa1a933fa5291176b0cea796d846218dc09ffa58169256bf6b71c1",
+      "depends_on": [
+        "3d7e7d26192c726c088ca72e28ed594269ecbc71"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0011-erhai-port-camera-and-video-to-Linux-7.3.patch",
+      "commit": "fd5231089bf41fa2ed7f6893fa8fea19fa1de4b8",
+      "sha256": "c99a325c6615fa25f693315094ebd0cc108b8703dfbc522078524656ee3b8abe",
+      "depends_on": [
+        "ac9329880dae74ae6dd4399b2160dd9572db1f30"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0012-erhai-port-gunyah-to-Linux-7.3.patch",
+      "commit": "1688d0bd94c910f39959f941dbd1365c848460f9",
+      "sha256": "b9e5f62a7d1def6d3aad301d59f989e37d38082f1479bcf45412c978865a536b",
+      "depends_on": [
+        "fd5231089bf41fa2ed7f6893fa8fea19fa1de4b8"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0013-erhai-port-device-tree-to-Linux-7.3.patch",
+      "commit": "f98215cf4873db15cdb0668cce5c4e050835824e",
+      "sha256": "039a84a9055b0e77e449d13caeb9925bf5d3a2b9c21227a91176ef3795d93afb",
+      "depends_on": [
+        "1688d0bd94c910f39959f941dbd1365c848460f9"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0014-erhai-port-hardware-config-to-Linux-7.3.patch",
+      "commit": "54ca8fcdca22c7dc0843df0fb91dfdebe628a584",
+      "sha256": "db13f6734fc1fe60edf53af9508b003ed42e6b18baea788dc6617448ff1704e3",
+      "depends_on": [
+        "f98215cf4873db15cdb0668cce5c4e050835824e"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0015-arm64-erhai-keep-rfkill-built-in-with-the-Bluetooth-stack.patch",
+      "commit": "9a8a4ab32c023cf2fc4c6df2f113f0e23f7f9165",
+      "sha256": "0bc319cd83fe0f28e4d40e895e87ba06210ee62d43404e685bc716bbcc718118",
+      "depends_on": [
+        "54ca8fcdca22c7dc0843df0fb91dfdebe628a584"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0016-ASoC-lpass-rx-close-runtime-PM-error-unwind-after-the-forward-port.patch",
+      "commit": "42c66f49899d3a0db4e2bb7dd7897ba74238b781",
+      "sha256": "f342684046234af5772c49689310c901b4d20694929a1b46c54388dc2c1951f6",
+      "depends_on": [
+        "9a8a4ab32c023cf2fc4c6df2f113f0e23f7f9165"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0017-ASoC-qcom-merge-the-upstream-and-Erhai-TDM-slot-configuration.patch",
+      "commit": "021332dc18a6df653521d132f344dfded5291d11",
+      "sha256": "9901af9f212a752f61e74a66354424188b3d7602150a22e57a0e64dafadda873",
+      "depends_on": [
+        "42c66f49899d3a0db4e2bb7dd7897ba74238b781"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0018-ASoC-qcom-retain-the-upstream-machine-driver-with-Erhai-DAI-formats.patch",
+      "commit": "adc175d99163bcfd25cbc856ba58c7fa31a73c46",
+      "sha256": "212ebb8727fc706f45a5e5c2ba1a08faa89630c8fb9a892d4d69bc78b9971aeb",
+      "depends_on": [
+        "021332dc18a6df653521d132f344dfded5291d11"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0019-dt-bindings-gunyah-repair-CMA-memory-schema-and-example.patch",
+      "commit": "bfc760b9caa7d621afe907d592bda39187186411",
+      "sha256": "740f3da6249423ff8e4f2fc251cc12d39c8599c1b50f413029a7c1d1d1916b74",
+      "depends_on": [
+        "adc175d99163bcfd25cbc856ba58c7fa31a73c46"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0020-irqchip-qcom-pdc-read-IRQ_PARAM-only-for-secondary-GPIO-handling.patch",
+      "commit": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+      "sha256": "601c57eec1f3a771d7e804cba907de7af4588fedcdb6b87c9283ed6cc4098b46",
+      "depends_on": [
+        "bfc760b9caa7d621afe907d592bda39187186411"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0021-arm64-dts-qcom-erhai-pin-panel-VDDIO-to-1.896-V.patch",
+      "commit": "d31d13f5d0b1117160e2930da43996219933f14d",
+      "sha256": "f47ade3baf41dfa6ad94a7b5714abc3fbf22b3b03f280b4c32f2a412e8c3c462",
+      "depends_on": [
+        "21a8aa69b8c68e995f41d7307d70d023171bdf3d"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0022-serial-qcom-geni-balance-IRQ-masking-across-port-reopen.patch",
+      "commit": "bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb",
+      "sha256": "aa0d7c18221160519690b8ab54cb89b98c3156af573d77f625f74d5b435c5b4c",
+      "depends_on": [
+        "d31d13f5d0b1117160e2930da43996219933f14d"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    }
+  ],
+  "configs": [
+    {
+      "file": "configs/sm8750-peripherals.config",
+      "source": "arch/arm64/configs/sm8750-peripherals.config",
+      "sha256": "e0643b5620c9dbc842ffb7703c858447d93c6fe3bee9a0d3e3c07a42b3c360b2"
+    },
+    {
+      "file": "configs/erhai-firstboot.config",
+      "source": "arch/arm64/configs/erhai-firstboot.config",
+      "sha256": "65ff027cdc1fc389f2eab6e5bc1482da488d01e56091fa226f7e9828fc69169d"
+    }
+  ],
+  "result_files_sha256": {
+    "Documentation/ABI/testing/sysfs-driver-input-nt36536": "be575b0041937682c5d4096807bcce6ff399a3cbe5cacd165a1d85c37bc623bd",
+    "Documentation/arch/arm64/erhai.rst": "5f714761a421c7c84b779b5f8c3a4852b81be3233359fb5c424cc19ff31d01d7",
+    "Documentation/arch/arm64/index.rst": "3ffcbc2a5b79e417ca74b85a02bc09acd88013697d679ef35cfd6a7fcba4d01f",
+    "Documentation/devicetree/bindings/arm/qcom.yaml": "775a3883dd140092b71fe3c317711d6ac6fa480683c608ff6335b963b11e743c",
+    "Documentation/devicetree/bindings/clock/qcom,sm8450-camcc.yaml": "e0bf46d13f631912e70bc1ae02b350ab80e43ae9aebf396433975068efed1246",
+    "Documentation/devicetree/bindings/display/msm/gmu.yaml": "dfd0da5db2eea683b6afbf44da3e40ce84884190da00ff65793bdbbd2bc28a47",
+    "Documentation/devicetree/bindings/display/msm/gpu.yaml": "1c4fb110a159e040490d0788a12258994db9adb8eabe0129c560fbb3787153c0",
+    "Documentation/devicetree/bindings/display/panel/novatek,nt36536.yaml": "078072afcbfe44945fd10d284b3ac5e8ede659ea12c317d30d05a9f01085614f",
+    "Documentation/devicetree/bindings/firmware/gunyah-cma-mem.yaml": "d03ececd6574815950d32ef0ff1d50cceede9fab256dbe17f61b3f7b95e5df6e",
+    "Documentation/devicetree/bindings/firmware/gunyah-hypervisor.yaml": "fd77ac32a33ed4d9271b86f5fbc52a2708e47f756b9afd8603713ba8beb95a11",
+    "Documentation/devicetree/bindings/input/oneplus,pad2pro-pogo-keyboard.yaml": "56987de796256117bc3cebcdb8e4ce022e3d32ffa052fd622566f49cff8ea3ed",
+    "Documentation/devicetree/bindings/input/touchscreen/novatek,nt36536-ts.yaml": "146a67c69d3398ffa69206b70bdb757cd40f0751e383a9597934dc05fba49ec2",
+    "Documentation/devicetree/bindings/leds/backlight/kinetic,ktz8866.yaml": "5c23421dc278fe4c2ed607fe23bc23be469653448cafe0eaa8b4cc736e98f840",
+    "Documentation/devicetree/bindings/media/i2c/chipnext,cn3927.yaml": "c43c5a670c15cb0b82a26c49df4b8c3c95d6955319eb154b78dc14bd3ffd083a",
+    "Documentation/devicetree/bindings/media/i2c/smartsens,sc1300cs.yaml": "86ddeec280c37c2b1a66edb68be4044cb6cedf256b490b0e6c57249610e81f1e",
+    "Documentation/devicetree/bindings/media/i2c/smartsens,sc820cs.yaml": "41c55031ab320a0f0467fb865a4819407ba108a030bce2c1c72a3e503def6e4b",
+    "Documentation/devicetree/bindings/media/qcom,kaanapali-camss.yaml": "e9f419f96cee414e860b6a6b73e611cfb501fb15f92915432ab44a45fe67c853",
+    "Documentation/devicetree/bindings/media/qcom,sm8750-camss.yaml": "cc5a6eb8df7d80df33e7205efc67209f60d23e4a2adf407d51e3bac1fcf22fe0",
+    "Documentation/devicetree/bindings/net/bluetooth/qcom,wcn7850-bt.yaml": "075b23bc79ac995ac2afba11fa4ace3e2f2efb38239c79bf6434ce376c42351d",
+    "Documentation/devicetree/bindings/net/wireless/qcom,ath12k.yaml": "4c3a261e0023996c3278addc2586530a7ea6f5ebfec7d11966f6bf4fe26e8ac0",
+    "Documentation/devicetree/bindings/phy/qcom,x1e80100-csi2-phy.yaml": "ee8380adc03b0892040d64e343bcb203866d59c0af3ec4c4ab05bf4c58ff6adf",
+    "Documentation/devicetree/bindings/power/supply/oplus,wls-charger-cps8601.yaml": "796175572c6fbf8add093d1aecb5eeaddedc35a7678fd667d70412fc070a4854",
+    "Documentation/devicetree/bindings/power/supply/southchip,sc8547a.yaml": "56a390cac61afd23bdb0b79239c6c55bcfda017cc0907c38ffbe19abb70ecc80",
+    "Documentation/devicetree/bindings/regulator/qcom,qca6390-pmu.yaml": "2112b6de538aa8a1b1ab4e446452ef286706a6f224062087668d5fd1583e45ef",
+    "Documentation/devicetree/bindings/serial/serial.yaml": "869f3d0022d8a785a02c25eb1b549f6ab58ce7b47faa5f04c37e2c5d040c90d2",
+    "Documentation/devicetree/bindings/soc/qcom/qcom,pmic-glink.yaml": "030f29f20dde0d8dfea8184bf78aec627c87455ba3ef17a3d761ed1a02ce57f0",
+    "Documentation/devicetree/bindings/sound/qcom,sm8250.yaml": "a5eef6fd92ffcf5541bff54b188563dbcf06837dff9cb6941f5c0215db9cca42",
+    "Documentation/devicetree/bindings/vendor-prefixes.yaml": "0c09214d4c89e69db4665b4190676f4a0f82ab6cdbd223b8804b133378a86642",
+    "Documentation/virt/gunyah/index.rst": "40a0effbdad2488570fb554645f37c9993b81844f9b766f6e088c565d6649183",
+    "Documentation/virt/gunyah/message-queue.rst": "d8c4fe2a4a94a2af58ca3918c209a494281371cd787b25cfe0e64b2a5a35abc7",
+    "MAINTAINERS": "648c7c2ad68da3124917f8c4a39b879161c6f6a5ae3124cdb0ff542044dce804",
+    "arch/arm64/Kbuild": "abaf6ca053e2163a56df1d2cf9710dae7638c75aa722c22fc311b12191b4b7f3",
+    "arch/arm64/boot/dts/qcom/Makefile": "31161edfb391d9259bc4fb8e76cdf3236fce432b0642be570064f1ee81de3684",
+    "arch/arm64/boot/dts/qcom/sm8750-erhai.dts": "9d59a1fa5cf6191faa61ee33fe57ea5b1dba7f8c8ed8b8e085f90074e9af9b57",
+    "arch/arm64/boot/dts/qcom/sm8750.dtsi": "74279a395df351a3febbe1ce65eab040c82b41ea58383d5fcc6facd1a060c85b",
+    "arch/arm64/configs/erhai-firstboot.config": "65ff027cdc1fc389f2eab6e5bc1482da488d01e56091fa226f7e9828fc69169d",
+    "arch/arm64/configs/sm8750-netfilter.config": "72fa09bfe639d145842604aace8405492f4588369b469cadcd323dc81bcd5b6e",
+    "arch/arm64/configs/sm8750-peripherals.config": "e0643b5620c9dbc842ffb7703c858447d93c6fe3bee9a0d3e3c07a42b3c360b2",
+    "arch/arm64/configs/sm8750-snap.config": "050337bdad9a0cc8c5725d5decbb7600e5e7c3142b5036862ecb339bdcca2df7",
+    "arch/arm64/configs/sm8750-virt.config": "c66295c479db96f2315cf109ddcbeac757b3f1eed52118c772f8b35539048206",
+    "arch/arm64/configs/sm8750-waydroid.config": "8fa046c9cb6aaae995ae850037937f5ce92189c2082bd39c95fbdb703d69ada1",
+    "arch/arm64/gunyah/Makefile": "6eb0e3aaf0697d24bad5e19775dcd9650768df3bc1c52402ffe067df955c8254",
+    "arch/arm64/gunyah/gunyah_hypercall.c": "db4be47bd8f02467d13d3f8e6b74c50fb02c821a2c2fdfc0c26d206a2b449afd",
+    "arch/arm64/gunyah/timer.c": "3591fadbc91a932a4b78a7b686d3910e605f8054cd624ff0cf961c6e3f09bfaa",
+    "arch/arm64/include/asm/gunyah.h": "e81aecda2cf5bd2160a786fb195329f10d97e8ac4bff50165b805527818a90bc",
+    "arch/arm64/mm/fault.c": "110ea9b3b49c47eb1201e23ec0ebd99185a20eb6bb4ccae98aeb1b6aad114094",
+    "drivers/base/core.c": "ab57379f0372d42fbeb5e4555b2a6076c390e9b1a661f2856b0f105ef4a99251",
+    "drivers/bluetooth/brahma_peripheral.h": "fe99a2e2842bc33264a0497eef04c4cdbab04b70d33f3a9aed47adfff5b6ea9d",
+    "drivers/bluetooth/btqca.c": "32ec9e787cad897e7ea56bf666cf96d2febd8ac7a0bd3f968d112f6c61d22962",
+    "drivers/bluetooth/btqca.h": "9dad962e3f0b848d882903d6b6ce45deabb7141428d3db04e4b69c4cb4750995",
+    "drivers/bluetooth/hci_qca.c": "d80821a871e3b3a9762e47f58b139aa6527016eb17e626df55a1f8b50e13bd74",
+    "drivers/bluetooth/hci_serdev.c": "855e70b48f8ee68ef425bf59afaf1a4e7edc706aa166f0830e3b89f151d409a4",
+    "drivers/clk/clk.c": "b4c690886558d0a0665b9819b93e5eeafbaadfa2c5233139111188e9f147c598",
+    "drivers/clk/clk_test.c": "dfcf50050b2fa8deba4454e4708f13e46d86a733f929b82d6c93bfa91927806e",
+    "drivers/clk/qcom/dispcc-sm8750.c": "819208f293c919853f50cd342978c65eede1ad4e208da5142967b7a896934551",
+    "drivers/clk/qcom/gcc-sm8750.c": "0cefef94a558b310be2a903d9ad883b1226cc1897a7bed517b119b97794f39bd",
+    "drivers/firmware/qcom/qcom_scm_trace.h": "e8d18404b2f0bd9ff53b9e72eb16cfcef038e4ff368d2ba078a3f13b0a0dd33b",
+    "drivers/firmware/qcom/qcom_tzmem.c": "8e565a936924f86394d8c26b7e4cb1da2f8b60579cf0e672715891d944f39a7d",
+    "drivers/gpu/drm/msm/adreno/a6xx_catalog.c": "846c79e7d20f5a1b76e0bb39fc4c96f2b9fff537d53043e6f1f95caba042f913",
+    "drivers/gpu/drm/msm/adreno/a6xx_gmu.c": "266f02901d419747a2d12d9940fa026fcfc00fc454728ba36be4eb5e9e06c094",
+    "drivers/gpu/drm/msm/adreno/a6xx_gpu.c": "52c0ec437f5f03049dc6ab99da85360810dca38ca9dcdd8261bc576e8760d56f",
+    "drivers/gpu/drm/msm/adreno/a6xx_gpu.h": "aa831bfa9a5569813ff0bfc790dd13cb7580790a2512306b56ecaf6c54fcd3ea",
+    "drivers/gpu/drm/msm/adreno/a6xx_hfi.c": "0e7fbe10c88784f764eae0e0912a747e5aa684b6ce3cf519964fb36548a6b1f4",
+    "drivers/gpu/drm/msm/adreno/a8xx_gpu.c": "dbd7229defb083d5d33256a01bcc8217918a8b47c51f319444b4c3706c943dcc",
+    "drivers/gpu/drm/msm/adreno/adreno_device.c": "569d560929ff48a9249fcb5b50853d6758f0b0ca1e06474f7c4a949ff23b4aba",
+    "drivers/gpu/drm/msm/adreno/adreno_gpu.h": "2897a1ea557bd05e91a8d6f959a9035de0357338e4b3b2b59978877c3ede9b51",
+    "drivers/gpu/drm/msm/disp/dpu1/catalog/dpu_12_0_sm8750.h": "13e5ad79f362179013bd68941d076b065b49471ae72e6c7de03d1b1fb4470562",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.c": "ca84bd8b63c44d468e03fb6bf1bb3705414775e5fda50c543ae60e0599bf940f",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.h": "866c4013223b03f6de0952a0c3b32b34b85635cdb08f127676bf241bcdef174e",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_encoder.c": "7b85b5324853605ed1284a3e84cba7035632f3589165c99038e4fe2096b2dfa7",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_encoder_phys_vid.c": "931ca04c91d4d4682bb8ebc8df9b7d3932245096778741d8341deee6effc2b84",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_catalog.c": "4deabf55d699e5874f638189231139345429e82f0c8fa440d8950bee744cc60d",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_catalog.h": "8640fd013616cb79b43d848e2d401a49f0806158486aa860c2bd0807f1cdcd5f",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_ctl.c": "9b053b8a854effa2e365b65f2c78feba2d7d09ac86e875f940ecac7a1f379e3b",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_dsc_1_2.c": "a5bc8f5837e81eac1df8849ce79162817a31e0f784ffd4359990b7056164409f",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_vbif.c": "9cb3ec3982d06bcc4e82a2be4a5b5c35d2becbba68aef9aaa787836436e9e1cd",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_vbif.h": "70c722da7f18b2ff278f7f04c75b228a50a429ae02e0f9137882859d880d3473",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_kms.c": "9f5352f9eaeb3b235a28ac15156e4cdba6397f66467f5fc1ad48b66970084c50",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_vbif.c": "a05e1417a2f8872a394a325cf1c8cc75fec838a63c44f239b7f28b0430871cdc",
+    "drivers/gpu/drm/msm/disp/dpu1/dpu_vbif.h": "eaf1b7c84b7abbf4ed4deead7a01267c6ffaa4a2bd6915426fefd39ad1928aae",
+    "drivers/gpu/drm/msm/dp/dp_ctrl.c": "253f0395e97363ffe27a5ac9809692ada1027d218a28fbf72123d365828a5e79",
+    "drivers/gpu/drm/msm/dp/dp_display.c": "da78604c4c85d92a071668a47b66dce38e008f15a31baa723babc4cb6f652c45",
+    "drivers/gpu/drm/msm/dp/dp_panel.c": "132edd0b7a02133e09a8223e352cf9126bcdd3ad734a4b837b2e473412ff91e4",
+    "drivers/gpu/drm/msm/dsi/dsi_host.c": "2ec919c037f3ef540ca26fef8a0df5433556172b06da6553c631e48f5ac10855",
+    "drivers/gpu/drm/msm/dsi/phy/dsi_phy_7nm.c": "78e42d709c2b1268b95686aaaea40ac72d3459caccb1be60470900f1cfdabf74",
+    "drivers/gpu/drm/msm/msm_drv.c": "0d5694b2ad61cdd281ac024311d7a2dfacd83646b381ed69a4f5a1db66d4d09e",
+    "drivers/gpu/drm/msm/msm_drv.h": "2d8e66a6b63345658c483a1d29cb0596a469d7be3b7b2a635530a126af613c21",
+    "drivers/gpu/drm/msm/msm_gpu.h": "50a00dfed51ce3565a74a3c78bb8ea2c8e6d8f7227c9e2a73da249add7504cc2",
+    "drivers/gpu/drm/msm/msm_submitqueue.c": "01c2633b031ef868d684ac829c2c05a3ec9e7e9b6b9f2e1ce001887fdf8b264d",
+    "drivers/gpu/drm/panel/Kconfig": "5cdcae1747c067ae61bf44ec25723d3333593f4771b629f083d26ce8d20f4dbf",
+    "drivers/gpu/drm/panel/Makefile": "08f935f365481c1d3171fcbba4c677ce9d3c1ecd8e538f953d00f70eb01a81b4",
+    "drivers/gpu/drm/panel/panel-novatek-nt36536-erhai.c": "3c86c7d38fa951d46e5aa576288940e4f8f0d019b4b36de2ad8cb8349aea5bb6",
+    "drivers/input/keyboard/Kconfig": "2a19e7601acb75f351e2925d7da0b0a9502efdc304539f6ab3d016ae8d052961",
+    "drivers/input/keyboard/Makefile": "c9d0b47b68bbc903f4d83c706af3aeff6f66bac8139f82fea002b4b843695bfb",
+    "drivers/input/keyboard/gpio_keys.c": "96bd2d17ed30f3f62ee1467afae6f2cdd2d090e9cfc9f713511d19d1fd1fc12d",
+    "drivers/input/keyboard/oneplus-pogo-keyboard.c": "76947741eff32f544cefef7fb535b1117da6126727cf93ae044cc5e4f716e81a",
+    "drivers/input/touchscreen/Kconfig": "2d672d304ec0cff939f72ee82caf40c8afab6b09d03ea0f7e95f57d12af75a7c",
+    "drivers/input/touchscreen/Makefile": "45eaeb41b3f8f5cc0518c60eddd957e6a84c4d6aa356e6b8622ddc58752f94cd",
+    "drivers/input/touchscreen/nt36536/Kconfig": "a2a38b1438446bb0e7a4ad4ccef4b07b7206d87e32e9057e5405d4082959f52b",
+    "drivers/input/touchscreen/nt36536/Makefile": "bc58faebdd3d7cdd6ca3378b91b9d33c66e9ed5dd8cd79e4c7b1eac7ef96d06f",
+    "drivers/input/touchscreen/nt36536/nt36536.c": "70b1b98735a4f097ff5a2a9e01fc66bd885e59c6ce968da4648d96fb3388d9c7",
+    "drivers/input/touchscreen/nt36536/nt36536.h": "ccc93cc9c45212eba370204e8f1a255022f24dbc830efe47dae8631f8edb25a1",
+    "drivers/input/touchscreen/nt36536/nt36536_fw_update.c": "a282f39b10f21bb068d30dfdaf8db904d4124214a1ab3d05d9913b6996e42968",
+    "drivers/input/touchscreen/nt36536/nt36536_mem_map.h": "eb186e70d60d38654318f2892a66b0921ffbf37477d4a24aafa2d1d85682a5fd",
+    "drivers/irqchip/qcom-pdc.c": "3c33847c7b16a51ba90c5430b5e023ee21cbe02c8636d019765d51bc6b2d4925",
+    "drivers/media/i2c/Kconfig": "5706221ef6f05202fac94699e90051f3a9e8ed8be892d2349d83748f6cbd61a2",
+    "drivers/media/i2c/Makefile": "d36efd66911892541855300dc95ca6414f380d060e82648586e4a85b23b12c41",
+    "drivers/media/i2c/cn3927.c": "d9c2ed33321ddb331313be5d4fdd492ac098fb8ec12456d2d2ca1cdfc7da46ef",
+    "drivers/media/i2c/sc1300cs.c": "ad8f021656b000162237ae5f03e741779d57c855cb53eff0197ea48b71c64f73",
+    "drivers/media/i2c/sc820cs.c": "2de2170f229dd72fab7d808ba8ec3438a10844583d60d83ba18c5b0e9ed5af03",
+    "drivers/media/platform/qcom/camss/Kconfig": "925fc97695e9b78b77f68c9ac59903312271f3d681f5e6b4ed1bc33645a255e5",
+    "drivers/media/platform/qcom/camss/Makefile": "74a0f9ac5f178e927eecfb97ebe470e9c49faa611c716ebeb83dd4f228f8b2e1",
+    "drivers/media/platform/qcom/camss/camss-csid-980.c": "a42d4104b68575c6d65e20c35eece16cf11075c543f451aaee6f3779fb0651c9",
+    "drivers/media/platform/qcom/camss/camss-csid-gen4.c": "3129d370fafbb81a4133fda5e99e63bc34f41a35e24c87f9b5e6f4793f630ae6",
+    "drivers/media/platform/qcom/camss/camss-csid.c": "c301eadc86031aade1143da03620698ea5899424ae4e7bca5668b684cd918641",
+    "drivers/media/platform/qcom/camss/camss-csid.h": "16f78870ff11a8f35a305c540c320cdd2918c33f56ea6c8718a8f746cc06f847",
+    "drivers/media/platform/qcom/camss/camss-csiphy.c": "eff81b16b9595c7ef6da0bd045f8fcc668abf548deab99f8e5bb58470c386c47",
+    "drivers/media/platform/qcom/camss/camss-csiphy.h": "1e88d857aef2f0b804705ebc117af849ecdf53eef910ba1aa02a1daed51f330b",
+    "drivers/media/platform/qcom/camss/camss-tpg-gen1.c": "82903dbe776f18811e9074643ee3cb2fdd0d6d520afdec4083f702755233d134",
+    "drivers/media/platform/qcom/camss/camss-vfe-gen4.c": "3d3c643ba6771c9085395a79047615db65a156ea2cf77bc55bfd6008f2b73717",
+    "drivers/media/platform/qcom/camss/camss-vfe.c": "7cb411fa90c2973e089009f12679bdcba8ab26787110474a603be53776d28493",
+    "drivers/media/platform/qcom/camss/camss-vfe.h": "e32ff0f991b57ad451f534449b6b4591813e966bef441c7225f367ec190a0219",
+    "drivers/media/platform/qcom/camss/camss.c": "29487d2c7ff3db0de42613d3dc3dae5456c3d87e27bccb534586d3483c561090",
+    "drivers/media/platform/qcom/camss/camss.h": "577357c73da26dc746b205e6d402e2a51540f09a3dd715d51f861be4ea33bfb3",
+    "drivers/media/platform/qcom/iris/iris_buffer.c": "b302d87e71c9c0645145acaf4f49dfd9ae8050f5a44b2b00e57d2f6052bfc6a1",
+    "drivers/media/platform/qcom/iris/iris_core.c": "7289f6fd6da8354b92092ba759aa023cf6a33d8f29eb9303a86b3808788067e7",
+    "drivers/media/platform/qcom/iris/iris_core.h": "abfe60f1e205904908e0f0c9e55bf479db6bdaeac143ab4cecc127488905d2d7",
+    "drivers/media/platform/qcom/iris/iris_ctrls.c": "26615482c73de3d0b00518f77d577948d795639fbacfc551760098f3d1ab4d4b",
+    "drivers/media/platform/qcom/iris/iris_hfi_common.c": "5db9d87c45f7bf54cb99dae3f5ae097c794b3ad28f03f6b8c4e486e2d39a9a97",
+    "drivers/media/platform/qcom/iris/iris_hfi_gen2.c": "705b793304a54fe5129152c054232935d417da22bd6839964ba25525419ccf30",
+    "drivers/media/platform/qcom/iris/iris_hfi_gen2_command.c": "403622a25e31dd0e24c0b231c465a84cfc19c36ec18211ca74ae44f88ce89ca7",
+    "drivers/media/platform/qcom/iris/iris_hfi_gen2_defines.h": "6ff24d3599a1ddfdf6c33651da11d555096062b617a9506901e885b8184a4c39",
+    "drivers/media/platform/qcom/iris/iris_hfi_gen2_response.c": "5ceca75e01a0f2b981720ee72c3eeaf029837cf24b272fa4904029becdb514f8",
+    "drivers/media/platform/qcom/iris/iris_platform_common.h": "fcfb9e80aa4adbe629972fd494c991c8bdca0bd9f0f75d9213c738a6d7a41483",
+    "drivers/media/platform/qcom/iris/iris_probe.c": "acb62b78148f3c31eb48f8a4fa9a417ee0e321d5cf984d5f20f29c863983a9a0",
+    "drivers/media/platform/qcom/iris/iris_resources.c": "baf41a0de9fc7b8cc983c76e63618c77b780f515a3cd34d7e1c6345d22ed0512",
+    "drivers/media/platform/qcom/iris/iris_resources.h": "eeeedb610626aa4390faa3d1c855018ff4c16bfae23625caf74909bb8b3d30a5",
+    "drivers/media/platform/qcom/iris/iris_vidc.c": "ed05d7b94aa333cf87c51c7e0e5bc3a4d1ebf39edaacca4982b421faf73401aa",
+    "drivers/media/platform/qcom/iris/iris_vpu_common.c": "bc219e339f596b298ec86d5013655bc82bfb0ca2a928237ca7c781cea71f5d77",
+    "drivers/net/wireless/ath/ath12k/core.c": "4da5863e801a3fa75f1dea198b304df62adcbefc81f4ffbad0f48cb6a7ecdbf2",
+    "drivers/net/wireless/ath/ath12k/core.h": "ba335003240209ed4a77855d783ec2fe5b4f29d6c2d9ca094bab56ae7a2bbf82",
+    "drivers/net/wireless/ath/ath12k/hw.h": "ea501853b282d4dec5f41730de9fe515de780c760713cd0c27deb84b04c5f4d9",
+    "drivers/net/wireless/ath/ath12k/mac.c": "92d0d4b022efa006d6e6b779fa99fa81e19e40bac199ef8d07248e81468eea84",
+    "drivers/net/wireless/ath/ath12k/qmi.c": "6d14a937c6beef2609b03062a0822dd874941a69b2b1e6108347a7471db704ac",
+    "drivers/net/wireless/ath/ath12k/qmi.h": "e4939c7c99a6a5df87fa80ff32412f56028daf344339d42f0fcff2167927caac",
+    "drivers/net/wireless/ath/ath12k/reg.c": "5b032f6758cbc232a69252931c56beedd62e1ec9e7b5e912351a1a3d1b890a97",
+    "drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c": "94bbb9735390ffb909296ef7d1fdfb768ec44bbf6e4bf95e196931d29aca95a1",
+    "drivers/net/wireless/ath/ath12k/wifi7/hal.c": "af0f11df3e4206fd5a372f9be06ea49c412d27ecc82e8d6e08141f9edf1d9cde",
+    "drivers/net/wireless/ath/ath12k/wifi7/hw.c": "23448b190765244303b1796beefaebb4566fa641214f797d3a24e030706bc3b7",
+    "drivers/net/wireless/ath/ath12k/wifi7/pci.c": "fa25a7056bd6c8d28b2fef4052832efb306583e987ab374cbb4a9f75a796fbaa",
+    "drivers/net/wireless/ath/ath12k/wmi.c": "11164508d90b12e226b037df4261c128d97fe8d103921b58d6ff5252b850a3a8",
+    "drivers/pci/controller/dwc/pcie-qcom.c": "f2139b803dfcb9e576e8c34bffe84dbbad6346a1d5d698a9e3584c4658fab0ff",
+    "drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c": "eb74dc33446869759ef53967646bceff1430d3a1d4a9c578fd1be6421a411e46",
+    "drivers/phy/phy-core.c": "391d9788ff9da26bbbd7bb6ee6dca0cabf38304def43d2b5cb4c7edbc8a38115",
+    "drivers/phy/qualcomm/Kconfig": "d4237a40290b397c84139790fe82a95acc653b5da0ee30651ae17f13ddd65c03",
+    "drivers/phy/qualcomm/Makefile": "0eb7e5850558a9ee8039ace4b71d01abd540de2133b8a47ed8741f71a9919da6",
+    "drivers/phy/qualcomm/phy-qcom-mipi-csi2-3ph-dphy.c": "72f91ff85f6c65989f51e40a138dad342eee16089e46963a10f3a987b0ebd8ec",
+    "drivers/phy/qualcomm/phy-qcom-mipi-csi2-core.c": "25ac8b2bfca5c79dc31bd79a1592503704dd29f6303a829d6bbc60db550aa615",
+    "drivers/phy/qualcomm/phy-qcom-mipi-csi2.h": "8c718b632c7968bdb22a6e1ee2ba855fae11bb4ffcced1ba047a62139be8c2f0",
+    "drivers/phy/qualcomm/phy-qcom-qmp-combo.c": "0726a6a8501c5dddb54e808af8e19c28b28bcabb5f0419eb45bff2b5a12e4ff0",
+    "drivers/phy/qualcomm/phy-qcom-qmp-pcie.c": "fd1df0dcd4fba0e859b3d04debcc74e5389eddcb1b25fddb38e888bc3192ea42",
+    "drivers/pinctrl/qcom/pinctrl-sm8650-lpass-lpi.c": "79901678af4cc1172520d7b0b295cf3796b69aac007a3f6338fc4ed4a14d6a81",
+    "drivers/pmdomain/core.c": "c29842a0eb68815bab36e3d23d06b1ac79e4078485c380ee0d7befe292caea46",
+    "drivers/power/sequencing/pwrseq-qcom-wcn.c": "d09b804e655125e7aa0abda7f862a3ccceb2a016c6e6e6de56f23739a857b441",
+    "drivers/power/supply/Kconfig": "0837b5989eb812c1bbfd6d0cba3fbb3eccf1d7bafb0cab7a30f301af8b516657",
+    "drivers/power/supply/Makefile": "871b628e6c2405415ca8acf3db64d168d4c59a462aff7028822c5ccaae008cc3",
+    "drivers/power/supply/cps8601.c": "30368aed1857bda14f48e75202a3a0f66975f0a8e2281e5aba1ff9606a811b96",
+    "drivers/power/supply/cps8601_bl.h": "90d4050f5bb2d14b113af96b7b1e9243b00c492c67a03707a8ba79d225679fba",
+    "drivers/power/supply/erhai_otg_glink.h": "e001d13c2cdcf2f0c2ee2285fe837876a7843146cd5c07c563deb7841370eca5",
+    "drivers/power/supply/erhai_pps.c": "a662a7a63b356bf2dc81237358d963ca23b679f2c71f8173b421b923f8572b40",
+    "drivers/power/supply/erhai_pps_trace.h": "299577707a2825b7ecaf4a192675fa53a8e22988542ad4b2847bd98952b77f33",
+    "drivers/power/supply/qcom_battmgr.c": "94c840f433422ebd3a22d7eb3d0b7cc14896ba06b164b1dddc4ad27cb23fb554",
+    "drivers/power/supply/sc8547a.c": "5ae208d3c732454aa6fbe0b26335370feec4673452fce68535f8575bb3a74808",
+    "drivers/power/supply/sc8547a.h": "5fd2ff38425ccee50652253efbb652e0be248db3fe0868b2ae1af199c06899b4",
+    "drivers/remoteproc/qcom_q6v5_pas.c": "d89feeca7924a62043996c9a6ecfb0b7dc29d6508631b90c410cf54355e979fb",
+    "drivers/rpmsg/qcom_glink_native.c": "a3532b952fac1b24081d5e59cdacf31117779bc829309c0943a9d6c8f2ee5511",
+    "drivers/soc/qcom/Kconfig": "812b698531b21b956625d53c30b1b67e98f024fd804c7022bbcf24424f16d485",
+    "drivers/soc/qcom/Makefile": "874960d1f9d279dd8a62d6425f055494f3eaa6047b0959381561d81f3462afe1",
+    "drivers/soc/qcom/abl_root_identity.c": "2c8ea83529e231939fe77d92537b92d314f2c27ad6a3e2d5f574684208c175db",
+    "drivers/soc/qcom/abl_root_identity_test.c": "4fcc72a3a6064f7e0820002ee1cdb9fcf4e1abdb27116494838022caa7fdfb2f",
+    "drivers/soc/qcom/apr.c": "01489862d78ab48339dd1d29389f9fb63820802fecb84be98372d5385e5a4312",
+    "drivers/soc/qcom/llcc-qcom.c": "d35f2cc65fd0e3b3effe350d751f386e06a055c0e68e4fdb3094a1724adf2702",
+    "drivers/soc/qcom/pmic_glink.c": "e7f0cc7f3e95647db6d9031b0c976d4662b61e16664deb51d04e6c94f5029a25",
+    "drivers/soc/qcom/pmic_glink_altmode.c": "097153f9419d6dbc092c4df9eef8740a4331aadf3cc49c9d4c30de1234757e01",
+    "drivers/soc/qcom/pmic_glink_altmode_test.c": "685e418dd696b8764c54929ed0cd2f5fa2e918e269e42fd98be717d7d0540636",
+    "drivers/soc/qcom/qcom_pd_mapper.c": "b7aeb004a310f2faaf6decb7f1e94617d8f0ed66c0230c17a67c54ec70982769",
+    "drivers/soc/qcom/ubwc_config.c": "793fd6017fc900173752bda9a4472ed9c5229949694759e71783ba744c5a9c6c",
+    "drivers/soundwire/qcom.c": "f4652d688838ce0b923807a849d3eb0d26d16d2518bb84d325f073f38f6f2537",
+    "drivers/spi/spi-geni-qcom.c": "8a7f261f54ed411f2d2a309e1385116505b16bc7a1bc89a183b6e584b38d663b",
+    "drivers/thermal/qcom/tsens.c": "25a6b2d7789a721c9a8d4c76e35ef9679fb59ecdaf385fe6f12407a4c3d04c39",
+    "drivers/tty/serial/qcom_geni_serial.c": "e4aad5f362deeaf2686a93704f4f2565b2a1a9e4f8c764fad58296de3dabc0d0",
+    "drivers/ufs/host/ufs-qcom.c": "726285b3ceb4678e29797e0c8992f6b5e8876c692da65221a040ffa1bc7e92f1",
+    "drivers/ufs/host/ufs-qcom.h": "a8e48b18df59dd896bb9d0e3e5f5adf25ef4b3988286f368dd8bfc5280f6698e",
+    "drivers/usb/dwc3/dwc3-qcom.c": "42dd7c3cb5b0e9807089d25e212bebbcdacb1dd54f1e4c43d3cf5bb4ad675982",
+    "drivers/usb/gadget/function/f_ncm.c": "deee63b3824e8ae496e264ab799341a9b4bef875600a7a04eda5da835011fc92",
+    "drivers/usb/typec/mux/wcd939x-usbss.c": "f4bebbe3d827addb97bdbd4656fadd3f8133d55ad715cc9a8ec7a998bf0fb9f8",
+    "drivers/usb/typec/ucsi/Kconfig": "12ac8cacc01ef3d860ae6190d6a7bda896f6f2237b798ec0933df21dc7b9ff42",
+    "drivers/usb/typec/ucsi/ucsi.c": "6f0331a46c1e262ceabe0138f5b5471055bd335bc0967d5982aad956b62c9012",
+    "drivers/usb/typec/ucsi/ucsi_glink.c": "e2a9e83fc28fe1c646f4e343b53bb425cdad6a36d6f41f7014ebd1b31d4cce49",
+    "drivers/usb/typec/ucsi/ucsi_glink_test.c": "64359e5d7a265ade3127eff1bb657114e5b69502ce4aa7f5fcd2920bebee8c5e",
+    "drivers/video/backlight/Kconfig": "dbe46900cb1eefc611f508a6f0c6625ace41af4379a1aac5594f1954bfdd8891",
+    "drivers/video/backlight/ktz8866.c": "21c011aa619d25b33d801fd882c02cb12eaacc330e37dfbcf86a744530381afe",
+    "drivers/virt/Kconfig": "037448987500d9f5b9711eb924c3535904cdeb7590f2b9e0734817f7c644e261",
+    "drivers/virt/Makefile": "453d44d74ff9e32b0cbb621b669b2d890a9563bac96399bfe51a424cd0590e52",
+    "drivers/virt/gunyah/Kconfig": "f0f5b3078f4a2a6f28fbffe9b2cba223f0b4b6c06969e0fa3822667e466e8275",
+    "drivers/virt/gunyah/Makefile": "392c4078e58b529e6b5e3775d3fa6f6de0c6fbc7099e4fd76948e2feb5e3f5db",
+    "drivers/virt/gunyah/gunyah.c": "86b83f7da3ecb3373a3f612f7863c354903d5ad6c5aa28b09cda455e9b4b4916",
+    "drivers/virt/gunyah/gunyah_ioeventfd.c": "f4d04777d1e9883c9c193f8a1635a92c363f7580d2824eac076b8893aec7c2cf",
+    "drivers/virt/gunyah/gunyah_irqfd.c": "221a46a37790630f11b24dc2f1ff00a7aa5034fb4fee0af816ad8f8afb9c8f77",
+    "drivers/virt/gunyah/gunyah_platform_hooks.c": "aa1b536c521991275e886250509aecf08d6b121d22f820ecc8af302922927250",
+    "drivers/virt/gunyah/gunyah_qcom.c": "eeefa99fcb7e6911d45aa36a37683bbc408aa0e8139077c9577853192a2588d4",
+    "drivers/virt/gunyah/gunyah_qtvm.c": "773ffdebe55a2cb471e20c493c262b0597561acacaf05d0b571d811335d5e8dd",
+    "drivers/virt/gunyah/gunyah_vcpu.c": "e476c74093a30b368624cf14d8348c0f2edc168f7ee98723ddaaad220d3699a1",
+    "drivers/virt/gunyah/gunyah_vendor_hooks.h": "e3e163ffdd9c6d7566b7d1673afbe15e47b8fea728ac4428ecec7865dba03a08",
+    "drivers/virt/gunyah/rsc_mgr.c": "0838674954cba5abde7494be11be505e720281267bdab5becc83b03bc804c2ff",
+    "drivers/virt/gunyah/rsc_mgr.h": "1550835b3df2b7f575c6b1cacaae5f96c78c0a3e1c44d5725c1d25cec5dcbf90",
+    "drivers/virt/gunyah/rsc_mgr_rpc.c": "2a2b54795ab837c9e8285789d05a47c548b5ba67f71be2d9af39f7973ed08ad2",
+    "drivers/virt/gunyah/trace_vcpu.h": "6fd12e79e9ccfe9b4005f277f19817170058a451b2e38c1cdf3191efd1aa4280",
+    "drivers/virt/gunyah/vm_mgr.c": "48a2d970b50919f6d7ddcccb5d2291a89c3e756e5a89d557261e75359f89bef3",
+    "drivers/virt/gunyah/vm_mgr.h": "1c904113c40ae7c6a273940e4a2923cd3eb4575082503d6af0d45c6964d56ceb",
+    "drivers/virt/gunyah/vm_mgr_cma_mem.c": "f1e52627bb55ec07740fbce57074d608e6b6f7e40307ac64205a68a8a4901b8f",
+    "drivers/virt/gunyah/vm_mgr_mem.c": "9a5672ed45757cc4973dccbc45042cee4b435665dc512128faf99675c6b5d7da",
+    "include/linux/gunyah.h": "c9eafc2fb22e13ac363d8c7f02b67678a12c86c7a0060a01b75406ba9e0bc279",
+    "include/linux/gunyah_qtvm.h": "dda3786113c730cbf0fd01088b8ffd450471efc11c33a61807b5b6ac2b6df9ec",
+    "include/linux/phy/phy.h": "76107865067aa7c8221ca31ba603d41fcd46f7daa970aebf94ca308b124c5358",
+    "include/linux/soc/qcom/pmic_glink.h": "00c261c0e756320f24a18b9a8497de8b858f2877205fc15a4af3fba867ea4942",
+    "include/linux/usb/wcd939x-usbss.h": "5d528b628504dd701b810ad713bacd1b9d38dedd847a589091e4bd4e48eb55f6",
+    "include/uapi/linux/gunyah.h": "58e76eef91f6a5afc507293970c01f41f7ad2aea52562be6bd735dd6b0c3656c",
+    "sound/soc/codecs/aw88261.c": "3c90bcb31cf788d4762acb0177099f101cd469c33690e03641bb5428e416cf95",
+    "sound/soc/codecs/lpass-rx-macro.c": "ab0fed0c0a2e2eb1812c8eca3aec8844ceeb7048a96f3b39aaf78c465752cc3c",
+    "sound/soc/codecs/lpass-tx-macro.c": "3acf619fa81e02ee1f7406fe06b767efa2e4f5bc10aad018541d47d140ccc750",
+    "sound/soc/codecs/lpass-va-macro.c": "2c65eed32fec466414c4d62821669876ecc53c6b65b4d39a3aa2f319e37aa975",
+    "sound/soc/codecs/lpass-wsa-macro.c": "aafb2a55858d8a4a044349b128aacba75b8bc406a30ede59fbff2988350c4f4f",
+    "sound/soc/codecs/wcd-common.c": "e848276b0af7dd32691289736fbbf6cd32c2a16a762718d2e68409b992b64937",
+    "sound/soc/codecs/wcd939x.c": "ff0db1d51389d6b926b9ef92733da913ff230e59ae671af06d62c52e0365d119",
+    "sound/soc/codecs/wcd939x.h": "6e05b5908a9770bbc92260121f8fb4d744a570b35d0c9a9cdaba192a447b1033",
+    "sound/soc/qcom/Kconfig": "23fe3ca4bc96b22a39ad8908f57ae50c8bab627e187fe4b388eb23feeeac0a58",
+    "sound/soc/qcom/common.c": "e1baa0e16dae7266edb0ea28d945270f00e7deb9ebc0bc5a82d0fe0d75f1f5da",
+    "sound/soc/qcom/common.h": "f423ae24148d211bca38378e6a3663421af2d1640ddb3952c2df1d2350363d0c",
+    "sound/soc/qcom/qdsp6/audioreach.c": "149e0e4b14bf4cefe27cc5af56eaf1642fa09476bdb2cccc668f1df15f8bee8a",
+    "sound/soc/qcom/qdsp6/audioreach.h": "3739588bfcc2e540da4782f0b60c4c9820f117f96b13633bee5d19d792f87e59",
+    "sound/soc/qcom/qdsp6/q6apm-dai.c": "8188cbde3ab5efb583a9ebc3f29dc73f13b32c45b7f61b6846109eaf4923440e",
+    "sound/soc/qcom/qdsp6/q6apm-lpass-dais.c": "a206a1d482a36dd618f947195647c9e387c709c767a17d1c92eead1ff40e6719",
+    "sound/soc/qcom/qdsp6/q6apm.c": "314579a33145470217ad190e6539b455a2a5b697a9b3e8678db098000951d321",
+    "sound/soc/qcom/qdsp6/q6prm-clocks.c": "ef7ee4fe5bc5a3618d716bc19a762eeafd8efc813e20f7ad04df3909b1ab6cca",
+    "sound/soc/qcom/qdsp6/q6prm.h": "5431fe593b2adcb4cab6468143971ad9d1fea4d77aa9a205128742aeb631006d",
+    "sound/soc/qcom/qdsp6/topology.c": "31d5c6e913988a0a503e87213ec0c147cacf427aefcdfd0b56a0653757fd5128",
+    "sound/soc/qcom/sc8280xp.c": "b654f98191b689128a1db0ea5607b12204419c84837421073397962dc843326e",
+    "tools/testing/selftests/bluetooth/brahma-peripheral-test.c": "e11bfea692d87862578d12f46378fd9d7a1a811782d96bc5348bc1389985d99c",
+    "tools/testing/selftests/drm/dpu-output-dither-test.py": "e3a816d1083fd209b2b36852cfe83983ba47fef073b88902e9fd36f7d8a1b3ce",
+    "tools/testing/selftests/net/ath12k-of-freq-test.py": "5600c656c14f5905ff23d135665bea025a9c9f1659ff2617273b4a8129fdcfe8",
+    "tools/testing/selftests/net/ath12k-range-scan-test.py": "1a3c70ae7ec928f2919ed8137305add552788313fd16b8c1ed380e6f5d17feb5",
+    "tools/testing/selftests/net/ath12k-reg-event-test.py": "9571eae328d83ca281b961f48d5faf00f07ebaf6fc2e0f652051d54036ada244",
+    "tools/testing/selftests/power_supply/Makefile": "11e3b574f61156abfb21a9f263740d30e57a215b479fcd237efcb527a7df9acb",
+    "tools/testing/selftests/tty/qcom-geni-lifecycle-test.py": "ce33924ca9916a4b0dc2ba018dc93c32bda127472461d72f891fe9ec6b96da00"
+  },
+  "validation": {
+    "hardware": "pending",
+    "full_build": "pending"
+  }
+}

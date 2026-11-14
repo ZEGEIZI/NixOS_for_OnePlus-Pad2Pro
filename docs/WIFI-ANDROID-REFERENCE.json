@@ -1,0 +1,149 @@
+{
+  "date": "2026-11-12",
+  "device": "OnePlus Pad 2 Pro / OPD2413",
+  "android_build": "OPD2413_16.0.9.400(CN01)",
+  "android_kernel": "6.6.118-android15-8-g2e6b9c3812c5-ab15114928-4k",
+  "android_loaded_wlan_module": "qca_cld3_peach_v2",
+  "android_pci_driver_module": "cnss2",
+  "android_wlan_vermagic": "6.6.118-android15-8-o-4k SMP preempt mod_unload modversions aarch64",
+  "nixos_kernel": "7.2.15-nixos-erhai-c3583ea3a35f-upstream3",
+  "nixos_driver": "ath12k_wifi7_pci / ath12k / mac80211",
+  "firmware_comparison": {
+    "amss.bin": {
+      "nixos_sha256": "f89a5348a4076d4db062eb335ac97b5fb028397bd3d21c96a837fb138503d84e",
+      "android_identical_files": [
+        "/vendor/firmware_mnt/image/peach/amss20.bin"
+      ]
+    },
+    "aux_ucode.bin": {
+      "nixos_sha256": "5360d1b26c3b2458f3df30a0c690a17bc0f4b6952f36b805810061ff9be7995b",
+      "android_identical_files": [
+        "/vendor/firmware_mnt/image/peach/aux_ucode20.elf"
+      ]
+    },
+    "board.bin": {
+      "nixos_sha256": "5cbfe14329b1db894cb621fb3d65b161014f5d51594b44690b9466fe406ef953",
+      "android_identical_files": [
+        "/odm/etc/wifi/peach/bdwlan.elf"
+      ]
+    },
+    "m3.bin": {
+      "nixos_sha256": "fbe4ea920c38454b12d612f7c16e68a572a714aeca60d65c994abe1b516b24ba",
+      "android_identical_files": [
+        "/vendor/firmware_mnt/image/peach/phy_ucode20.elf"
+      ]
+    },
+    "qdss.cfg": {
+      "nixos_sha256": "17a855ff76656f3f8ea2571e2523a52a20d0ce036f42bd5728dcae49425ad889",
+      "android_identical_files": [
+        "/vendor/firmware_mnt/image/peach/qdss_trace_config_v2.cfg"
+      ]
+    },
+    "regdb.bin": {
+      "nixos_sha256": "5b0f1c65cd9f7580a71913c8c21a746625924c66da1e9aaf7c095d3b659ec5e5",
+      "android_identical_files": [
+        "/vendor/firmware_mnt/image/peach/regdb.bin"
+      ]
+    }
+  },
+  "all_six_firmware_files_identical": true,
+  "android_country_runtime": "CN",
+  "nixos_regulatory_observed": {
+    "global": "00",
+    "self_managed_phy": "US"
+  },
+  "android_loaded_ini": {
+    "actual_loaded_path": "/mnt/vendor/persist/wlan/WCNSS_qcom_cfg.ini",
+    "sha256": "3037434c5af0200cd23e6779f07054d3d9c544b5deeb25856bec9039df8e5420",
+    "scan_and_radio_settings": {
+      "g11dSupportEnabled": "0",
+      "gNeighborScanTimerPeriod": "200",
+      "gCountryCodePriority": "1",
+      "adaptive_dwell_mode_enabled": "0",
+      "hostscan_adaptive_dwell_mode": "1",
+      "g_prefer_5g_scc_to_dbs": "12",
+      "gRoamScanHiRssiDelta": "10",
+      "gRoamRescanRssiDiff": "3",
+      "scan_allow_bss_with_corrupted_ie": "1",
+      "gInitialScanNoDFSChnl": "1",
+      "BandCapability": "3",
+      "enable_sbs": "0"
+    },
+    "vendor_template_equal": false,
+    "BandCapability_semantics_confirmed": {
+      "value": 3,
+      "meaning": "2.4 GHz and 5 GHz only",
+      "source_revision": "cc463675855afb8702a263f415330a240f5cd919",
+      "source_path": "vendor/qcom/opensource/wlan/qcacld-3.0/components/mlme/dispatcher/inc/cfg_mlme_generic.h"
+    }
+  },
+  "android_allowed_sta_frequencies_mhz": [
+    2412,
+    2417,
+    2422,
+    2427,
+    2432,
+    2437,
+    2442,
+    2447,
+    2452,
+    2457,
+    2462,
+    2467,
+    2472,
+    5180,
+    5200,
+    5220,
+    5240,
+    5260,
+    5280,
+    5300,
+    5320,
+    5745,
+    5765,
+    5785,
+    5805,
+    5825
+  ],
+  "android_normal_scan": {
+    "request_exit": 0,
+    "observed_after_seconds": 8,
+    "cached_result_frequencies_mhz": [
+      2412,
+      2422,
+      2437,
+      2447,
+      2452,
+      2462,
+      2472,
+      5200,
+      5220,
+      5240,
+      5320,
+      5745,
+      5765
+    ],
+    "connected_frequency_mhz": 5200,
+    "minimum_cached_result_age_seconds": 6.278,
+    "exact_scan_completion_timing_measured": false
+  },
+  "limits": [
+    "The loaded INI is verified, but its settings do not independently prove every effective runtime field or its causal role. Module parameter enable_11d=-1 is not evidence that offloaded 11d is enabled or disabled.",
+    "Android command/event sequencing and per-PHY scan batches have not been fully reconstructed.",
+    "No Android country code, firmware, INI, module or saved connection settings were changed. One normal scan was requested.",
+    "Do not infer the cause of Linux associated-scan cancellation from these configuration differences alone."
+  ],
+  "private_evidence_directory": ".work/android-wifi-reference",
+  "return_to_nixos": {
+    "confirmed": true,
+    "kernel": "7.2.15-nixos-erhai-c3583ea3a35f-upstream3",
+    "system": "/nix/store/qvqh3bk0xnypyhxgwrpf1rzxs0sr30zb-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+    "frequency_mhz": 5200,
+    "gateway_ping_passed": true,
+    "https_passed": true,
+    "failed_units": [],
+    "serious_kernel_errors": [],
+    "observer_first_uptime_seconds": 158.08,
+    "exact_association_timing_measured": false
+  }
+}

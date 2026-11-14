@@ -1,0 +1,1210 @@
+{
+  "status": "NIXOS_BLUETOOTH_FACTORY_IDENTITY_REBOOT_VERIFIED",
+  "kernel_revision": "870167fad062e74f6de27e76db84d17cc49d8b84",
+  "kernel_release": "7.2.15-nixos-erhai-870167fad062-color1",
+  "nixpkgs_revision": "f4a03c008967841f2a0b3cb7c436fc6fc31671f6",
+  "erhai_integration_revision": "4cc3570c7c14689d77e58c081d2430170288f72a",
+  "kshim_revision": "ca1b03b809719d3abeccedabfc8887b679772949",
+  "checks": {
+    "flake_all_systems_evaluation": "passed with explicit builtin Wi-Fi baseline",
+    "nix_host_tests": 20,
+    "early_firmware_original_hashes_verified": 78,
+    "ext4_runtime_reader": {
+      "status": 0,
+      "entries": 1,
+      "block_reads": 29308,
+      "catalog": [
+        {
+          "system": "nixos",
+          "version": "nixos-da24e5059ee5dac32351bf65a52b363f",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 1,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        }
+      ],
+      "selection": null
+    },
+    "menu_repeated_build_identical": true,
+    "installation_cache_signatures": "passed with at least one trusted signature per path",
+    "system_closure_paths": 633,
+    "desktop_shell_or_display_manager_present": false,
+    "latest_base_system_closure_paths": 641,
+    "latest_base_ext4_runtime_reader": {
+      "status": 0,
+      "entries": 1,
+      "block_reads": 29086,
+      "catalog": [
+        {
+          "system": "nixos",
+          "version": "nixos-711a16405621b34c4e0809e735fa0d98",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 1,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        }
+      ],
+      "selection": null
+    },
+    "latest_base_cache_signatures": "passed; all current v6 closure paths have a trusted signature",
+    "device_primary_gpt_unchanged": false,
+    "device_primary_and_backup_gpt_verification": "passed after approved repartition; partition entries 1-14 byte-identical; all partition GUIDs retained",
+    "partition_layout_regular_file_rehearsal": {
+      "target": "regular sparse file only",
+      "device_accessed_for_write": false,
+      "tool": "host util-linux sfdisk, explicit --sector-size 4096 --wipe never --wipe-partitions never",
+      "entries_1_to_14_byte_identical": true,
+      "unused_entries_byte_identical": true,
+      "gpt_entry_count": 32,
+      "gpt_entry_bytes": 128,
+      "primary_table_lba": 2,
+      "backup_table_lba": 124196862,
+      "original_backup_table_lba": 124196859,
+      "header_and_entry_crcs": "passed",
+      "proposed_boundaries_and_labels": "passed",
+      "disk_guid_preserved": true,
+      "usable_bounds_preserved": true,
+      "image_allocated_bytes": 14848
+    },
+    "host_tests_after_firewall_fix": 12,
+    "pre_install_gpt_matched_backup": true,
+    "native_device_kernel_build": "configuration evaluated; complete on-device kernel compilation not tested",
+    "physical_power_loss_fault_injection": false,
+    "host_tests_after_ram_passwordless_change": 12
+  },
+  "probe": {
+    "sha256": "82b0cc4a6b3b1a8327d64c473861643d86668c701086438254e141e83c9a22b0",
+    "bytes": 100663296,
+    "payloads": {
+      "Image": {
+        "sha256": "40802406c88fc2cfe1e728656a778d9afcecc67b607b9ede8f6edf5e4de32ff0",
+        "bytes": 36219392
+      },
+      "board.dtb": {
+        "sha256": "5ce588a827e9e99e0a266bde4028b8282fb7919dc797b7e7475964438a9d7214",
+        "bytes": 188840
+      },
+      "initramfs.img": {
+        "sha256": "17b165d0d0e9b02a0deb9f021de334a8170e947fcc5485f941bddd33e6d3f9c9",
+        "bytes": 54554077
+      }
+    }
+  },
+  "partition_modified": true,
+  "android_boot_written": true,
+  "login_password_configured": true,
+  "boot_partlabel": "KShinC_BOOT",
+  "root_partlabel": "NixOS_Root",
+  "device_initrd_boot_verified": true,
+  "installed_system_boot_verified": true,
+  "hardware_observed": {
+    "source": "read-only USB NCM HTTP report from manually booted diagnostic image",
+    "marker": "NIXOS_PAD2PRO_INITRD_READY_v1",
+    "kernel_release": "7.2.15-nixos-erhai-870167fad062",
+    "ufs_detected": true,
+    "usb_ncm_working": true,
+    "touch_firmware_loaded": true,
+    "adsp_running": true,
+    "soccp_running": true,
+    "wifi_firmware_loaded": true,
+    "charging_contract_observed": "USB 4984 mV / 497 mA; charging effectiveness not yet measured",
+    "scmi_late_error": "resolved by including and force-loading qcom-cpucp-mbox in initrd",
+    "wifi_scan_verified": true,
+    "touch_input_devices_registered": true,
+    "physical_touch_input_verified": false,
+    "framebuffer_login_prompt_verified": true,
+    "physical_display_user_confirmed": true,
+    "cpu_idle_driver": "psci_idle",
+    "suspend_resume_verified": false,
+    "charging_effectiveness_verified": false,
+    "physical_display_confirmation": {
+      "source": "user confirmed the tablet displays the NixOS text login prompt",
+      "date": "2026-11-10"
+    }
+  },
+  "probe_v2": {
+    "sha256": "353e488f21d6974db4daf040b8bac23118c9906f9245c20f3d198265ea9ae612",
+    "hardware_verified": false,
+    "CPUCP_mailbox_in_initrd": true,
+    "read_only_live_status_and_dmesg": true,
+    "packed_kernel_bytes": 97079848,
+    "usb_ncm_verified": true,
+    "http_service_verified": false,
+    "http_failure": "liveStatus/liveLog scripts absent from initrd; storePaths and archive-content build check added",
+    "fixed_payload_build_passed": true
+  },
+  "ram_system": {
+    "boot_sha256": "2711971a2313b9faa5a0f723d8f1844ae623b5b12eb2fb1d38b9367d1c19a309",
+    "rootfs_sha256": "762a98968ae10a7c18ec9b8ed3fcb10705b3ba5829a16e0cc33faddc640f4b2f",
+    "system_path": "/nix/store/ak36hbxkr8731wc9gm9l8zplhm26q4ms-nixos-system-pad2pro-ram-kexec-26.05.19800101.dirty",
+    "full_nixos_boot_verified": true,
+    "authenticated_usb_ssh_verified": true,
+    "root_filesystem": "tmpfs",
+    "store_filesystem": "squashfs + tmpfs overlay",
+    "physical_device_filesystems_mounted": false,
+    "active_services": [
+      "sshd",
+      "NetworkManager",
+      "systemd-networkd",
+      "getty@tty1"
+    ],
+    "closure_paths": 646,
+    "store_contents_verification": "passed",
+    "zram": "zstd, about 3.6 GiB, active swap",
+    "cpu_frequency_policies": [
+      {
+        "cpus": "0-5",
+        "driver": "scmi",
+        "governor": "schedutil",
+        "min_khz": 384000,
+        "max_khz": 3532800
+      },
+      {
+        "cpus": "6-7",
+        "driver": "scmi",
+        "governor": "schedutil",
+        "min_khz": 1017600,
+        "max_khz": 4089600
+      }
+    ],
+    "firewall": {
+      "initial_service_failure": "CONFIG_NETFILTER_XT_MATCH_PKTTYPE unset",
+      "live_module_repair_verified": true,
+      "ipv4_ipv6_rules_loaded": true,
+      "ssh_new_connection_verified": true,
+      "unopened_port_drop_verified": true,
+      "failed_units_after_ram_repair": 0,
+      "declarative_kernel_fix": "CONFIG_NETFILTER_XT_MATCH_PKTTYPE=m",
+      "updated_kernel_build": "passed; CONFIG_NETFILTER_XT_MATCH_PKTTYPE=m in resolved config; rebuilt kernel booted in installed v5 and v6",
+      "live_test_module_sha256": "9263ec3eecd7c3f6bab2315387ae1184a95c6d307e6cd2c8633afd751496820d",
+      "updated_kernel_image_sha256": "11057d98891ce2e3c5414944b40c72558ae8677a351a2ddadf2285e9293ca35d"
+    },
+    "known_unverified_features": [
+      "physical touch input",
+      "Wi-Fi association",
+      "charging effectiveness",
+      "suspend/resume",
+      "camera",
+      "Bluetooth",
+      "audio",
+      "pen charging"
+    ],
+    "device_clock_synchronised": false,
+    "private_evidence_files": [
+      ".work/ram-system-first-report.txt",
+      ".work/ram-services-report.txt",
+      ".work/ram-hardware-report.txt",
+      ".work/ram-v2-system-report.txt",
+      ".work/ram-v2-verification.txt",
+      ".work/ram-v2-storage-idle-report.txt",
+      ".work/ram-firewall-repair-test.txt",
+      ".work/ram-firewall-network-test.txt",
+      ".work/ram-console.png"
+    ],
+    "ram_file_filesystem_tests": {
+      "status": "passed",
+      "storage": "regular images in /run tmpfs; loop devices only",
+      "btrfs_subvolumes": [
+        "@nixos-root",
+        "@nixos-nix",
+        "@nixos-home",
+        "@nixos-log"
+      ],
+      "btrfs_check_readonly": "passed",
+      "ext4_write_and_remount_readonly": "passed",
+      "e2fsck_readonly": "passed",
+      "temporary_files_removed": true,
+      "evidence": ".work/ram-filesystem-test.log"
+    },
+    "record_scope": "Initial RAM bring-up evidence; current installed-system results are in physical_installation and completion_scope"
+  },
+  "installation_bundle_v3": {
+    "directory": "artifacts/nixos-pad2pro-install-v3",
+    "system_path": "/nix/store/nnhs8q6pfjm6bqpk2vz3w6s376karpjn-nixos-system-pad2pro-26.05.19800101.dirty",
+    "kernel_outputs": {
+      "dev": "/nix/store/kwx5hq70fjk0i63v4ic1rqs7dax44c58-linux-erhai-aarch64-unknown-linux-gnu-7.2.15-dev",
+      "modules": "/nix/store/zypywzdgvrr481bjkmr3nd9jdah157s2-linux-erhai-aarch64-unknown-linux-gnu-7.2.15-modules",
+      "out": "/nix/store/pkx8rw0z4rl33yqg60cgckb7nllvmw3j-linux-erhai-aarch64-unknown-linux-gnu-7.2.15"
+    },
+    "boot_ext4_sha256": "c5f236296aed94a95f108518af385b9e6ee311acafef9967d7b24f414c0e7900",
+    "closure_paths": 633,
+    "contains_desktop": false,
+    "private_ssh_or_signing_keys_exported": false,
+    "new_kernel_boot_verified": false,
+    "boot_partuuid_still_requires_device_configuration": true,
+    "cache_signatures": "passed"
+  },
+  "installation_bundle_v4": {
+    "directory": "artifacts/nixos-pad2pro-install-v4",
+    "system_path": "/nix/store/s5rlsbpcwralrwsh7rb3xn4hy0zdr2za-nixos-system-pad2pro-26.05.19800101.dirty",
+    "closure_paths": 643,
+    "live_install_hook_has_expected_boot_partuuid": true,
+    "usb_network_unit_present": true,
+    "desktop_absent": true,
+    "device_written": true,
+    "boot_ext4_sha256": "8b7014fc84f08e06eaa7888718b06df1b6813291c7a287a5cda3db0aac4d6d3a",
+    "cache_signatures": "passed; all 643 closure paths have at least one trusted signature",
+    "ext4_runtime_reader": {
+      "status": 0,
+      "entries": 1,
+      "block_reads": 28562,
+      "catalog": [
+        {
+          "system": "nixos",
+          "version": "nixos-e866639fa0145e70740090b4cfa059fc",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 1,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        }
+      ],
+      "selection": null
+    },
+    "source_snapshot_build_matches_system_and_boot_image": true,
+    "root_and_nixos_accounts_initially_locked": true,
+    "normal_system_root_ssh_login": "no",
+    "private_keys_exported": false,
+    "boot_partuuid_requires_rechecking_against_final_partition_table": true,
+    "boot_partuuid_still_requires_device_configuration": false,
+    "installed_boot_verified": false
+  },
+  "installation_authorisation": {
+    "date": "2026-11-10",
+    "backup_completed_user_confirmed": true,
+    "repartition_and_install_authorised": true,
+    "layout": "1 GiB KShinC_BOOT ext4 + 200 GiB NixOS_Root Btrfs; Android userdata about 258.97 GiB",
+    "password_must_remain_unset": true
+  },
+  "android_userdata_recreation_pending": false,
+  "physical_installation": {
+    "date": "2026-11-10",
+    "system_path": "/nix/store/4sxp4pv0ns5f0xx8vmyk5sqgll1jm8lg-nixos-system-pad2pro-26.05.19800101.dirty",
+    "closure_paths": 642,
+    "boot_partlabel": "KShinC_BOOT",
+    "boot_bytes": 1073741824,
+    "root_partlabel": "NixOS_Root",
+    "root_bytes": 214748364800,
+    "android_userdata_bytes": 278069567488,
+    "root_filesystem": "btrfs",
+    "boot_filesystem": "ext4",
+    "source_config_directory": "/etc/nixos",
+    "source_config_owned_by_root": true,
+    "accounts_initially_locked": [
+      "root",
+      "nixos"
+    ],
+    "password_configured": true,
+    "live_publication_and_repeat_passed": true,
+    "installed_store_contents_verification": "passed after Python -B wrapper fix and signed cache repair",
+    "python_bytecode_store_mutation_fixed": true,
+    "gpt_validation": {
+      "entries_1_to_14_byte_identical": true,
+      "partition_guids_preserved": true,
+      "primary_and_secondary_gpt_crcs": "passed",
+      "actual_layout_matches_approved_plan": true,
+      "post_write_primary_sha256": "909e134b08849578dffe3e3bafa0e916216cd36f9b5a52ed0c3bb316dbbb5f35"
+    },
+    "installed_boot_ext4_sha256": "a80e54bcb238505ab16b5048b27db9a7b642ce9873a0702fc72b57aa14d0b94e",
+    "installed_boot_reader": {
+      "status": 0,
+      "entries": 6,
+      "block_reads": 125135,
+      "catalog": [
+        {
+          "system": "nixos",
+          "version": "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 1,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-9bb09c194932d1c0924b9cc3ee091cf7",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 1,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-711a16405621b34c4e0809e735fa0d98",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-3fff9a665e9773f13eef830b25f86d81",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-5cad574373dfbc2b57c3ed4f9a638969",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-e866639fa0145e70740090b4cfa059fc",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        }
+      ],
+      "selection": null
+    },
+    "ext4_e2fsck_readonly": "passed",
+    "btrfs_check_readonly": "passed",
+    "actual_gc_roots_current_and_previous_verified": true,
+    "post_gc_boot_verified": false,
+    "installation_mounts_released": true,
+    "android_boot_a_unchanged": false,
+    "android_userdata_reset_done": true,
+    "android_metadata_reset_done": true,
+    "installed_system_boot_verified": true,
+    "generation_rollback_boot_verified": true,
+    "private_evidence_files": [
+      ".work/apply-approved-layout.log",
+      ".work/install-filesystems.log",
+      ".work/install-v5-device.log",
+      ".work/install-repair-old-package.log",
+      ".work/finalise-installed-system.log",
+      ".work/installed-boot-reader.json",
+      ".work/install-final-ownership-and-boot.txt",
+      ".work/approved-android-reset.log"
+    ],
+    "android_initialisation_verified": true,
+    "android_reset_receipt": {
+      "same_physical_usb_port_verified": true,
+      "new_partition_sizes_verified": true,
+      "userdata_erased": true,
+      "metadata_erased": true
+    },
+    "linux_partition_sizes_rechecked_after_android_erase": true,
+    "android_active_slot_after_erase": "a",
+    "android_boot_user_confirmed": true,
+    "android_boot_confirmation": {
+      "source": "user confirmed Android setup wizard or system displayed after authorised data reset",
+      "date": "2026-11-10",
+      "full_personal_setup_completion_assessed": false,
+      "android_filesystem_capacity_measured_over_adb": false
+    },
+    "persisted_old_menu_nixos_entry_visible": false,
+    "persisted_old_menu_boot_partlabel": "ARMADA_BOOT",
+    "replacement_menu_boot_partlabel": "KShinC_BOOT",
+    "replacement_menu_ram_boot_verified": true,
+    "replacement_menu_sha256": "797dd06f054b24b7d94b20d703a8357ba3e6bcce2e3900bf2f163564c6f14174",
+    "installed_system_usb_ncm_verified": true,
+    "installed_system_usb_observation": "v5 late binding failed to enumerate; v6 initrd binding enumerated successfully in both ordinary current and diagnostic previous generations",
+    "usb_host_port_cycle": "not confirmed: unprivileged hub control failed; run0 transient service request timed out; NCM still absent",
+    "usb_persistent_log_diagnosis_pending": false,
+    "first_installed_boot_confirmation": {
+      "date": "2026-11-10",
+      "source": "user temporarily booted the corrected external-production menu, selected NixOS current generation and saw pad2pro login prompt",
+      "generation": "nixos-5cad574373dfbc2b57c3ed4f9a638969",
+      "system_path": "/nix/store/5r291makfnnqbsnraaki9wmv9r7bhxlp-nixos-system-pad2pro-26.05.19800101.dirty",
+      "runtime_mounts_independently_measured": false
+    },
+    "first_installed_boot_verified": true,
+    "current_generation": "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+    "diagnostic_generation": "nixos-9bb09c194932d1c0924b9cc3ee091cf7",
+    "diagnostic_system_path": "/nix/store/fs0nqp2nsyrk21cirwrhkj4nrz7pxa6r-nixos-system-pad2pro-26.05.19800101.dirty",
+    "diagnostic_generation_boot_verified": true,
+    "actual_gc_canary_deleted": true,
+    "actual_gc_four_generation_closures_valid": true,
+    "menu_deployment": {
+      "partition": "boot_a",
+      "before_sha256": "4835dcb1bc8ccec8e720bc5d7cb428e698632289dda4bada9e1e380455db9e4b",
+      "after_sha256": "797dd06f054b24b7d94b20d703a8357ba3e6bcce2e3900bf2f163564c6f14174",
+      "readback_verified": true,
+      "cold_boot_verified": false,
+      "android_path_verified": true,
+      "backup": ".work/boot_a-current.img",
+      "linux_path_verified": true,
+      "persistent_reboot_boot_verified": true,
+      "cold_power_cycle_separately_verified": false
+    },
+    "early_usb_revision": "v6 common initrd binding verified in ordinary current and diagnostic previous generations",
+    "readonly_diagnostics_sandbox_live_test": "passed in RAM; diagnostic generation only, default disabled",
+    "usb_ncm_verified_generation": "nixos-3fff9a665e9773f13eef830b25f86d81",
+    "diagnostic_runtime_mounts": {
+      "/": {
+        "source": "/dev/sda17[/@nixos-root]",
+        "fstype": "btrfs",
+        "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=256,subvol=/@nixos-root"
+      },
+      "/nix": {
+        "source": "/dev/sda17[/@nixos-nix]",
+        "fstype": "btrfs",
+        "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=257,subvol=/@nixos-nix"
+      },
+      "/var/log": {
+        "source": "/dev/sda17[/@nixos-log]",
+        "fstype": "btrfs",
+        "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=259,subvol=/@nixos-log"
+      },
+      "/nix/store": {
+        "source": "/dev/sda17[/@nixos-nix/store]",
+        "fstype": "btrfs",
+        "options": "ro,nosuid,nodev,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=257,subvol=/@nixos-nix"
+      },
+      "/boot": {
+        "source": "/dev/sda16",
+        "fstype": "ext4",
+        "options": "ro,noatime,stripe=128"
+      },
+      "/home": {
+        "source": "/dev/sda17[/@nixos-home]",
+        "fstype": "btrfs",
+        "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=258,subvol=/@nixos-home"
+      }
+    },
+    "diagnostic_failed_units": 0,
+    "diagnostic_ssh_host_key_matches_installed_filesystem": true,
+    "diagnostic_scmi_policies_verified": true,
+    "diagnostic_battery_sample": {
+      "status": "Charging",
+      "capacity_percent": 94,
+      "current_microamps": 37232,
+      "temperature_c": 31.0,
+      "sustained_charge_or_fast_charge_verified": false
+    },
+    "post_gc_diagnostic_boot_verified": false,
+    "current_generation_boot_verified": true,
+    "current_generation_boot_confirmation": {
+      "date": "2026-11-10",
+      "source": "user selected c5d38997 current generation and confirmed login prompt; pinned SSH identity verified, root none authentication rejected, diagnostic HTTP closed"
+    },
+    "normal_generation_transport": {
+      "ordinary_generation": "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+      "login_prompt_user_confirmed": true,
+      "pinned_ssh_host_identity_verified": true,
+      "diagnostic_http_enabled": false,
+      "ordinary_root_none_auth_rejected": true,
+      "login_credentials_attempted": false
+    },
+    "current_normal_diagnostics_default_off_verified": true,
+    "android_initialisation_scope": "Android system boot confirmed after user recovery data clear; personal setup completion and filesystem capacity not assessed",
+    "usb_ncm_verified_generations": [
+      "nixos-711a16405621b34c4e0809e735fa0d98",
+      "nixos-3fff9a665e9773f13eef830b25f86d81"
+    ],
+    "post_gc_current_normal_boot_verified": false,
+    "android_return_test": {
+      "source": "user report after booting ordinary NixOS current generation",
+      "result": "Android system boots from persisted kShimC after NixOS previous-generation boot; user confirmed",
+      "diagnosis": "Android initially entered recovery from both menu and temporary stock boot. User cleared data in stock recovery; subsequent persisted-menu roundtrip passed.",
+      "date": "2026-11-10",
+      "final_test_used_fastboot_boot": false
+    },
+    "android_boot_confirmation_after_recovery": {
+      "source": "user manually cleared data in recovery after temporary stock boot, then confirmed Android system boots",
+      "date": "2026-11-10",
+      "persistent_new_menu_android_path_verified": true
+    },
+    "manual_menu_rollback_verification": {
+      "previous_generation_boot_identity_verified": true,
+      "diagnostic_failed_units": 0,
+      "pid1_runtime_mounts": {
+        "/": {
+          "source": "/dev/sda17[/@nixos-root]",
+          "fstype": "btrfs",
+          "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=256,subvol=/@nixos-root"
+        },
+        "/nix": {
+          "source": "/dev/sda17[/@nixos-nix]",
+          "fstype": "btrfs",
+          "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=257,subvol=/@nixos-nix"
+        },
+        "/var/log": {
+          "source": "/dev/sda17[/@nixos-log]",
+          "fstype": "btrfs",
+          "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=259,subvol=/@nixos-log"
+        },
+        "/nix/store": {
+          "source": "/dev/sda17[/@nixos-nix/store]",
+          "fstype": "btrfs",
+          "options": "ro,nosuid,nodev,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=257,subvol=/@nixos-nix"
+        },
+        "/home": {
+          "source": "/dev/sda17[/@nixos-home]",
+          "fstype": "btrfs",
+          "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=258,subvol=/@nixos-home"
+        },
+        "/boot": {
+          "source": "/dev/sda16",
+          "fstype": "ext4",
+          "options": "ro,noatime,stripe=128"
+        }
+      },
+      "previous_journal_matches_ordinary_current_init": true,
+      "ordinary_current_multiuser_reached": true,
+      "ordinary_current_firewall_started": true,
+      "ordinary_current_ssh_started": true,
+      "ordinary_current_failed_unit_start_messages": false,
+      "ssh_pinned_host_identity_verified": true,
+      "login_credentials_attempted": false,
+      "evidence": [
+        ".work/v6-rollback-status.txt",
+        ".work/v6-rollback-previous-boot.txt",
+        ".work/v6-rollback-ssh-transport.txt"
+      ],
+      "date": "2026-11-10"
+    },
+    "current_generation_persistent_journal_verified": false,
+    "android_nixos_roundtrip_boot_verified": true,
+    "retained_generation_count": 2,
+    "current_generation_gc_after_install_tested": false,
+    "post_gc_boot_generation_ids": [
+      "nixos-711a16405621b34c4e0809e735fa0d98",
+      "nixos-3fff9a665e9773f13eef830b25f86d81"
+    ],
+    "diagnostic_generation_boot_confirmation": {
+      "date": "2026-11-10",
+      "source": "USB report identifies fs0nqp2 system and nixos-optional-fw1 module; charger 0x011e, ready and scan armed, no missing optional firmware load errors, failed units 0"
+    },
+    "manual_menu_rollback_scope": "v6 baseline; see v6_installation_baseline for actual current-to-previous and post-GC evidence",
+    "retained_generation_count_before_prune": 6,
+    "installed_boot_reader_scope": "Historical full boot image before four-generation pruning; post-prune verification recorded in boot_pruning.",
+    "previous_generation": "nixos-711a16405621b34c4e0809e735fa0d98",
+    "diagnostic_generation_in_boot_menu": false
+  },
+  "installation_bundle_v5": {
+    "directory": "artifacts/nixos-pad2pro-install-v5",
+    "system_path": "/nix/store/5r291makfnnqbsnraaki9wmv9r7bhxlp-nixos-system-pad2pro-26.05.19800101.dirty",
+    "closure_paths": 643,
+    "cache_signatures": "passed",
+    "boot_ext4_sha256": "df1ccd21720479c9f878f8a98e3bf3202f4eb97dc81b1be1431b6a8a6caf15d9",
+    "python_bytecode_store_mutation_fixed": true,
+    "installed_to_btrfs": true,
+    "installed_system_boot_verified": true
+  },
+  "latest_installed_system_boot_verified": true,
+  "install_v6_debug": {
+    "system_path": "/nix/store/dbdvzw4a4hbgmn51rjxpmwp9d6yb20x3-nixos-system-pad2pro-26.05.19800101.dirty",
+    "closure_paths": 647,
+    "cache_signatures": "passed",
+    "contains_desktop": false,
+    "diagnostics_enabled": true,
+    "normal_accounts_passwords_unchanged": true,
+    "early_usb_in_initrd": true,
+    "boot_verified": true,
+    "usb_ncm_verified": true,
+    "runtime_mounts": {
+      "/": {
+        "source": "/dev/sda17[/@nixos-root]",
+        "fstype": "btrfs",
+        "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=256,subvol=/@nixos-root"
+      },
+      "/nix": {
+        "source": "/dev/sda17[/@nixos-nix]",
+        "fstype": "btrfs",
+        "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=257,subvol=/@nixos-nix"
+      },
+      "/var/log": {
+        "source": "/dev/sda17[/@nixos-log]",
+        "fstype": "btrfs",
+        "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=259,subvol=/@nixos-log"
+      },
+      "/nix/store": {
+        "source": "/dev/sda17[/@nixos-nix/store]",
+        "fstype": "btrfs",
+        "options": "ro,nosuid,nodev,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=257,subvol=/@nixos-nix"
+      },
+      "/boot": {
+        "source": "/dev/sda16",
+        "fstype": "ext4",
+        "options": "ro,noatime,stripe=128"
+      },
+      "/home": {
+        "source": "/dev/sda17[/@nixos-home]",
+        "fstype": "btrfs",
+        "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=258,subvol=/@nixos-home"
+      }
+    },
+    "failed_units": 0,
+    "post_gc_boot_verified": true,
+    "manual_menu_rollback_verified": true,
+    "ordinary_current_persistent_journal_verified": true,
+    "persistent_menu_dual_boot_roundtrip_verified": true
+  },
+  "install_v6": {
+    "system_path": "/nix/store/3q6bvxz6sbfvz92il2jck2m8hckrlli2-nixos-system-pad2pro-26.05.19800101.dirty",
+    "closure_paths": 641,
+    "cache_signatures": "passed",
+    "contains_desktop": false,
+    "diagnostics_enabled": false,
+    "normal_accounts_passwords_unchanged": true,
+    "early_usb_in_initrd": true,
+    "boot_verified": true,
+    "usb_ncm_verified": true,
+    "ssh_pinned_host_identity_verified": true,
+    "diagnostic_http_reachable": false,
+    "post_gc_boot_verified": true,
+    "manual_menu_rollback_verified": true,
+    "ordinary_current_persistent_journal_verified": true,
+    "persistent_menu_dual_boot_roundtrip_verified": true
+  },
+  "android_recovery_diagnosis": {
+    "full_ram_maintenance_attempt": "failed: USB disconnected during rootfs download; initrd emergency mode shown in user photo",
+    "host_usb_errors": [
+      -71,
+      -110
+    ],
+    "tablet_partitions_written_during_diagnosis": false,
+    "compact_probe_image": "artifacts/nixos-pad2pro-android-recovery-probe-v1/packed/boot.img",
+    "compact_probe_sha256": "9afd69143b363720bfe698687ab4e9a814a8c752310a39fff54d490098d74ffe",
+    "compact_probe_archive_scripts_verified": true,
+    "compact_probe_device_boot_verified": true,
+    "private_image_comparison": ".work/android-return-image-comparison.json",
+    "compact_probe_usb_http_verified": true,
+    "bcb_boot_recovery_command_present": false,
+    "device_filesystems_mounted": false,
+    "pstore_records_read": 0,
+    "boot_a_digest_matches_deployed_menu": true,
+    "vendor_boot_a_matches_reference": true,
+    "dtbo_a_matches_reference": true,
+    "init_boot_a_digest_matches_pre_install_baseline": true,
+    "init_boot_a_differs_from_stock_reference": true,
+    "init_boot_a_difference_causality": "pre-existing; not evidence of cause",
+    "private_evidence": [
+      ".work/android-recovery-probe-state.txt",
+      ".work/android-recovery-bcb.json",
+      ".work/android-recovery-probe-dmesg.txt"
+    ],
+    "original_stock_temporary_boot_result": "also entered recovery",
+    "user_recovery_action": {
+      "date": "2026-11-10",
+      "source": "user report",
+      "action": "clear data selected manually in stock recovery",
+      "result": "Android system now boots",
+      "agent_issued_additional_erase_commands": false
+    },
+    "cause_scope": "Android boot restored after recovery data clear; exact failing filesystem/encryption stage was not captured",
+    "resolved": true,
+    "resolution": "User completed stock recovery data clear; persisted-menu Android -> NixOS previous -> Android verified afterward",
+    "agent_issued_additional_erase_commands": false
+  },
+  "completion_scope": {
+    "date": "2026-11-11",
+    "minimal_system_installed": true,
+    "desktop_installed": true,
+    "persistent_menu_android_nixos_android_verified": true,
+    "manual_menu_generation_rollback_verified": true,
+    "retained_generation_boot_after_gc_verified": true,
+    "normal_accounts_passwords_unset": false,
+    "all_hardware_functions_verified": false,
+    "tablet_final_user_reported_system": "NixOS v7 ordinary current generation c5d38997",
+    "native_kernel_full_build_tested": false,
+    "authenticated_normal_user_login_tested": true,
+    "controlled_shutdown_and_cold_power_cycle_tested": false,
+    "gc_boot_verification_scope": "Retained v6 generations booted after actual GC. V7 had six checked roots before pruning. Two boot generations remain; no GC or reboot was run for pruning.",
+    "desktop_wayland_user_session_verified": true,
+    "latest_system_activated_live": true,
+    "latest_initrd_boot_verified": true,
+    "latest_system_path": "/nix/store/kd6p72al07chzbxgsadnc87glg6fy9br-nixos-system-pad2pro-26.11.20261107.f4a03c0"
+  },
+  "host_cleanup": {
+    "temporary_ram_http_server_stopped": true,
+    "temporary_usb_networkmanager_profile_deleted": true,
+    "maintenance_artifacts_and_private_backups_retained": true,
+    "record_scope": "Host cleanup at initial installation handoff; later tutorial support intentionally restarted HTTP and a new temporary NM connection, see ram_tutorial_support"
+  },
+  "ram_tutorial_support": {
+    "date": "2026-11-10",
+    "initial_host_missing_prerequisites": [
+      "USB IPv4 address 192.168.77.10/24",
+      "HTTP server for rootfs.squashfs"
+    ],
+    "host_prerequisites_restored": true,
+    "manual_reboot_user_confirmed_login_prompt": true,
+    "authenticated_ram_ssh_verified": true,
+    "rootfs_sha256_verified_by_initrd": true,
+    "rootfs_sha256": "762a98968ae10a7c18ec9b8ed3fcb10705b3ba5829a16e0cc33faddc640f4b2f",
+    "root_tmpfs_and_store_overlay_squashfs_verified": true,
+    "getty_and_sshd_active": true,
+    "physical_device_filesystems_mounted": false,
+    "password_configured": false,
+    "host_http_server_left_running_for_manual_maintenance": false,
+    "host_temporary_nm_uuid": "9bcf9181-e5c9-4aed-8c6c-f8977bbfdb11",
+    "private_evidence": ".work/ram-tutorial-repair-verified.txt",
+    "old_ram_firewall_failure_remains_known": "old RAM v1 lacks pkttype; installed ordinary v6 kernel already fixed",
+    "passwordless_usb_ssh_now_verified": true,
+    "console_root_autologin_now_verified": true
+  },
+  "ram_passwordless_access": {
+    "passwordless_usb_root": true,
+    "console_autologin": "root",
+    "ssh_listen_address": "192.168.77.2",
+    "ssh_command": "ssh root@192.168.77.2",
+    "rootfs_sha256": "d54e8ece9b0cb6665f089b20074d69b377d4a5e9d69d27c9cdedd0b82fb72704",
+    "rootfs_bytes": 475656192,
+    "rootfs_http_file": "rootfs-d54e8ece9b0cb6665f089b20074d69b377d4a5e9d69d27c9cdedd0b82fb72704.squashfs",
+    "boot_sha256": "632fe0d303959ac9856d19398054057cac2ff10c5be48470454ad88a0e019ca5",
+    "system_path": "/nix/store/brajqy1jh0lrf4m21vghyyfyhvp4b3cg-nixos-system-pad2pro-ram-kexec-26.05.19800101.dirty",
+    "kernel_sha256": "11057d98891ce2e3c5414944b40c72558ae8677a351a2ddadf2285e9293ca35d",
+    "kernel_matches_installed_verified_v6": true,
+    "current_ram_live_passwordless_ssh_verified": true,
+    "current_ram_live_console_autologin_verified": true,
+    "new_image_device_boot_verified": true,
+    "installed_normal_accounts_remain_locked": true,
+    "old_ram_v1_http_file_preserved": true,
+    "host_http_alias_checked": true,
+    "host_tests_passed": 12,
+    "packed_initrd_and_generated_sshd_pam_checked": true,
+    "user_requested": true,
+    "scope": "temporary RAM maintenance only",
+    "current_running_ram_system": "/nix/store/ak36hbxkr8731wc9gm9l8zplhm26q4ms-nixos-system-pad2pro-ram-kexec-26.05.19800101.dirty",
+    "private_evidence_files": [
+      ".work/current-ram-passwordless-test.txt",
+      ".work/current-ram-passwordless-console.txt",
+      ".work/passwordless-config-check.json",
+      ".work/passwordless-archive-check.json",
+      ".work/passwordless-host-tests.log"
+    ],
+    "passwordless_ssh_from_fresh_boot_verified": true,
+    "console_autologin_from_fresh_boot_verified": true,
+    "failed_units_from_fresh_boot": 0
+  },
+  "latest_agent_installation_handoff": {
+    "date": "2026-11-10",
+    "user_requested_agent_installation": true,
+    "method": "standard nixos-install using existing Btrfs subvolumes; no repartition or format",
+    "system_path": "/nix/store/3q6bvxz6sbfvz92il2jck2m8hckrlli2-nixos-system-pad2pro-26.05.19800101.dirty",
+    "installation_succeeded": true,
+    "signed_cache_key_compared_with_pc_bundle": true,
+    "store_contents_verified": true,
+    "boot_current": "nixos-711a16405621b34c4e0809e735fa0d98",
+    "boot_previous": "nixos-3fff9a665e9773f13eef830b25f86d81",
+    "boot_a_digest_unchanged": true,
+    "gpt_digest_unchanged": true,
+    "android_data_erased": false,
+    "normal_root_and_nixos_accounts_locked": true,
+    "password_set": false,
+    "ext4_readonly_check_passed": true,
+    "btrfs_readonly_check_passed": true,
+    "all_installation_mounts_released": true,
+    "post_install_boot_user_confirmation_pending": false,
+    "installer_resolv_conf_staging_warning": "Existing /etc/static link produced a staging warning; activation and installation completed, final target etc links are standard generated links",
+    "private_evidence": [
+      ".work/install-handoff-mounted-preflight.txt",
+      ".work/install-handoff.log",
+      ".work/install-handoff-final-checks.log"
+    ],
+    "post_install_current_generation_login_user_confirmed": true,
+    "post_install_transport": {
+      "installed_ssh_host_identity_verified": true,
+      "root_none_auth_rejected": true,
+      "login_credentials_attempted": false,
+      "diagnostic_http_reachable": false
+    },
+    "installation_handoff_complete": true
+  },
+  "cps8601_optional_firmware_fix": {
+    "status": "INSTALLED_DIAGNOSTIC_FIX_AND_ORDINARY_BOOT_VERIFIED",
+    "source_kernel_revision": "870167fad062e74f6de27e76db84d17cc49d8b84",
+    "original_error": "missing optional wireless_pen/24926/cps8601_firmware.bin, errno -2, repeated five times",
+    "factory_firmware_observed": "0x011e",
+    "module_version": "nixos-optional-fw1",
+    "kernel_binary_unchanged": true,
+    "firmware_binary_added": false,
+    "firmware_reflash_requested": false,
+    "hardware_parameters_changed": false,
+    "original_fault_reproduced": true,
+    "patched_fault_scenarios_passed": 8,
+    "all_systems_flake_evaluation": "passed",
+    "ordinary_boot_id": "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+    "diagnostic_boot_id": "nixos-9bb09c194932d1c0924b9cc3ee091cf7",
+    "physical_pen_charging_verified": false,
+    "new_generation_device_boot_verified": true,
+    "module_selection_evidence": ".work/cps8601-module-selection.json",
+    "installed_boot_reader": {
+      "status": 0,
+      "entries": 6,
+      "block_reads": 125135,
+      "catalog": [
+        {
+          "system": "nixos",
+          "version": "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 1,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-9bb09c194932d1c0924b9cc3ee091cf7",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 1,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-711a16405621b34c4e0809e735fa0d98",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-3fff9a665e9773f13eef830b25f86d81",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-5cad574373dfbc2b57c3ed4f9a638969",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        },
+        {
+          "system": "nixos",
+          "version": "nixos-e866639fa0145e70740090b4cfa059fc",
+          "release": "7.2.15-nixos-erhai-870167fad062",
+          "current": 0,
+          "previous": 0,
+          "payload_status": 0,
+          "payload_checked": true
+        }
+      ],
+      "selection": null
+    },
+    "installed_store_contents_verified": true,
+    "all_install_mounts_released": true,
+    "boot_a_and_gpt_unchanged": true,
+    "host_publication_tests_passed": 12,
+    "installed": true,
+    "normal_accounts_locked_after_install": true,
+    "previous_config_backup": ".work/etc-nixos-before-cps-v7.tar",
+    "post_install_fs_checks": ".work/cps-v7-final-fs-checks.log",
+    "device_verification": {
+      "diagnostic_generation": "nixos-9bb09c194932d1c0924b9cc3ee091cf7",
+      "loaded_module_version": "nixos-optional-fw1",
+      "running_charger_firmware": "0x011e",
+      "repeated_missing_optional_firmware_errors": 0,
+      "charger_initialized": true,
+      "scan_armed": true,
+      "failed_units": 0,
+      "optional_factory_firmware_info_retained": true,
+      "out_of_tree_module_notice_observed": true,
+      "firmware_update_log_present": false,
+      "physical_pen_present": false,
+      "physical_pen_charging_verified": false
+    },
+    "private_device_evidence": [
+      ".work/cps-v7-live-status.txt",
+      ".work/cps-v7-live-dmesg.txt",
+      ".work/cps-v7-device-verification.json"
+    ],
+    "ordinary_boot_verified": true,
+    "ordinary_usb_ssh_verification": {
+      "ordinary_generation": "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+      "login_prompt_user_confirmed": true,
+      "pinned_ssh_host_identity_verified": true,
+      "diagnostic_http_enabled": false,
+      "ordinary_root_none_auth_rejected": true,
+      "login_credentials_attempted": false
+    },
+    "installed_boot_reader_scope": "Historical full boot image before four-generation pruning; post-prune verification recorded in boot_pruning.",
+    "previous_generation": "nixos-711a16405621b34c4e0809e735fa0d98",
+    "diagnostic_generation_in_boot_menu": false,
+    "old_four_generations_retained_before_prune": true,
+    "boot_generations_after_prune": [
+      "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+      "nixos-711a16405621b34c4e0809e735fa0d98"
+    ]
+  },
+  "v6_installation_baseline": {
+    "system_path": "/nix/store/3q6bvxz6sbfvz92il2jck2m8hckrlli2-nixos-system-pad2pro-26.05.19800101.dirty",
+    "current_generation": "nixos-711a16405621b34c4e0809e735fa0d98",
+    "diagnostic_generation": "nixos-3fff9a665e9773f13eef830b25f86d81",
+    "manual_menu_rollback_verification": {
+      "previous_generation_boot_identity_verified": true,
+      "diagnostic_failed_units": 0,
+      "pid1_runtime_mounts": {
+        "/": {
+          "source": "/dev/sda17[/@nixos-root]",
+          "fstype": "btrfs",
+          "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=256,subvol=/@nixos-root"
+        },
+        "/nix": {
+          "source": "/dev/sda17[/@nixos-nix]",
+          "fstype": "btrfs",
+          "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=257,subvol=/@nixos-nix"
+        },
+        "/var/log": {
+          "source": "/dev/sda17[/@nixos-log]",
+          "fstype": "btrfs",
+          "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=259,subvol=/@nixos-log"
+        },
+        "/nix/store": {
+          "source": "/dev/sda17[/@nixos-nix/store]",
+          "fstype": "btrfs",
+          "options": "ro,nosuid,nodev,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=257,subvol=/@nixos-nix"
+        },
+        "/home": {
+          "source": "/dev/sda17[/@nixos-home]",
+          "fstype": "btrfs",
+          "options": "rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvolid=258,subvol=/@nixos-home"
+        },
+        "/boot": {
+          "source": "/dev/sda16",
+          "fstype": "ext4",
+          "options": "ro,noatime,stripe=128"
+        }
+      },
+      "previous_journal_matches_ordinary_current_init": true,
+      "ordinary_current_multiuser_reached": true,
+      "ordinary_current_firewall_started": true,
+      "ordinary_current_ssh_started": true,
+      "ordinary_current_failed_unit_start_messages": false,
+      "ssh_pinned_host_identity_verified": true,
+      "login_credentials_attempted": false,
+      "evidence": [
+        ".work/v6-rollback-status.txt",
+        ".work/v6-rollback-previous-boot.txt",
+        ".work/v6-rollback-ssh-transport.txt"
+      ],
+      "date": "2026-11-10"
+    },
+    "normal_generation_transport": {
+      "ssh_pinned_host_identity_verified": true,
+      "login_credentials_attempted": false,
+      "diagnostic_http_reachable": false,
+      "http_observation": "URLError"
+    },
+    "current_generation_boot_confirmation": {
+      "date": "2026-11-10",
+      "source": "user selected ordinary current generation 711a1640 and saw login prompt; USB NCM connected, SSH pinned identity verified, diagnostic HTTP unreachable as configured"
+    },
+    "post_gc_boot_verified": true,
+    "post_gc_current_normal_boot_verified": true,
+    "post_gc_diagnostic_boot_verified": true
+  },
+  "normal_user_ssh_setup": {
+    "date": "2026-11-10",
+    "user": "nixos",
+    "method": "password",
+    "password_entered_by_user_in_own_terminal": true,
+    "password_or_hash_captured_by_agent": false,
+    "target_password_set_verified": true,
+    "root_account_remains_locked": true,
+    "password_ssh_login_user_confirmed": true,
+    "usb_device_address": "192.168.77.2",
+    "pc_usb_address": "192.168.77.10/24",
+    "pc_connection_name": "pad2pro-usb",
+    "pc_connection_uuid": "9bcf9181-e5c9-4aed-8c6c-f8977bbfdb11",
+    "pc_connection_persistent": true,
+    "host_key_pinned": true,
+    "current_generation": "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+    "private_status_evidence": ".work/password-setup-final-state.txt",
+    "ram_http_server_stopped": true
+  },
+  "boot_pruning": {
+    "state": "completed_verified_over_ssh",
+    "full_pre_cleanup_boot_image": ".work/installed-v7-boot.ext4",
+    "regular_directory_rehearsal_from_real_boot_backup": "passed",
+    "host_tests": 17,
+    "system_profiles_changed": false,
+    "store_gc_run": false,
+    "remote_tool_uploaded_and_hash_verified": true,
+    "source": "tools/prune-kshim-boot.py",
+    "status": "ok",
+    "current": "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+    "previous": "nixos-711a16405621b34c4e0809e735fa0d98",
+    "retained": [
+      "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+      "nixos-711a16405621b34c4e0809e735fa0d98"
+    ],
+    "removed": [
+      "nixos-3fff9a665e9773f13eef830b25f86d81",
+      "nixos-5cad574373dfbc2b57c3ed4f9a638969",
+      "nixos-9bb09c194932d1c0924b9cc3ee091cf7",
+      "nixos-e866639fa0145e70740090b4cfa059fc"
+    ],
+    "backup": "/var/lib/nixos-kshim/boot-prune/prune-z8wgsdoo",
+    "boot_used_before_bytes": 510558208,
+    "boot_used_after_bytes": 171651072,
+    "boot_readonly": true,
+    "freed_bytes": 338907136,
+    "live_retained_directories_and_gc_roots_verified": true,
+    "boot_mount": "ext4 ro,noatime,stripe=128",
+    "boot_used_percent": 19,
+    "post_cleanup_reboot_tested": false,
+    "evidence_file": ".work/boot-prune-live-result.json"
+  },
+  "wifi1": {
+    "date": "2026-11-11",
+    "status": "accepted_default_baseline",
+    "user_confirmed_5ghz_fix": true,
+    "kernel_source_revision": "870167fad062e74f6de27e76db84d17cc49d8b84",
+    "kernel_release": "7.2.15-nixos-erhai-870167fad062-wifi1",
+    "kernel_config_fragment": "packages/nixos.config",
+    "required_builtin_config": {
+      "CONFIG_WLAN": "y",
+      "CONFIG_WLAN_VENDOR_ATH": "y",
+      "CONFIG_CFG80211": "y",
+      "CONFIG_MAC80211": "y",
+      "CONFIG_ATH12K": "y"
+    },
+    "builtin_runtime_config_verified": true,
+    "driver_patch": "packages/patches/ath12k-opd2413-firmware.patch",
+    "driver_patch_sha256": "c1eada845c34e511e520caa88232ea3714c628e13b9a7807e1787fa6d1d66ddb",
+    "firmware_manifest": "inputs/opd2413-wifi-firmware.json",
+    "firmware_files": 6,
+    "firmware_archive": "inputs/local/opd2413-wifi-firmware.tar",
+    "firmware_archive_sha256": "c486e1c9e5caa56a49c746fdca4b098ceb355ae1426d5b66a60856540be8a8fc",
+    "firmware_in_initrd": true,
+    "generic_firmware_fallback": false,
+    "installed_system": "/nix/store/g2i4m0201kmnh7snvkbdxhgqkjq5w7gp-nixos-system-pad2pro-26.05.19800101.dirty",
+    "current_boot_id": "nixos-7d5488900107d53c387d23c300031c25",
+    "previous_boot_id": "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+    "additional_retained_boot_id": "nixos-711a16405621b34c4e0809e735fa0d98",
+    "boot_verified": true,
+    "channel_40_scan_verified": true,
+    "channel_40_association_verified": true,
+    "wifi_router_ping": "3/3",
+    "wifi_https_status": 200,
+    "failed_services": 0,
+    "usb_ssh_verified": true,
+    "usb_initial_transmit_stall": "recovered; root cause not established",
+    "evidence": [
+      "artifacts/nixos-pad2pro-wifi1/installation.json",
+      "artifacts/nixos-pad2pro-wifi1/first-boot.json",
+      "artifacts/nixos-pad2pro-wifi1/wifi5-connectivity.txt"
+    ],
+    "resolved_kernel_config_sha256": "e02fa944ac19ce4650903d1061b1c1cb961ed43e6c3c10daa6c9a88315f17ecd",
+    "resolved_config_unchanged_from_validated_wifi1": true,
+    "host_regression_tests": 20,
+    "driver_path_check": "passed",
+    "all_systems_flake_evaluation": "passed"
+  },
+  "kernel_nixpkgs_revision": "ac588ef1c914865dad517b337ea0eb9694a4021c",
+  "gnome": {
+    "verified_at": "2026-11-11T02:50:28.700998+08:00",
+    "system": "/nix/store/5qcc92qw75144hl1ikrp0zayirhg5qvh-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+    "booted_system": "/nix/store/g2i4m0201kmnh7snvkbdxhgqkjq5w7gp-nixos-system-pad2pro-26.05.19800101.dirty",
+    "kernel_release": "7.2.15-nixos-erhai-870167fad062-wifi1",
+    "kernel_unchanged": true,
+    "dtb_unchanged": true,
+    "modules_tree_unchanged": true,
+    "services": {
+      "display-manager": "active",
+      "sshd": "active",
+      "NetworkManager": "active"
+    },
+    "system_failed_units": 0,
+    "user_failed_units": 0,
+    "gnome": "51.0",
+    "mutter": "51.0",
+    "mesa": "26.2.6",
+    "firefox": "159.0.1",
+    "user_session": "nixos, seat0, active Wayland",
+    "display": "3392x2400, 120 Hz, scale 2",
+    "gpu_renderer": "Adreno (TM) 830",
+    "egl_render_readback": "PASS",
+    "shared_context_stress": {
+      "result": "PASS",
+      "contexts": 4000,
+      "buffers": 882048
+    },
+    "vulkan": "Turnip, Adreno 830, API 1.4.354",
+    "ibus_libpinyin": true,
+    "current_boot_id": "nixos-0522dfa2eed0159cbd45b6b5d6675dd2",
+    "previous_boot_id": "nixos-f6ec5a787ab23af453059dd062d08239",
+    "retained_boot_versions": [
+      "nixos-0522dfa2eed0159cbd45b6b5d6675dd2",
+      "nixos-f6ec5a787ab23af453059dd062d08239",
+      "nixos-06c7a9eb6c213399f3062ac12ab6779b",
+      "nixos-e64b61a11b270e5eb2dea9e2531152c0",
+      "nixos-7d5488900107d53c387d23c300031c25",
+      "nixos-c5d389974e65db7114fa0e40fa2ff8e0",
+      "nixos-711a16405621b34c4e0809e735fa0d98"
+    ],
+    "all_boot_payload_hashes_valid": true,
+    "boot_readonly": true,
+    "shared_boot_config_unchanged": true,
+    "rebooted": false,
+    "new_initrd_boot_verified": false,
+    "checks": {
+      "flake_all_systems_evaluation": "PASS",
+      "publication_tests": 20,
+      "wifi_firmware_routing": "PASS",
+      "cps8601_firmware_scenarios": "PASS"
+    }
+  },
+  "night_light_recovery": {
+    "verified_at": "2026-11-11T03:18:52.983740+08:00",
+    "system": "/nix/store/kd6p72al07chzbxgsadnc87glg6fy9br-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+    "boot_id": "nixos-8d39778e37ce5247a25782f9654143f5",
+    "actual_reboot_and_login_verified": true,
+    "user_confirmed_desktop_normal": true,
+    "night_light_enabled": false,
+    "night_light_writable": false,
+    "night_light_active": false,
+    "temperature_kelvin": 6500,
+    "scope": "Night Light disabled and locked as a compatibility workaround; exact color-pipeline defect not yet isolated.",
+    "boot_menu_recovery": {
+      "cause": "Agent wrote invalid default=nixos instead of system/selector.",
+      "recovery": "Known RAM v2 image, mounted existing boot partition, restored configuration with vendor configure CLI.",
+      "runtime_parser_entries": 8,
+      "runtime_parser_status": 0,
+      "new_current_payloads_verified": true,
+      "tested_auto_selection": "nixos-8d39778e37ce5247a25782f9654143f5",
+      "final_default": "android",
+      "final_shared_config_matches_original": true,
+      "boot_readonly": true
+    },
+    "usb_management": {
+      "restored": true,
+      "conflict": "virt-manager redirected tablet to win11",
+      "runtime_redirection_channels_released": [
+        "redir1",
+        "redir0"
+      ],
+      "vm_persistent_config_changed": false
+    },
+    "kernel_changed": false,
+    "linux_data_erased": false,
+    "android_partitions_written": false,
+    "system_failed_units": 0,
+    "user_failed_units": 0,
+    "checks": {
+      "flake_all_systems_evaluation": "PASS",
+      "publication_regression_tests": 21
+    }
+  },
+  "bluetooth_factory_identity": {
+    "status": "FACTORY_IDENTITY_AUTOMATIC_PROVISIONING_REBOOT_VERIFIED",
+    "record": "BLUETOOTH-VALIDATION.json",
+    "boot_id": "nixos-06f3e4b35a208da7db344a74adbfc516"
+  }
+}

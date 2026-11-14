@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "origin": "OnePlus OPD2413_16.0.9.400(CN01), as verified by armadaos-freedom/devices/oneplus-pad2pro/inputs/firmware.json",
+  "license": "Proprietary vendor firmware; original vendor terms apply. Not covered by the kernel GPL.",
+  "files": [
+    {
+      "install": "ath12k/WCN7860/hw2.0/oneplus/opd2413/amss.bin",
+      "size": 6840384,
+      "sha256": "f89a5348a4076d4db062eb335ac97b5fb028397bd3d21c96a837fb138503d84e"
+    },
+    {
+      "install": "ath12k/WCN7860/hw2.0/oneplus/opd2413/aux_ucode.bin",
+      "size": 61440,
+      "sha256": "5360d1b26c3b2458f3df30a0c690a17bc0f4b6952f36b805810061ff9be7995b"
+    },
+    {
+      "install": "ath12k/WCN7860/hw2.0/oneplus/opd2413/board.bin",
+      "size": 125264,
+      "sha256": "5cbfe14329b1db894cb621fb3d65b161014f5d51594b44690b9466fe406ef953"
+    },
+    {
+      "install": "ath12k/WCN7860/hw2.0/oneplus/opd2413/m3.bin",
+      "size": 290816,
+      "sha256": "fbe4ea920c38454b12d612f7c16e68a572a714aeca60d65c994abe1b516b24ba"
+    },
+    {
+      "install": "ath12k/WCN7860/hw2.0/oneplus/opd2413/qdss.cfg",
+      "size": 6241,
+      "sha256": "17a855ff76656f3f8ea2571e2523a52a20d0ce036f42bd5728dcae49425ad889"
+    },
+    {
+      "install": "ath12k/WCN7860/hw2.0/oneplus/opd2413/regdb.bin",
+      "size": 24278,
+      "sha256": "5b0f1c65cd9f7580a71913c8c21a746625924c66da1e9aaf7c095d3b659ec5e5"
+    }
+  ]
+}

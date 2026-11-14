@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-11-13T18:50:18.115906+00:00",
+  "release": "7.3.4-erhai-p2",
+  "system": "/nix/store/1m8jh4gil7qmvr8fxyg0i8vr1fq8gvfz-nixos-system-pad2pro-erhai-p2-gpu-trace2",
+  "boot_id": "nixos-cad8ce652de320da03683acb1a25d9a7",
+  "result": "immediate reset; user returned directly to original current",
+  "recovery_boot_id": "fa4360aa-6eca-48d5-b82e-5053ad255a9a",
+  "pstore": {
+    "bytes": 262132,
+    "sha256": "95e2dfacaf70ee4b6284c31190061893237c166d4fba2100389c5b9f18fa6f92",
+    "corrupted": true,
+    "nul_bytes": 531,
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-gpu-trace2-recovery/var/lib/systemd/pstore/console-ramoops-0"
+  },
+  "readable_probes": [
+    "GMU OOB clear returned",
+    "a8xx_hw_init returned ret=0",
+    "msm_gpu_hw_init returned ret=0",
+    "adreno_load_gpu returned",
+    "msm_fbdev_driver_fbdev_probe entered",
+    "last readable probe: framebuffer probe returned ret=0 around 0.942856s"
+  ],
+  "interpretation": "GPU software initialization and framebuffer creation completed. Later first modeset and asynchronous GPU power management remain candidates. The next framebuffer registration takes console_lock inside fbcon_fb_registered, suppressing further console output if it fails before unlocking.",
+  "next": "Use documented fb.lockless_register_fb=1 (present in actual Image) and additional display probes/DPU events to retain console output through framebuffer registration.",
+  "hardware_accepted": false
+}

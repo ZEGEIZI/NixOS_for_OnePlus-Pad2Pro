@@ -1,0 +1,31 @@
+From: NixOS for OnePlus Pad 2 Pro maintainers
+Subject: [PATCH] wifi: ath12k: keep OPD2413 firmware and BDF in its OEM namespace
+
+Port the OPD2413 firmware routing from armadaos-freedom's verified
+Linux 7.2.6 touch18 profile to the pinned erhai Linux 7.2.15 tree.
+QMI can report board ID 0xff; all firmware requests, including the
+board API1 fallback, must use the matching OEM firmware set.
+
+Source: devices/oneplus-pad2pro/kernel/current/upstream-to-touch18.patch
+Source-SHA256: 7520350aab464ec97c4945657a32fdf6725db342b0fde49959ad0bdcbd782fc1
+The existing source and SPDX license notices are retained.
+
+--- a/drivers/net/wireless/ath/ath12k/core.h
++++ b/drivers/net/wireless/ath/ath12k/core.h
+@@ -1363,6 +1363,16 @@
+ {
+ 	const char *fw_name = NULL;
+ 
++	/* OPD2413 has its own OEM BDF even when QMI reports board ID 0xff.
++	 * Keep every request, including board API fallbacks, in its namespace.
++	 */
++	if (of_machine_is_compatible("oneplus,opd2413") &&
++	    ab->hw_rev == ATH12K_HW_WCN7860_HW20) {
++		snprintf(buf, buf_len, "%s/%s/oneplus/opd2413/%s",
++			 ATH12K_FW_DIR, ab->hw_params->fw.dir, filename);
++		return;
++	}
++
+ 	of_property_read_string(ab->dev->of_node, "firmware-name", &fw_name);
+ 
+ 	if (fw_name && strncmp(filename, "board", 5))

@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-11-13T19:15:30.642497+00:00",
+  "release": "7.3.4-erhai-p2",
+  "system": "/nix/store/4ckg073izrgdzlgs9imhvqq54d41j4ri-nixos-system-pad2pro-erhai-p2-power-trace",
+  "boot_id": "nixos-3849e76da2314444df04fcc67496a3df",
+  "result": "immediate reset; user directly recovered original current without Android",
+  "recovery_boot_id": "16aec2ac-085e-437f-9a37-58d6cd785110",
+  "pstore": {
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-power-trace-recovery/var/lib/systemd/pstore/console-ramoops-0",
+    "bytes": 262132,
+    "sha256": "3c134048de1675dca7dc5bc220a6e4755e9eee20535d9a130d25414f0c963ab4",
+    "nul_bytes": 542,
+    "corrupted": true
+  },
+  "readable_progress": [
+    "a6xx_gmu_stop returned 0",
+    "adreno_runtime_suspend returned 0",
+    "novatek_nt36536_prepare entered",
+    "vreg_l12b_1p8 enable completed",
+    "regulator_enable returned 0 to panel prepare",
+    "usleep_range_state entered with min=2000 max=3000",
+    "No following sleep return, bias call or PSCI domain idle entry is readable"
+  ],
+  "interpretation": "Reset occurs after entering the first panel delay. PSCI domain enter is traced after CPU-domain runtime suspend, so missing that trace does not exclude a CPU-domain transition. No readable panic or stack.",
+  "next": "Controlled cpuidle.off=1 comparison with identical trace definitions and identical p2 kernel/DTB/initrd. This is a diagnostic, not a permanent fix or accepted kernel.",
+  "hardware_accepted": false
+}

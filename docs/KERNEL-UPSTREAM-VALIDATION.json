@@ -1,0 +1,352 @@
+{
+  "date": "2026-11-12",
+  "daily_baseline": "upstream4",
+  "daily_baseline_promoted": true,
+  "upstream1": {
+    "revision": "853b84e1b190dbd13dc38c16ed1eeee4fe63e6a5",
+    "release": "7.2.15-nixos-erhai-853b84e1b190-upstream1",
+    "full_kernel_build_passed": true,
+    "module_count": 1285,
+    "image_sha256": "0ad156ab19a6f181e2ea68e8c68336d0bdece29248b864231a28bb02ab6d31bb",
+    "temporary_boot_passed": true,
+    "storage_boot_passed": true,
+    "user_confirmed_screen_touch_and_bluetooth_audio": true,
+    "five_ghz_automatic_discovery_accepted": false
+  },
+  "wifi_delay": {
+    "target_frequency_mhz": 5200,
+    "reproduced_on": [
+      "brahma1",
+      "upstream1",
+      "upstream2"
+    ],
+    "baseline_missing_target_at_uptime_seconds": [
+      42.72,
+      132.67,
+      143.58,
+      154.44,
+      165.44,
+      176.34,
+      747.12
+    ],
+    "manual_5ghz_activation_before_24ghz_failed": true,
+    "diagnostic_24ghz_association_then_rescan_restored_5ghz": true,
+    "regulatory_country_forced": false,
+    "saved_autoconnect_policy_changed": false,
+    "firmware_scan_mode": "DBS_OR_SBS (5)",
+    "firmware_phy_5ghz_ranges_mhz": [
+      [
+        4900,
+        5320
+      ],
+      [
+        4900,
+        7125
+      ]
+    ]
+  },
+  "validation_limits": [
+    "Power-off cold boot, deep sleep and long-duration operation remain untested.",
+    "Upstream4 was tested via temporary boot with matching shared boot payloads; a separate ordinary reboot was not repeated."
+  ],
+  "evidence_directory": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/upstream1",
+  "evidence_directories": [
+    ".work/upstream1",
+    ".work/upstream2",
+    ".work/upstream3",
+    ".work/wifi-oem-policy",
+    ".work/upstream4"
+  ],
+  "upstream2": {
+    "revision": "619c42f63a5627b07731a82562be8e56a0f00ae0",
+    "release": "7.2.15-nixos-erhai-619c42f63a56-upstream2",
+    "state": "booted_startup_5ghz_discovery_failed",
+    "changes": [
+      "Complete regulatory requests even when replies are rejected or duplicate.",
+      "Send the computed scan priority to firmware, imported from ArmadaOS/ROCKNIX.",
+      "Allow bounded ath12k debug_mask diagnostics; ordinary boots keep mask zero."
+    ],
+    "full_kernel_build_passed": true,
+    "module_count": 1285,
+    "image_bytes": 36284928,
+    "system": "/nix/store/s6jrpivj79rs7l9jg7a396yvsddsxm3d-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+    "temporary_boot_sent": true,
+    "temporary_boot_confirmed": true,
+    "five_ghz_automatic_discovery_accepted": false,
+    "image_sha256": "34a0ce7969a28c5d56c7e6fea1e6a0ffa13c2fd7d22f9312c668981ef162b32f",
+    "boot_test": {
+      "method": "fastboot boot",
+      "image_sha256": "14c8efbdd3e19e7d942b35517a3caa0766b300b62d32415c338c1bf1fa7a3ef8",
+      "partition_flashed": false,
+      "status": "Booted to Linux desktop; kernel release and USB SSH confirmed."
+    },
+    "temporary_boot_passed": true,
+    "startup_observer": {
+      "start_uptime_seconds": 40.86,
+      "last_uptime_seconds": 160.34,
+      "target_visible": false,
+      "automatically_connected": false,
+      "manual_scan_or_connection_requested": false
+    },
+    "single_frequency_diagnostic": {
+      "start_uptime": 219.0,
+      "operation": "single-frequency active scan; no connection activation",
+      "scan_exit": 0,
+      "target_found": true,
+      "bss_count": 14,
+      "restored_mask": "0",
+      "connected_after_scan": true,
+      "frequencies_after_scan_mhz": [
+        "5200.0"
+      ]
+    },
+    "driver_reprobe_reproduced_missing_target": true
+  },
+  "boot_partition_selection": {
+    "current": "nixos-c9a9be822bc77abda6f2269356f696b5",
+    "previous": "nixos-11de6b4a27b5519fbf6b5a2c6fc2c178"
+  },
+  "upstream3": {
+    "revision": "c3583ea3a35f34eb8e37d69b0106512e95849313",
+    "release": "7.2.15-nixos-erhai-c3583ea3a35f-upstream3",
+    "state": "accepted_daily_kernel_for_tested_scope",
+    "changes": [
+      "Import wiphy scan timeout lifecycle prerequisite from ArmadaOS patch 1021.",
+      "Adapt patch 0188 range scans to OPD2413 after matching firmware hardware mode and PHY ranges.",
+      "Clear finish_queued for intermediate batches to retain overall timeout."
+    ],
+    "arm64_affected_objects_passed": true,
+    "host_actual_function_regressions_passed": true,
+    "device_acceptance_passed": true,
+    "full_kernel_build_passed": true,
+    "module_count": 1285,
+    "image_sha256": "88bffb7da9bcee01723ba47ad5779ca7404571d92c3a5349fc6140adf0f0a69a",
+    "image_bytes": 36284928,
+    "system": "/nix/store/qvqh3bk0xnypyhxgwrpf1rzxs0sr30zb-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+    "cps8601_build_passed": true,
+    "initrd_and_dtb_build_passed": true,
+    "temporary_boot_sent": true,
+    "temporary_boot_confirmed": true,
+    "boot_image_sha256": "6c38e5b91ee07a2b704cbd2e6fc91d7482ec68f05df13d8a8e54056b349f095f",
+    "android_partition_flashed": false,
+    "temporary_boot_passed": true,
+    "storage_boot_passed": true,
+    "five_ghz_automatic_discovery_accepted": true,
+    "user_confirmed_screen_touch_and_bluetooth_audio": true,
+    "frozen_package_matches_tested_closure": true,
+    "daily_system_matches_tested_system": true,
+    "startup_observations": [
+      {
+        "method": "temporary_boot",
+        "observer_start_uptime_seconds": 24.1,
+        "target_already_visible_and_connected": true,
+        "frequency_mhz": 5200,
+        "actively_requested_scan": false,
+        "manually_activated_connection": false
+      },
+      {
+        "method": "ordinary_reboot_shared_storage",
+        "observer_start_uptime_seconds": 33.28,
+        "target_already_visible_and_connected": true,
+        "frequency_mhz": 5200,
+        "actively_requested_scan": false,
+        "manually_activated_connection": false
+      }
+    ],
+    "startup_timing_note": "First observed uptime is an upper bound; it is not the exact association latency.",
+    "associated_scan": {
+      "kernel": "7.2.15-nixos-erhai-c3583ea3a35f-upstream3",
+      "start_uptime": 126.8,
+      "operation": "one associated full scan with simultaneous gateway ping",
+      "request_exit": 0,
+      "request_error": "",
+      "scan_event": "aborted",
+      "scan_event_elapsed_seconds": 20.46,
+      "ping_exit": 0,
+      "ping": {
+        "sent": 100,
+        "received": 100,
+        "loss_percent": 0.0
+      },
+      "still_connected": true,
+      "frequency_mhz": 5200.0,
+      "new_driver_or_kernel_errors": [],
+      "cancel_initiator": "not established; subsequent debug run had 81 successful batches before cancellation"
+    },
+    "daily_configuration_applied": true,
+    "daily_device_build_matches_tested_system": true,
+    "bytecode_cache_exclusion_preserves_tested_system": true,
+    "final_state_evidence": ".work/upstream3/final-state.json",
+    "configuration_backup_on_device": "/var/lib/pad2pro-updates/upstream3/etc-nixos-before"
+  },
+  "previous_daily_baseline": "upstream3",
+  "previous_daily_baseline_preserved": true,
+  "upstream4": {
+    "revision": "efc39b9d972665c270adc4e4ec2c46685792ffda",
+    "release": "7.2.15-nixos-erhai-efc39b9d9726-upstream4",
+    "change": "Standard OF frequency limits from OPD2413 shipped band policy, applied before wiphy registration.",
+    "full_build_state": "built_temporary_boot_testing",
+    "device_acceptance_passed": true,
+    "checks": {
+      "actual_cfg80211_of_filter_and_regulatory_update_regression": true,
+      "arm64_mac_object_and_dtb": true,
+      "dt_binding_doc_schema": true,
+      "compiled_dtb_ath12k_schema": true,
+      "existing_range_scan_fault_paths": true
+    },
+    "module_count": 1285,
+    "image_sha256": "cb5b6e64e68c650f36d34e3a9c4e7076b033555540c4f2906a07a1f99de33488",
+    "system": "/nix/store/l1b8yaz2jzncy2pwfw88h0ymcrhr9j11-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+    "independent_checkpoint_matches_candidate": true,
+    "temporary_boot_image_sent": true,
+    "device_boot_confirmed": false,
+    "state": "accepted_daily_for_tested_scope",
+    "temporary_boot_passed": true,
+    "screen_touch_audio_bluetooth_user_confirmed": true,
+    "normal_full_scans": [
+      {
+        "operation": "ordinary NetworkManager full scan; no frequency or SSID restriction",
+        "request_exit": 0,
+        "scan_event": "completed",
+        "supplicant_scan_seconds": 9.581323,
+        "supplicant_timeout": false,
+        "ping": {
+          "sent": 100,
+          "received": 100,
+          "loss_percent": 0.0
+        },
+        "after": {
+          "connected": true,
+          "frequency_mhz": 5200.0
+        },
+        "visited_frequencies_mhz": [
+          2412,
+          2417,
+          2422,
+          2427,
+          2432,
+          2437,
+          2442,
+          2447,
+          2452,
+          2457,
+          2462,
+          5180,
+          5200,
+          5220,
+          5240,
+          5260,
+          5280,
+          5300,
+          5320,
+          5500,
+          5520,
+          5540,
+          5560,
+          5580,
+          5600,
+          5620,
+          5640,
+          5660,
+          5680,
+          5700,
+          5720,
+          5745,
+          5765,
+          5785,
+          5805,
+          5825
+        ],
+        "new_driver_errors": [],
+        "debug_mask_restored": "0"
+      },
+      {
+        "operation": "ordinary NetworkManager full scan; no frequency or SSID restriction",
+        "request_exit": 0,
+        "scan_event": "completed",
+        "supplicant_scan_seconds": 9.806365,
+        "supplicant_timeout": false,
+        "ping": {
+          "sent": 100,
+          "received": 100,
+          "loss_percent": 0.0
+        },
+        "after": {
+          "connected": true,
+          "frequency_mhz": 5200.0
+        },
+        "visited_frequencies_mhz": [
+          2412,
+          2417,
+          2422,
+          2427,
+          2432,
+          2437,
+          2442,
+          2447,
+          2452,
+          2457,
+          2462,
+          5180,
+          5200,
+          5220,
+          5240,
+          5260,
+          5280,
+          5300,
+          5320,
+          5500,
+          5520,
+          5540,
+          5560,
+          5580,
+          5600,
+          5620,
+          5640,
+          5660,
+          5680,
+          5700,
+          5720,
+          5745,
+          5765,
+          5785,
+          5805,
+          5825
+        ],
+        "new_driver_errors": [],
+        "debug_mask_restored": "0"
+      }
+    ],
+    "suspend_resume": {
+      "kernel": "7.2.15-nixos-erhai-efc39b9d9726-upstream4",
+      "before": {
+        "uptime": 551.62,
+        "connected": true,
+        "frequency_mhz": 5200.0
+      },
+      "suspend_success_before": 0,
+      "rtc_wakeup_count_before": 0,
+      "rtc_seconds": 30,
+      "resume_confirmed": true,
+      "automatic_reconnection_passed": true,
+      "request_exit": 0,
+      "suspend_success_after": 1,
+      "resume_observed_uptime": 584.7,
+      "rtc_wakeup_count_after": 0,
+      "elapsed_wall_seconds_to_resume_observation": 33.09,
+      "reconnection_observed_after_resume_seconds": 5.11,
+      "after": {
+        "uptime": 589.8,
+        "connected": true,
+        "frequency_mhz": 5200.0,
+        "gateway_ping_passed": true
+      },
+      "remaining_wakealarm": ""
+    },
+    "all_six_ghz_channels_remain_disabled_after_resume": true,
+    "shared_boot_payloads_match_tested_system": true,
+    "independent_storage_reboot_tested": false,
+    "daily_configuration_applied": true,
+    "daily_device_system_matches_tested_system": true
+  }
+}

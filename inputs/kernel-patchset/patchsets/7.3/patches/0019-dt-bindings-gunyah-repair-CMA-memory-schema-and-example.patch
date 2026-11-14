@@ -1,0 +1,58 @@
+From bfc760b9caa7d621afe907d592bda39187186411 Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Fri, 13 Nov 2026 23:19:01 +0800
+Subject: [PATCH] dt-bindings: gunyah: repair CMA memory schema and example
+
+Describe the variable list of reserved memory pools consumed by the driver without inventing a hardware count limit. Fix the compatible schema, examples key, YAML indentation and additional-property policy.
+---
+ .../bindings/firmware/gunyah-cma-mem.yaml     | 27 +++++++++----------
+ 1 file changed, 12 insertions(+), 15 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/firmware/gunyah-cma-mem.yaml b/Documentation/devicetree/bindings/firmware/gunyah-cma-mem.yaml
+index 6f0e1391c..3774623d6 100644
+--- a/Documentation/devicetree/bindings/firmware/gunyah-cma-mem.yaml
++++ b/Documentation/devicetree/bindings/firmware/gunyah-cma-mem.yaml
+@@ -18,31 +18,28 @@ description: |+
+ 
+ properties:
+   compatible:
+-      - const: gunyah-cma-vm-mem
++    const: gunyah-cma-vm-mem
+ 
+   memory-region:
+-    $ref: '/schemas/types.yaml#/definitions/phandle'
+-    items:
+-      - description: |
+-          Describes the specific reserved memory region that this allocator
+-          will allocate memory from for a Virtual Machine. Refer to
+-          Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt
+-          for more information.
++    description: |
++      Reserved memory regions from which the allocator supplies memory for
++      virtual machines. Each region has a corresponding memory-region-names
++      entry at the same index. See reserved-memory/reserved-memory.yaml.
+ 
+   memory-region-names:
+-    $ref: /schemas/types.yaml#/definitions/string-array
+-    items:
+-      - description: Name of the memory-region to be used by VMM for operation
++    description: Names used by the VMM, one for each memory-region entry.
+ 
+ required:
+   - compatible
+   - memory-region
+   - memory-region-names
+ 
+-example:
++additionalProperties: false
++
++examples:
+   - |
+     gunyah-cma-mem {
+-	compatible = "gunyah-cma-vm-mem";
+-	memory-region = <&trust_ui_vm_mem &oem_vm_mem>;
+-	memory-region-names = "trustedvm_cma" , "oemvm_cma";
++        compatible = "gunyah-cma-vm-mem";
++        memory-region = <&trust_ui_vm_mem>, <&oem_vm_mem>;
++        memory-region-names = "trustedvm_cma", "oemvm_cma";
+     };

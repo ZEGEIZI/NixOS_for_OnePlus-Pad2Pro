@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-11-13T17:58:03.529441+00:00",
+  "running_source": "efc39b9d972665c270adc4e4ec2c46685792ffda",
+  "candidate_source": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+  "scope": "Regenerated a6xx.xml and a6xx_gmu.xml C headers from both source revisions; compare all numeric REG_ definitions after GBIF_CX_CONFIG rename. This does not validate the whole GPU driver or hardware.",
+  "headers": {
+    "a6xx": {
+      "numeric_registers_compared": 1268,
+      "changed": {},
+      "removed": {},
+      "added": {},
+      "generated_header_sha256": {
+        "old": "fc5202d14381dc29285a35ea72109f78f4602f49f5db4e8feb270a1143925d18",
+        "candidate": "c52c0d5f44866d47f3e8fabd43873b1ae103d12a37e298937cfde210f49b7162"
+      }
+    },
+    "a6xx_gmu": {
+      "numeric_registers_compared": 47,
+      "changed": {},
+      "removed": {},
+      "added": {
+        "REG_A7XX_GMU_CX_AO_COUNTER_H": "0x0001f881",
+        "REG_A7XX_GMU_CX_AO_COUNTER_L": "0x0001f880"
+      },
+      "generated_header_sha256": {
+        "old": "a7191e727316d82f2cc08f778a04469a0ba9559f6c713ec05f494094cfdb70d9",
+        "candidate": "e5c9a46a25bf81fddf866c7af037dddbb8c36e1d5dd57b0ccc4d141ac1a028bf"
+      }
+    }
+  },
+  "conclusion": "GBIF_CX_CONFIG remains at register index 0x3c00. Existing generated numeric register addresses are unchanged; only two A7xx counter definitions were added. Do not treat this source rename as an A830 MMIO regression."
+}

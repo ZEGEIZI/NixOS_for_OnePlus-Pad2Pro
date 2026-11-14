@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-11-13T17:09:09.567011+00:00",
+  "release": "7.3.4-erhai-p2",
+  "patch_head": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+  "kernel_drv": "/nix/store/6vlcvg86zqiiihsw7nhll6xibs8zxvjl-linux-erhai-aarch64-unknown-linux-gnu-7.3.4.drv",
+  "outputs": {
+    "dev": "/nix/store/rw2a18932v0d8lxxgjqlvrsj4jmdgisp-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-dev",
+    "modules": "/nix/store/s3ddawqyxpjh3ac6klbfpjizlcma1l4s-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-modules",
+    "out": "/nix/store/6jbam9k7zfbbyhls8576kjxp9m0id5fm-linux-erhai-aarch64-unknown-linux-gnu-7.3.4"
+  },
+  "architecture": "AArch64",
+  "BTF": "present",
+  "module_vermagic": "7.3.4-erhai-p2 SMP preempt mod_unload aarch64",
+  "config_sha256": "f949e77cc3687ea1660ef68bd023476e552ac596c29004c1202294c0b47431e2",
+  "artifacts_sha256": {
+    "Image": "a455bc1ef0deb1d957e58a16acf89049534ff75ac1a8ceaa992ac29da85bda31",
+    "DTB": "755c3106765db18caca1ceb6c3af6b0cf037ffcb05667270a45e695db59023cd"
+  },
+  "hardware_verified": false
+}

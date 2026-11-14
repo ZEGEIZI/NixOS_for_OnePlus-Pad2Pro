@@ -1,0 +1,290 @@
+{
+  "date": "2026-11-12",
+  "baseline": "7.2.15-nixos-erhai-c3583ea3a35f-upstream3",
+  "cancel_initiator": "wpa_supplicant nl80211 scan timeout",
+  "cancel_timeout_seconds": 20,
+  "full_scan_evidence": [
+    "[  549.736162] pad2pro wpa_supplicant[876]: Scan requested (ret=0) - scan timeout 20 seconds",
+    "[  569.738574] pad2pro wpa_supplicant[876]: nl80211: Scan timeout - try to abort it",
+    "[  569.738603] pad2pro wpa_supplicant[876]: nl80211: Abort scan",
+    "[  569.804594] pad2pro wpa_supplicant[876]: wlp1s0: Scan completed in 20.068198 seconds"
+  ],
+  "limited_scan": {
+    "requested_channels": 36,
+    "bands": "2.4 GHz and 5 GHz",
+    "evidence": [
+      "[  769.555097] pad2pro wpa_supplicant[876]: Scan requested (ret=0) - scan timeout 20 seconds",
+      "[  778.752492] pad2pro wpa_supplicant[876]: wlp1s0: Scan completed in 9.197264 seconds"
+    ]
+  },
+  "oem_source": {
+    "repository": "https://github.com/OnePlusOSS/android_kernel_modules_and_devicetree_oneplus_sm8750",
+    "branch": "oneplus/sm8750_b_16.0.0_pad_2_pro",
+    "revision": "cc463675855afb8702a263f415330a240f5cd919",
+    "path": "vendor/qcom/opensource/wlan/qcacld-3.0/components/mlme/dispatcher/inc/cfg_mlme_generic.h",
+    "line": 451,
+    "BandCapability_3": "Both 2.4G and 5G"
+  },
+  "checks": {
+    "actual_cfg80211_of_filter_and_regulatory_update_regression": true,
+    "arm64_mac_object_and_dtb": true,
+    "dt_binding_doc_schema": true,
+    "compiled_dtb_ath12k_schema": true,
+    "existing_range_scan_fault_paths": true
+  },
+  "invalid_test": {
+    "baseline_rtc_suspend": "Observer ran before actual suspend; excluded from acceptance. User manually woke the tablet.",
+    "after_manual_wake_wifi_mhz": 5200,
+    "after_manual_wake_failed_units": []
+  },
+  "country_forced": false,
+  "firmware_changed": false,
+  "previous_daily_baseline_preserved": true,
+  "accepted_kernel": {
+    "revision": "efc39b9d972665c270adc4e4ec2c46685792ffda",
+    "release": "7.2.15-nixos-erhai-efc39b9d9726-upstream4",
+    "change": "Standard OF frequency limits from OPD2413 shipped band policy, applied before wiphy registration.",
+    "full_build_state": "built_temporary_boot_testing",
+    "device_acceptance_passed": true,
+    "module_count": 1285,
+    "image_sha256": "cb5b6e64e68c650f36d34e3a9c4e7076b033555540c4f2906a07a1f99de33488",
+    "system": "/nix/store/l1b8yaz2jzncy2pwfw88h0ymcrhr9j11-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+    "cps_and_boot_payload_build_passed": true,
+    "firmware_closure_matches_upstream3": true,
+    "independent_checkpoint_matches_candidate": true,
+    "temporary_boot_image_sent": true,
+    "device_boot_confirmed": true,
+    "temporary_boot_passed": true,
+    "normal_full_scan_results": [
+      {
+        "operation": "ordinary NetworkManager full scan; no frequency or SSID restriction",
+        "request_exit": 0,
+        "scan_event": "completed",
+        "supplicant_scan_seconds": 9.581323,
+        "supplicant_timeout": false,
+        "ping": {
+          "sent": 100,
+          "received": 100,
+          "loss_percent": 0.0
+        },
+        "after": {
+          "connected": true,
+          "frequency_mhz": 5200.0
+        },
+        "visited_frequencies_mhz": [
+          2412,
+          2417,
+          2422,
+          2427,
+          2432,
+          2437,
+          2442,
+          2447,
+          2452,
+          2457,
+          2462,
+          5180,
+          5200,
+          5220,
+          5240,
+          5260,
+          5280,
+          5300,
+          5320,
+          5500,
+          5520,
+          5540,
+          5560,
+          5580,
+          5600,
+          5620,
+          5640,
+          5660,
+          5680,
+          5700,
+          5720,
+          5745,
+          5765,
+          5785,
+          5805,
+          5825
+        ],
+        "new_driver_errors": [],
+        "debug_mask_restored": "0"
+      },
+      {
+        "operation": "ordinary NetworkManager full scan; no frequency or SSID restriction",
+        "request_exit": 0,
+        "scan_event": "completed",
+        "supplicant_scan_seconds": 9.806365,
+        "supplicant_timeout": false,
+        "ping": {
+          "sent": 100,
+          "received": 100,
+          "loss_percent": 0.0
+        },
+        "after": {
+          "connected": true,
+          "frequency_mhz": 5200.0
+        },
+        "visited_frequencies_mhz": [
+          2412,
+          2417,
+          2422,
+          2427,
+          2432,
+          2437,
+          2442,
+          2447,
+          2452,
+          2457,
+          2462,
+          5180,
+          5200,
+          5220,
+          5240,
+          5260,
+          5280,
+          5300,
+          5320,
+          5500,
+          5520,
+          5540,
+          5560,
+          5580,
+          5600,
+          5620,
+          5640,
+          5660,
+          5680,
+          5700,
+          5720,
+          5745,
+          5765,
+          5785,
+          5805,
+          5825
+        ],
+        "new_driver_errors": [],
+        "debug_mask_restored": "0"
+      }
+    ],
+    "screen_touch_audio_bluetooth_user_confirmed": true,
+    "additional_audio_tests_stopped_at_user_request": true,
+    "first_boot_observer": {
+      "kernel": "7.2.15-nixos-erhai-efc39b9d9726-upstream4",
+      "boot_id": "549b8481-e804-4157-b9fe-2f6e74370b4c",
+      "observer_start_uptime": 56.54,
+      "target_first_visible_uptime": 56.54,
+      "target_connected_uptime": 56.54,
+      "samples": [
+        {
+          "uptime": 56.54,
+          "target_visible": true,
+          "connected_to_target_5ghz": true,
+          "frequency_mhz": 5200.0
+        }
+      ],
+      "actively_requested_scan": false,
+      "manually_activated_connection": false,
+      "automatic_5ghz_connection_passed": true
+    },
+    "live_board_limits": {
+      "limits_khz": [
+        2400000,
+        2500000,
+        4900000,
+        5925000
+      ],
+      "available_channel_count": 36,
+      "available_frequencies_mhz": [
+        2412.0,
+        2417.0,
+        2422.0,
+        2427.0,
+        2432.0,
+        2437.0,
+        2442.0,
+        2447.0,
+        2452.0,
+        2457.0,
+        2462.0,
+        5180.0,
+        5200.0,
+        5220.0,
+        5240.0,
+        5260.0,
+        5280.0,
+        5300.0,
+        5320.0,
+        5500.0,
+        5520.0,
+        5540.0,
+        5560.0,
+        5580.0,
+        5600.0,
+        5620.0,
+        5640.0,
+        5660.0,
+        5680.0,
+        5700.0,
+        5720.0,
+        5745.0,
+        5765.0,
+        5785.0,
+        5805.0,
+        5825.0
+      ],
+      "six_ghz_count": 60,
+      "all_six_ghz_disabled": true
+    },
+    "daily_baseline_promoted": true,
+    "daily_configuration_matches_tested_system": true,
+    "suspend_resume": {
+      "kernel": "7.2.15-nixos-erhai-efc39b9d9726-upstream4",
+      "before": {
+        "uptime": 551.62,
+        "connected": true,
+        "frequency_mhz": 5200.0
+      },
+      "suspend_success_before": 0,
+      "rtc_wakeup_count_before": 0,
+      "rtc_seconds": 30,
+      "resume_confirmed": true,
+      "automatic_reconnection_passed": true,
+      "request_exit": 0,
+      "suspend_success_after": 1,
+      "resume_observed_uptime": 584.7,
+      "rtc_wakeup_count_after": 0,
+      "elapsed_wall_seconds_to_resume_observation": 33.09,
+      "reconnection_observed_after_resume_seconds": 5.11,
+      "after": {
+        "uptime": 589.8,
+        "connected": true,
+        "frequency_mhz": 5200.0,
+        "gateway_ping_passed": true
+      },
+      "remaining_wakealarm": ""
+    },
+    "post_resume": {
+      "kernel": "7.2.15-nixos-erhai-efc39b9d9726-upstream4",
+      "frequency_mhz": 5200.0,
+      "all_six_ghz_disabled": true,
+      "failed_units": [],
+      "debug_mask": "0",
+      "wakealarm": "",
+      "https_passed": true
+    },
+    "shared_boot_payloads_verified": true,
+    "independent_storage_reboot_tested": false,
+    "daily_configuration_applied": true,
+    "device_daily_system_matches_tested_system": true,
+    "final_state_evidence": ".work/upstream4/final-state.json"
+  },
+  "previous_daily_baseline": "upstream3",
+  "limits": [
+    "One s2idle cycle was verified. RTC was armed for 30 seconds; the exact wake IRQ source was not separately established.",
+    "No repeated audio/Bluetooth tests were performed after the user confirmed them and requested stopping repetition.",
+    "No separate ordinary reboot was repeated for upstream4. Published Image/DTB/initrd hashes match the tested system; power-off cold boot, deep sleep and long-duration operation remain untested."
+  ]
+}

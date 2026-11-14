@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-11-13T19:27:03.578084+00:00",
+  "patch_head": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+  "native_config": "/nix/store/67g5gxidnyl5viz9bz0f5qmgl1bwyzbj-linux-config-7.3.4",
+  "cross_config": "/nix/store/rw2a18932v0d8lxxgjqlvrsj4jmdgisp-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-dev/lib/modules/7.3.4-erhai-p2/build/.config",
+  "all_fragment_requirements": "passed",
+  "native_sha256": "ef94cd56e2a183e7f401ae9b9befa0388aa03f434d04c2a41a0c32d67f95064f",
+  "cross_sha256": "f949e77cc3687ea1660ef68bd023476e552ac596c29004c1202294c0b47431e2",
+  "semantic_config_difference": {
+    "CONFIG_CC_VERSION_TEXT": {
+      "cross": "\"aarch64-unknown-linux-gnu-gcc (GCC) 16.2.0\"",
+      "native": "\"gcc (GCC) 16.2.0\""
+    }
+  },
+  "text_difference": [
+    "--- cross",
+    "+++ native",
+    "@@ -2,7 +2,7 @@",
+    " # Automatically generated file; DO NOT EDIT.",
+    " # Linux/arm64 7.3.4 Kernel Configuration",
+    " #",
+    "-CONFIG_CC_VERSION_TEXT=\"aarch64-unknown-linux-gnu-gcc (GCC) 16.2.0\"",
+    "+CONFIG_CC_VERSION_TEXT=\"gcc (GCC) 16.2.0\"",
+    " CONFIG_CC_IS_GCC=y",
+    " CONFIG_GCC_VERSION=160200",
+    " CONFIG_CLANG_VERSION=0",
+    "@@ -9791,6 +9791,7 @@",
+    " # CONFIG_DEBUG_INFO_REDUCED is not set",
+    " CONFIG_DEBUG_INFO_COMPRESSED_NONE=y",
+    " # CONFIG_DEBUG_INFO_COMPRESSED_ZLIB is not set",
+    "+# CONFIG_DEBUG_INFO_SPLIT is not set",
+    " CONFIG_DEBUG_INFO_BTF=y",
+    " CONFIG_PAHOLE_HAS_LANG_EXCLUDE=y",
+    " CONFIG_DEBUG_INFO_BTF_MODULES=y"
+  ],
+  "scope": "Historical observations for this build only; not a version or toolchain gate",
+  "native_full_build": "interrupted by manual boot during kernel unpack; see native-build-p2.json",
+  "hardware_accepted": false
+}

@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-11-13T19:44:12.556031+00:00",
+  "release": "7.3.4-erhai-p2",
+  "system": "/nix/store/hjk148aznanmlc0cmj7m7rp0d950c3w5-nixos-system-pad2pro-erhai-p2-rpm-trace",
+  "boot_id": "nixos-5ef2ee0d002793019dec6250297bcf01",
+  "result": "reset; user directly recovered original current without Android",
+  "recovery_boot_id": "d2f42778-12e5-401a-b14f-a42996973179",
+  "pstore": {
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-rpm-trace-recovery/var/lib/systemd/pstore/console-ramoops-0",
+    "bytes": 262132,
+    "sha256": "6ae9e2a73acf96264ae114b5e5e90360e01780aff78c5becbe15fe359d15d884",
+    "nul_bytes": 333,
+    "corrupted": true
+  },
+  "readable_progress": [
+    "Panel prepare and VDDIO enable completed while GPU runtime suspend ran",
+    "Panel entered its 2-3 ms delay; no readable delay return",
+    "Several GPU clock disable and unprepare completion events are readable",
+    "Last readable event is clk_unprepare_complete for gpu_cc_cxo_clk around 2.493873 s"
+  ],
+  "source_interpretation": "clk_unprepare_complete is before parent recursion and the clock-provider runtime PM put, so it does not prove clk_core_unprepare returned. No readable panic or stack; no exact fault is identified.",
+  "next": "Defer the in-kernel DRM client and graphical login, preserving full DRM registration, to attempt an SSH environment for separate GPU-open/runtime-PM and modeset tests.",
+  "hardware_accepted": false
+}

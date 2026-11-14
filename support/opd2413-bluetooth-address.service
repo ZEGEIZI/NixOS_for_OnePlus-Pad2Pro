@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: MIT
+# Install the three Python files together in /usr/libexec/opd2413/.
+[Unit]
+Description=Initialize OnePlus Pad 2 Pro factory Bluetooth identity
+After=local-fs.target systemd-modules-load.service
+Before=bluetooth.service
+StartLimitIntervalSec=600
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/libexec/opd2413/bluetooth-address.py
+StateDirectory=oneplus-pad2pro
+StateDirectoryMode=0700
+TimeoutStartSec=100
+Restart=on-failure
+RestartPreventExitStatus=1
+RestartSec=2
+
+[Install]
+WantedBy=bluetooth.service

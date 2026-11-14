@@ -1,0 +1,518 @@
+diff --git a/clutter/clutter/clutter-color-op.c b/clutter/clutter/clutter-color-op.c
+index 2a11736..d31325a 100644
+--- a/clutter/clutter/clutter-color-op.c
++++ b/clutter/clutter/clutter-color-op.c
+@@ -1007,6 +1007,76 @@ clutter_color_op_curve_1d_get_data (ClutterColorOp  *op,
+     *out_a = priv->a;
+ }
+ 
++struct _ClutterColorOpHdrShoulder
++{
++  ClutterColorOp parent_instance;
++  float knee;
++};
++
++G_DEFINE_TYPE (ClutterColorOpHdrShoulder, clutter_color_op_hdr_shoulder,
++               CLUTTER_TYPE_COLOR_OP)
++
++static char *
++clutter_color_op_hdr_shoulder_to_string (ClutterColorOp *op)
++{
++  return g_strdup ("hdr-shoulder");
++}
++
++/* Linear-light RGB shoulder with unit slope at SDR white. Scale the three
++ * channels together so that highlight compression does not change hue. */
++static void
++clutter_color_op_hdr_shoulder_do_transform (ClutterColorOp *op,
++                                           float          *data,
++                                           size_t          n_pixels)
++{
++  float knee = CLUTTER_COLOR_OP_HDR_SHOULDER (op)->knee;
++  float headroom = 1.0f - knee;
++
++  for (size_t i = 0; i < n_pixels; i++, data += 4)
++    {
++      float peak = MAX (data[0], MAX (data[1], data[2]));
++
++      if (peak > knee)
++        {
++          float excess = peak - knee;
++          float scale = (knee + headroom * (excess / (excess + headroom))) / peak;
++
++          data[0] *= scale;
++          data[1] *= scale;
++          data[2] *= scale;
++        }
++    }
++}
++
++static void
++clutter_color_op_hdr_shoulder_class_init (ClutterColorOpHdrShoulderClass *klass)
++{
++  ClutterColorOpClass *op_class = CLUTTER_COLOR_OP_CLASS (klass);
++
++  op_class->to_string = clutter_color_op_hdr_shoulder_to_string;
++  op_class->do_transform = clutter_color_op_hdr_shoulder_do_transform;
++}
++
++static void
++clutter_color_op_hdr_shoulder_init (ClutterColorOpHdrShoulder *op)
++{
++}
++
++ClutterColorOp *
++clutter_color_op_hdr_shoulder_new (float knee)
++{
++  ClutterColorOpHdrShoulder *op = g_object_new (CLUTTER_TYPE_COLOR_OP_HDR_SHOULDER, NULL);
++
++  op->knee = CLAMP (knee, 0.001f, 0.95f);
++  return CLUTTER_COLOR_OP (op);
++}
++
++float
++clutter_color_op_hdr_shoulder_get_knee (ClutterColorOp *op)
++{
++  return CLUTTER_COLOR_OP_HDR_SHOULDER (op)->knee;
++}
++
+ typedef struct _ClutterColorOpMultiplyPrivate
+ {
+   float value;
+diff --git a/clutter/clutter/clutter-color-op.h b/clutter/clutter/clutter-color-op.h
+index a55cd94..c7cd38f 100644
+--- a/clutter/clutter/clutter-color-op.h
++++ b/clutter/clutter/clutter-color-op.h
+@@ -192,6 +192,17 @@ G_DECLARE_FINAL_TYPE (ClutterColorOpMatrix4x4,
+ CLUTTER_EXPORT
+ ClutterColorOp * clutter_color_op_matrix_4x4_new (graphene_matrix_t *matrix);
+ 
++#define CLUTTER_TYPE_COLOR_OP_HDR_SHOULDER (clutter_color_op_hdr_shoulder_get_type ())
++CLUTTER_EXPORT
++G_DECLARE_FINAL_TYPE (ClutterColorOpHdrShoulder,
++                      clutter_color_op_hdr_shoulder,
++                      CLUTTER, COLOR_OP_HDR_SHOULDER,
++                      ClutterColorOp)
++
++CLUTTER_EXPORT
++ClutterColorOp * clutter_color_op_hdr_shoulder_new (float knee);
++float clutter_color_op_hdr_shoulder_get_knee (ClutterColorOp *op);
++
+ #define CLUTTER_TYPE_COLOR_OP_MULTIPLY (clutter_color_op_multiply_get_type ())
+ CLUTTER_EXPORT
+ G_DECLARE_FINAL_TYPE (ClutterColorOpMultiply,
+diff --git a/clutter/clutter/clutter-color-pipeline-shader.c b/clutter/clutter/clutter-color-pipeline-shader.c
+index f5eddb2..4607c41 100644
+--- a/clutter/clutter/clutter-color-pipeline-shader.c
++++ b/clutter/clutter/clutter-color-pipeline-shader.c
+@@ -316,6 +316,17 @@ static const char curve_1d_source[] =
+   "               texture (tex, vec2 (color.a + xoff, 0.75 + yoff)).r);\n"
+   "}\n";
+ 
++static const char hdr_shoulder_source[] =
++  "vec3 hdr_shoulder (vec3 color, float knee)\n"
++  "{\n"
++  "  float peak = max (color.r, max (color.g, color.b));\n"
++  "  if (peak <= knee) return color;\n"
++  "  float headroom = 1.0 - knee;\n"
++  "  float excess = peak - knee;\n"
++  "  float mapped = knee + headroom * (excess / (excess + headroom));\n"
++  "  return color * (mapped / peak);\n"
++  "}\n";
++
+ static const char multiply_source[] =
+   "vec3 multiply (vec3 color, float value)\n"
+   "{\n"
+@@ -653,6 +664,36 @@ update_multiply_state (ClutterColorOp *op,
+   cogl_pipeline_set_uniform_1f (pipeline, uniform_location, value);
+ }
+ 
++static char *
++get_hdr_shoulder_declarations (ClutterColorOp *op,
++                           size_t          op_id)
++{
++  return g_strdup_printf ("uniform float hdr_shoulder_param_%zu;\n", op_id);
++}
++
++static char *
++get_hdr_shoulder_invocation (ClutterColorOp *op,
++                         size_t          op_id)
++{
++  return g_strdup_printf ("vec4 (hdr_shoulder (color.rgb, hdr_shoulder_param_%zu), color.a)", op_id);
++}
++
++static void
++update_hdr_shoulder_state (ClutterColorOp *op,
++                       size_t          op_id,
++                       CoglPipeline   *pipeline)
++{
++  float value;
++  g_autofree char *uniform_name = NULL;
++  int uniform_location;
++
++  value = clutter_color_op_hdr_shoulder_get_knee (op);
++  uniform_name = g_strdup_printf ("hdr_shoulder_param_%zu", op_id);
++  uniform_location = cogl_pipeline_get_uniform_location (pipeline,
++                                                         uniform_name);
++  cogl_pipeline_set_uniform_1f (pipeline, uniform_location, value);
++}
++
+ typedef struct _ShaderOpInfo
+ {
+   GType (*get_type) (void);
+@@ -738,6 +779,13 @@ static const ShaderOpInfo shader_op_infos[] = {
+     .get_invocation = get_matrix_invocation,
+     .update_state = update_ycbcr_matrix_state,
+   },
++  {
++    .get_type = clutter_color_op_hdr_shoulder_get_type,
++    .shader_source = hdr_shoulder_source,
++    .get_declarations = get_hdr_shoulder_declarations,
++    .get_invocation = get_hdr_shoulder_invocation,
++    .update_state = update_hdr_shoulder_state,
++  },
+   {
+     .get_type = clutter_color_op_multiply_get_type,
+     .shader_source = multiply_source,
+diff --git a/clutter/clutter/clutter-color-state-params.c b/clutter/clutter/clutter-color-state-params.c
+index 3768bd9..57bfce1 100644
+--- a/clutter/clutter/clutter-color-state-params.c
++++ b/clutter/clutter/clutter-color-state-params.c
+@@ -183,7 +183,12 @@ clutter_color_state_params_required_format (ClutterColorState *color_state)
+         {
+         case CLUTTER_TRANSFER_FUNCTION_SRGB_PIECEWISE:
+         case CLUTTER_TRANSFER_FUNCTION_BT1886:
++          return CLUTTER_ENCODING_REQUIRED_FORMAT_UINT8;
+         case CLUTTER_TRANSFER_FUNCTION_GAMMA22:
++          /* A native gamma HDR sink still needs precision above SDR white. */
++          if (luminance->type == CLUTTER_LUMINANCE_TYPE_EXPLICIT &&
++              luminance->max > luminance->ref)
++            return CLUTTER_ENCODING_REQUIRED_FORMAT_UINT10;
+           return CLUTTER_ENCODING_REQUIRED_FORMAT_UINT8;
+         case CLUTTER_TRANSFER_FUNCTION_PQ:
+           return CLUTTER_ENCODING_REQUIRED_FORMAT_UINT10;
+diff --git a/clutter/clutter/clutter-color-transform.c b/clutter/clutter/clutter-color-transform.c
+index c95a5af..d45811c 100644
+--- a/clutter/clutter/clutter-color-transform.c
++++ b/clutter/clutter/clutter-color-transform.c
+@@ -325,7 +325,8 @@ add_params_to_linear_bt2020_ops (ClutterColorPipeline    *pipeline,
+ 
+ static void
+ add_params_from_linear_bt2020_ops (ClutterColorPipeline    *pipeline,
+-                                   ClutterColorStateParams *params)
++                                   ClutterColorStateParams *params,
++                                   float                   hdr_knee)
+ {
+   const ClutterEOTF *eotf;
+   graphene_matrix_t from_linear_bt2020_stack;
+@@ -341,6 +342,10 @@ add_params_from_linear_bt2020_ops (ClutterColorPipeline    *pipeline,
+   clutter_color_pipeline_take_op (pipeline,
+                                   clutter_color_op_matrix_4x4_new (from_linear_bt2020));
+ 
++  if (hdr_knee > 0.0f)
++    clutter_color_pipeline_take_op (pipeline,
++                                    clutter_color_op_hdr_shoulder_new (hdr_knee));
++
+   /* 2. Apply inverse EOTF */
+   {
+     ClutterColorOp *inv_eotf_op = create_inv_eotf_op (eotf);
+@@ -979,12 +984,14 @@ add_to_linear_bt2020_ops (ClutterColorPipeline *pipeline,
+ 
+ static void
+ add_from_linear_bt2020_ops (ClutterColorPipeline *pipeline,
+-                            ClutterColorState    *color_state)
++                            ClutterColorState    *color_state,
++                            float                 hdr_knee)
+ {
+   if (CLUTTER_IS_COLOR_STATE_PARAMS (color_state))
+     {
+       add_params_from_linear_bt2020_ops (pipeline,
+-                                         CLUTTER_COLOR_STATE_PARAMS (color_state));
++                                         CLUTTER_COLOR_STATE_PARAMS (color_state),
++                                         hdr_knee);
+     }
+   else if (CLUTTER_IS_COLOR_STATE_ICC (color_state))
+     {
+@@ -1036,10 +1043,33 @@ build_transform_pipeline (ClutterColorPipeline            *pipeline,
+     }
+   else
+     {
++      float hdr_knee = 0.0f;
++
++      if (CLUTTER_IS_COLOR_STATE_PARAMS (target_color_state))
++        {
++          const ClutterEOTF *eotf = clutter_color_state_params_get_eotf (
++            CLUTTER_COLOR_STATE_PARAMS (target_color_state));
++          const ClutterLuminance *target_lum =
++            clutter_color_state_get_luminance (target_color_state);
++          const ClutterLuminance *source_lum =
++            clutter_color_state_get_luminance (source_color_state);
++
++          /* A native gamma sink needs the compositor to roll off highlights.
++           * Standard PQ outputs retain their existing sink tone mapping. */
++          if (eotf->type == CLUTTER_EOTF_TYPE_NAMED &&
++              eotf->tf_name == CLUTTER_TRANSFER_FUNCTION_GAMMA22 &&
++              target_lum->type == CLUTTER_LUMINANCE_TYPE_EXPLICIT &&
++              target_lum->max > target_lum->ref &&
++              source_lum->mastering_max > source_lum->ref)
++            hdr_knee = target_lum->ref / target_lum->max;
++        }
++
+       /* source → linear BT.2020 D65 → target */
+       add_to_linear_bt2020_ops (pipeline, source_color_state);
+       add_luminance_mapping_op (pipeline, source_color_state, target_color_state);
+-      add_from_linear_bt2020_ops (pipeline, target_color_state);
++      add_from_linear_bt2020_ops (pipeline, target_color_state, hdr_knee);
++      if (hdr_knee > 0.0f)
++        clutter_color_pipeline_take_op (pipeline, clutter_color_op_clamp_unit_new ());
+     }
+ 
+   if (!(flags & CLUTTER_COLOR_STATE_TRANSFORM_OPAQUE))
+diff --git a/src/backends/meta-color-device.c b/src/backends/meta-color-device.c
+--- a/src/backends/meta-color-device.c
++++ b/src/backends/meta-color-device.c
+@@ -31,6 +31,7 @@
+ #include "backends/meta-color-store.h"
+ #include "backends/meta-crtc.h"
+ #include "backends/meta-monitor-private.h"
++#include "backends/meta-xn242-hdr.h"
+ #include "core/meta-debug-control-private.h"
+ 
+ #define EFI_PANEL_COLOR_INFO_PATH \
+@@ -704,6 +705,22 @@
+       eotf->tf_name = CLUTTER_TRANSFER_FUNCTION_GAMMA22;
+       return;
+     case META_COLOR_MODE_BT2100:
++      if (meta_xn242_has_native_hdr (meta_output_get_info (meta_monitor_get_main_output (monitor))))
++        {
++          /* Raw native chromaticities from the XN242 factory max-level XYZ
++           * measurements. Use the measured white point for adaptation. */
++          colorimetry->type = CLUTTER_COLORIMETRY_TYPE_PRIMARIES;
++          colorimetry->primaries = g_new (ClutterPrimaries, 1);
++          *colorimetry->primaries = (ClutterPrimaries) {
++            .r_x = 0.675582f, .r_y = 0.318530f,
++            .g_x = 0.265860f, .g_y = 0.685836f,
++            .b_x = 0.143320f, .b_y = 0.058331f,
++            .w_x = 0.297390f, .w_y = 0.311374f,
++          };
++          eotf->type = CLUTTER_EOTF_TYPE_NAMED;
++          eotf->tf_name = CLUTTER_TRANSFER_FUNCTION_GAMMA22;
++          return;
++        }
+       colorimetry->type = CLUTTER_COLORIMETRY_TYPE_COLORSPACE;
+       colorimetry->colorspace = CLUTTER_COLORSPACE_BT2020;
+       eotf->type = CLUTTER_EOTF_TYPE_NAMED;
+@@ -748,8 +765,12 @@
+   MetaMonitor *monitor = color_device->monitor;
+   MetaBackend *backend =
+     meta_color_manager_get_backend (color_device->color_manager);
++  MetaColorMode color_mode = meta_monitor_get_color_mode (monitor);
++  gboolean native_gamma_output =
++    meta_xn242_has_native_hdr (meta_output_get_info (meta_monitor_get_main_output (monitor)));
+   MetaContext *context = meta_backend_get_context (backend);
+   MetaDebugControl *debug_control = meta_context_get_debug_control (context);
++  gboolean hdr_forced = meta_debug_control_is_hdr_forced (debug_control);
+   ClutterContext *clutter_context = meta_backend_get_clutter_context (backend);
+   g_autoptr (ClutterColorState) color_state = NULL;
+   g_auto (ClutterColorimetry) colorimetry = { 0 };
+@@ -759,7 +780,7 @@
+ 
+   get_color_metadata_from_monitor (monitor, &colorimetry, &eotf);
+ 
+-  if (meta_debug_control_is_hdr_forced (debug_control))
++  if (hdr_forced)
+     {
+       colorimetry.type = CLUTTER_COLORIMETRY_TYPE_COLORSPACE;
+       colorimetry.colorspace = CLUTTER_COLORSPACE_BT2020;
+@@ -767,8 +788,27 @@
+       eotf.tf_name = CLUTTER_TRANSFER_FUNCTION_PQ;
+     }
+ 
+-  luminance = *clutter_eotf_get_default_luminance (eotf);
+-  luminance.ref = luminance.ref * color_device->reference_luminance_factor;
++  if (color_mode == META_COLOR_MODE_BT2100 &&
++      native_gamma_output && !hdr_forced)
++    {
++      /* Conservative peak from the factory HDR calibration (no HBM). */
++      luminance = (ClutterLuminance) {
++        .type = CLUTTER_LUMINANCE_TYPE_EXPLICIT,
++        .min = 0.5315f,
++        .max = 561.5f,
++        .ref = 203.0f,
++        .mastering_max = 561.5f,
++      };
++    }
++  else
++    {
++      luminance = *clutter_eotf_get_default_luminance (eotf);
++    }
++  /* A queued HDR reference-white update can arrive after switching to
++   * SDR. Keep the SDR reference white at the output peak so clients do
++   * not see HDR headroom in the SDR image description. */
++  if (!native_gamma_output || color_mode == META_COLOR_MODE_BT2100 || hdr_forced)
++    luminance.ref *= color_device->reference_luminance_factor;
+ 
+   color_state = clutter_color_state_params_new_from_primitives (clutter_context,
+                                                                 colorimetry,
+diff --git a/src/backends/meta-monitor.c b/src/backends/meta-monitor.c
+index 04a9110..64031c8 100644
+--- a/src/backends/meta-monitor.c
++++ b/src/backends/meta-monitor.c
+@@ -20,6 +20,7 @@
+ #include "config.h"
+ 
+ #include "backends/meta-monitor-private.h"
++#include "backends/meta-xn242-hdr.h"
+ 
+ #include "backends/meta-backend-private.h"
+ #include "backends/meta-crtc.h"
+@@ -232,10 +233,11 @@ meta_monitor_init_supported_color_modes (MetaMonitor *monitor)
+                        GINT_TO_POINTER (META_COLOR_MODE_SDR_NATIVE));
+     }
+ 
+-  if ((output_info->supported_color_spaces &
+-       (1 << META_OUTPUT_COLORSPACE_BT2020)) &&
+-      (output_info->supported_hdr_eotfs &
+-       (1 << META_OUTPUT_HDR_METADATA_EOTF_PQ)))
++  if (meta_xn242_has_native_hdr (output_info) ||
++      ((output_info->supported_color_spaces &
++        (1 << META_OUTPUT_COLORSPACE_BT2020)) &&
++       (output_info->supported_hdr_eotfs &
++        (1 << META_OUTPUT_HDR_METADATA_EOTF_PQ))))
+     {
+       priv->color_modes =
+         g_list_append (priv->color_modes,
+diff --git a/src/backends/meta-output.c b/src/backends/meta-output.c
+index 777b7d6..a3afbc7 100644
+--- a/src/backends/meta-output.c
++++ b/src/backends/meta-output.c
+@@ -18,6 +18,7 @@
+ #include "config.h"
+ 
+ #include "backends/meta-output.h"
++#include "backends/meta-xn242-hdr.h"
+ 
+ #include "backends/edid.h"
+ #include "backends/meta-crtc.h"
+@@ -539,6 +540,15 @@ meta_output_get_color_metadata (MetaOutput            *output,
+ {
+   MetaOutputPrivate *priv = meta_output_get_instance_private (output);
+ 
++  if (meta_xn242_has_native_hdr (meta_output_get_info (output)))
++    {
++      /* HDR content is converted to the native gamma response by Clutter.
++       * The DSI sink must never see a BT.2020/PQ output request. */
++      *hdr_metadata = (MetaOutputHdrMetadata) { 0 };
++      *colorspace = META_OUTPUT_COLORSPACE_DEFAULT;
++      return;
++    }
++
+   switch (priv->color_mode)
+     {
+     case META_COLOR_MODE_DEFAULT:
+diff --git a/src/backends/meta-xn242-hdr.h b/src/backends/meta-xn242-hdr.h
+new file mode 100644
+index 0000000..578ba2a
+--- /dev/null
++++ b/src/backends/meta-xn242-hdr.h
+@@ -0,0 +1,45 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++#pragma once
++
++#include <string.h>
++
++#include "backends/meta-output.h"
++
++/* The XN242 accepts RGB888/DSC, with a gamma 2.2 response in the factory
++ * HDR pipeline. Keep all color conversion in the compositor and leave the
++ * KMS connector in its default encoding. Only the dedicated test system
++ * installs the opt-in marker. */
++static inline gboolean
++meta_xn242_has_native_hdr (const MetaOutputInfo *info)
++{
++  static gsize checked;
++  static gboolean enabled;
++
++  if (!info || info->is_virtual ||
++      info->connector_type != META_CONNECTOR_TYPE_DSI ||
++      g_strcmp0 (info->name, "DSI-1") != 0)
++    return FALSE;
++
++  if (g_once_init_enter (&checked))
++    {
++      g_autofree char *compatible = NULL;
++      g_autofree char *max_brightness = NULL;
++      gsize length = 0;
++
++      enabled =
++        g_file_test ("/etc/mutter/xn242-native-hdr", G_FILE_TEST_IS_REGULAR) &&
++        g_file_get_contents ("/sys/firmware/devicetree/base/compatible",
++                             &compatible, &length, NULL) &&
++        length >= sizeof ("oneplus,opd2413") &&
++        memcmp (compatible, "oneplus,opd2413", sizeof ("oneplus,opd2413")) == 0 &&
++        g_file_test ("/sys/firmware/devicetree/base/soc@0/display-subsystem@ae00000/"
++                     "dsi@ae94000/panel@0/qcom,dpu-8bpc-dither",
++                     G_FILE_TEST_EXISTS) &&
++        g_file_get_contents ("/sys/class/backlight/backlight/max_brightness",
++                             &max_brightness, NULL, NULL) &&
++        g_str_equal (g_strstrip (max_brightness), "2047");
++      g_once_init_leave (&checked, 1);
++    }
++
++  return enabled;
++}
+diff --git a/src/backends/native/meta-output-kms.c b/src/backends/native/meta-output-kms.c
+index 3e34148..2452771 100644
+--- a/src/backends/native/meta-output-kms.c
++++ b/src/backends/native/meta-output-kms.c
+@@ -32,6 +32,7 @@
+ #include "backends/meta-color-manager.h"
+ #include "backends/meta-crtc.h"
+ #include "backends/meta-monitor-private.h"
++#include "backends/meta-xn242-hdr.h"
+ #include "backends/meta-output.h"
+ #include "backends/native/meta-crtc-kms.h"
+ #include "backends/native/meta-crtc-mode-kms.h"
+@@ -51,6 +52,8 @@ struct _MetaOutputKms
+   MetaOutputNative parent;
+ 
+   MetaKmsConnector *kms_connector;
++  gboolean have_xn242_sdr_brightness;
++  int xn242_sdr_brightness;
+ };
+ 
+ G_DEFINE_TYPE (MetaOutputKms, meta_output_kms, META_TYPE_OUTPUT_NATIVE)
+@@ -398,6 +401,7 @@ static MetaBacklight *
+ meta_output_kms_create_backlight (MetaOutput  *output,
+                                   GError     **error)
+ {
++  MetaOutputKms *output_kms = META_OUTPUT_KMS (output);
+   MetaMonitor *monitor = meta_output_get_monitor (output);
+   MetaBackend *backend = meta_monitor_get_backend (monitor);
+   MetaColorManager *color_manager = meta_backend_get_color_manager (backend);
+@@ -431,6 +435,12 @@ meta_output_kms_create_backlight (MetaOutput  *output,
+           MetaBacklight *bl = META_BACKLIGHT (backlight_sysfs);
+           int brightness_max;
+ 
++          if (meta_xn242_has_native_hdr (output_info) &&
++              !output_kms->have_xn242_sdr_brightness)
++            {
++              output_kms->xn242_sdr_brightness = meta_backlight_get_brightness (bl);
++              output_kms->have_xn242_sdr_brightness = TRUE;
++            }
+           meta_backlight_get_brightness_info (bl, NULL, &brightness_max);
+           meta_backlight_set_brightness (bl, brightness_max);
+ 
+@@ -454,6 +464,12 @@ meta_output_kms_create_backlight (MetaOutput  *output,
+       return NULL;
+     }
+ 
++  if (output_kms->have_xn242_sdr_brightness)
++    {
++      meta_backlight_set_brightness (META_BACKLIGHT (backlight_sysfs),
++                                     output_kms->xn242_sdr_brightness);
++      output_kms->have_xn242_sdr_brightness = FALSE;
++    }
+   return META_BACKLIGHT (g_steal_pointer (&backlight_sysfs));
+ }
+ 

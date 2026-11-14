@@ -1,0 +1,20 @@
+{
+  "from": "7.3.3",
+  "to": "7.3.4",
+  "official_base": "7595a62d45ee1a2297eafa5f2ef5d0a45142d84d",
+  "nixpkgs_revision": "d4f25a3e562008648d45bcf2d70bcc7422cad84e",
+  "old_patch_head": "7b95e56a9771ede404ebd7599458a21ddc2ffe79",
+  "new_patch_head": "bfc760b9caa7d621afe907d592bda39187186411",
+  "upstreamed": [
+    "drivers/ufs/core/ufshcd.c: lock order fix",
+    "drivers/media/platform/qcom/iris/iris_vdec.c: CAPTURE bit-depth gating removal"
+  ],
+  "conflicts": {
+    "qcom_battmgr": "Retain downstream notify_lock and removing guard on newly stable online-update helper.",
+    "audioreach_topology": "Retain the existing device ABI: array size includes header, as declared by snd_ar_tokens.h and consumed by audioreach.c; retain bounded kmemdup and error propagation.",
+    "iris_vdec": "Keep upstream CAPTURE gating removal and omit redundant downstream comment."
+  },
+  "strict_replay": "passed; see replay-7.3.4.json",
+  "full_build": "final kernel, modules and DTB passed; full system pending",
+  "hardware": "pending"
+}

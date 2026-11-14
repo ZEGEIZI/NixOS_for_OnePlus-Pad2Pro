@@ -1,0 +1,573 @@
+{
+  "groups": [
+    {
+      "name": "01-bindings-and-documentation",
+      "commit": "d441a690cf154ffa71c80362fa8e375971cd21f4",
+      "paths": [
+        "Documentation/ABI/testing/sysfs-driver-input-nt36536",
+        "Documentation/arch/arm64/erhai.rst",
+        "Documentation/arch/arm64/index.rst",
+        "Documentation/devicetree/bindings/arm/qcom.yaml",
+        "Documentation/devicetree/bindings/clock/qcom,sm8450-camcc.yaml",
+        "Documentation/devicetree/bindings/display/msm/gmu.yaml",
+        "Documentation/devicetree/bindings/display/msm/gpu.yaml",
+        "Documentation/devicetree/bindings/display/panel/novatek,nt36536.yaml",
+        "Documentation/devicetree/bindings/input/oneplus,pad2pro-pogo-keyboard.yaml",
+        "Documentation/devicetree/bindings/input/touchscreen/novatek,nt36536-ts.yaml",
+        "Documentation/devicetree/bindings/leds/backlight/kinetic,ktz8866.yaml",
+        "Documentation/devicetree/bindings/media/i2c/chipnext,cn3927.yaml",
+        "Documentation/devicetree/bindings/media/i2c/smartsens,sc1300cs.yaml",
+        "Documentation/devicetree/bindings/media/i2c/smartsens,sc820cs.yaml",
+        "Documentation/devicetree/bindings/media/qcom,kaanapali-camss.yaml",
+        "Documentation/devicetree/bindings/media/qcom,sm8750-camss.yaml",
+        "Documentation/devicetree/bindings/net/bluetooth/qcom,wcn7850-bt.yaml",
+        "Documentation/devicetree/bindings/net/wireless/qcom,ath12k.yaml",
+        "Documentation/devicetree/bindings/phy/qcom,x1e80100-csi2-phy.yaml",
+        "Documentation/devicetree/bindings/power/supply/oplus,wls-charger-cps8601.yaml",
+        "Documentation/devicetree/bindings/power/supply/southchip,sc8547a.yaml",
+        "Documentation/devicetree/bindings/regulator/qcom,qca6390-pmu.yaml",
+        "Documentation/devicetree/bindings/serial/serial.yaml",
+        "Documentation/devicetree/bindings/soc/qcom/qcom,pmic-glink.yaml",
+        "Documentation/devicetree/bindings/sound/qcom,q6apm-lpass-dais.yaml",
+        "Documentation/devicetree/bindings/sound/qcom,sm8250.yaml",
+        "Documentation/devicetree/bindings/vendor-prefixes.yaml",
+        "MAINTAINERS"
+      ]
+    },
+    {
+      "name": "03-platform-dependencies",
+      "commit": "c13565e788eec6fd368d8a38da7412d26f5bca04",
+      "paths": [
+        "drivers/base/core.c",
+        "drivers/clk/clk.c",
+        "drivers/clk/clk_test.c",
+        "drivers/clk/qcom/common.c",
+        "drivers/clk/qcom/dispcc-sm8750.c",
+        "drivers/clk/qcom/gcc-sm8750.c",
+        "drivers/clk/qcom/gxclkctl-kaanapali.c",
+        "drivers/firmware/qcom/qcom_scm_trace.h",
+        "drivers/firmware/qcom/qcom_tzmem.c",
+        "drivers/pci/controller/dwc/pcie-qcom.c",
+        "drivers/pci/pci.c",
+        "drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c",
+        "drivers/phy/phy-core.c",
+        "drivers/phy/qualcomm/Kconfig",
+        "drivers/phy/qualcomm/Makefile",
+        "drivers/phy/qualcomm/phy-qcom-qmp-combo.c",
+        "drivers/phy/qualcomm/phy-qcom-qmp-pcie.c",
+        "drivers/pinctrl/qcom/pinctrl-sm8650-lpass-lpi.c",
+        "drivers/pmdomain/core.c",
+        "drivers/power/sequencing/pwrseq-qcom-wcn.c",
+        "drivers/remoteproc/qcom_q6v5.c",
+        "drivers/remoteproc/qcom_q6v5.h",
+        "drivers/remoteproc/qcom_q6v5_pas.c",
+        "drivers/rpmsg/qcom_glink_native.c",
+        "drivers/soc/qcom/Kconfig",
+        "drivers/soc/qcom/Makefile",
+        "drivers/soc/qcom/abl_root_identity.c",
+        "drivers/soc/qcom/abl_root_identity_test.c",
+        "drivers/soc/qcom/apr.c",
+        "drivers/soc/qcom/llcc-qcom.c",
+        "drivers/soc/qcom/pmic_glink.c",
+        "drivers/soc/qcom/pmic_glink_altmode.c",
+        "drivers/soc/qcom/pmic_glink_altmode_test.c",
+        "drivers/soc/qcom/qcom_pd_mapper.c",
+        "drivers/soc/qcom/ubwc_config.c",
+        "drivers/ufs/core/ufshcd.c",
+        "drivers/ufs/host/ufs-qcom.c",
+        "drivers/ufs/host/ufs-qcom.h",
+        "drivers/virt/Kconfig",
+        "drivers/virt/Makefile",
+        "include/linux/phy/phy.h",
+        "include/linux/soc/qcom/pmic_glink.h"
+      ]
+    },
+    {
+      "name": "04-backlight-and-thermal",
+      "commit": "ccb780afe60a8227ca2fcd2d5794533f0a17db1c",
+      "paths": [
+        "drivers/iio/adc/qcom-spmi-adc5-gen3.c",
+        "drivers/thermal/qcom/Kconfig",
+        "drivers/thermal/qcom/Makefile",
+        "drivers/thermal/qcom/qcom-spmi-adc-tm5-gen3.c",
+        "drivers/thermal/qcom/tsens.c",
+        "drivers/video/backlight/Kconfig",
+        "drivers/video/backlight/ktz8866.c",
+        "include/linux/iio/adc/qcom-adc5-gen3-common.h"
+      ]
+    },
+    {
+      "name": "05-display-and-gpu",
+      "commit": "bf78c7a336f0529b960fdb0d722aea03fc900734",
+      "paths": [
+        "drivers/gpu/drm/msm/adreno/a6xx_catalog.c",
+        "drivers/gpu/drm/msm/adreno/a6xx_gmu.c",
+        "drivers/gpu/drm/msm/adreno/a6xx_gpu.c",
+        "drivers/gpu/drm/msm/adreno/a6xx_gpu.h",
+        "drivers/gpu/drm/msm/adreno/a6xx_hfi.c",
+        "drivers/gpu/drm/msm/adreno/a8xx_gpu.c",
+        "drivers/gpu/drm/msm/adreno/adreno_device.c",
+        "drivers/gpu/drm/msm/adreno/adreno_gpu.h",
+        "drivers/gpu/drm/msm/disp/dpu1/catalog/dpu_12_0_sm8750.h",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.c",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_core_perf.h",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_encoder.c",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_encoder_phys_vid.c",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_catalog.c",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_catalog.h",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_ctl.c",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_dsc_1_2.c",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_vbif.c",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_hw_vbif.h",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_kms.c",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_vbif.c",
+        "drivers/gpu/drm/msm/disp/dpu1/dpu_vbif.h",
+        "drivers/gpu/drm/msm/dp/dp_audio.c",
+        "drivers/gpu/drm/msm/dp/dp_ctrl.c",
+        "drivers/gpu/drm/msm/dp/dp_display.c",
+        "drivers/gpu/drm/msm/dp/dp_panel.c",
+        "drivers/gpu/drm/msm/dsi/dsi_host.c",
+        "drivers/gpu/drm/msm/dsi/phy/dsi_phy_7nm.c",
+        "drivers/gpu/drm/msm/msm_drv.c",
+        "drivers/gpu/drm/msm/msm_drv.h",
+        "drivers/gpu/drm/msm/msm_gpu.h",
+        "drivers/gpu/drm/msm/msm_submitqueue.c",
+        "drivers/gpu/drm/panel/Kconfig",
+        "drivers/gpu/drm/panel/Makefile",
+        "drivers/gpu/drm/panel/panel-novatek-nt36536.c",
+        "include/drm/drm_mipi_dsi.h",
+        "tools/testing/selftests/drm/dpu-output-dither-test.py"
+      ]
+    },
+    {
+      "name": "06-input",
+      "commit": "57e8df71c7f4152c5ba9b3807d038101bf6f94c7",
+      "paths": [
+        "drivers/input/keyboard/Kconfig",
+        "drivers/input/keyboard/Makefile",
+        "drivers/input/keyboard/gpio_keys.c",
+        "drivers/input/keyboard/oneplus-pogo-keyboard.c",
+        "drivers/input/touchscreen/Kconfig",
+        "drivers/input/touchscreen/Makefile",
+        "drivers/input/touchscreen/nt36536/Kconfig",
+        "drivers/input/touchscreen/nt36536/Makefile",
+        "drivers/input/touchscreen/nt36536/nt36536.c",
+        "drivers/input/touchscreen/nt36536/nt36536.h",
+        "drivers/input/touchscreen/nt36536/nt36536_fw_update.c",
+        "drivers/input/touchscreen/nt36536/nt36536_mem_map.h",
+        "drivers/spi/spi-geni-qcom.c"
+      ]
+    },
+    {
+      "name": "07-power-supply",
+      "commit": "3418899c102d858dd29818170a06e5545dd53db3",
+      "paths": [
+        "drivers/power/supply/Kconfig",
+        "drivers/power/supply/Makefile",
+        "drivers/power/supply/cps8601.c",
+        "drivers/power/supply/cps8601_bl.h",
+        "drivers/power/supply/erhai_otg_glink.h",
+        "drivers/power/supply/erhai_pps.c",
+        "drivers/power/supply/erhai_pps_trace.h",
+        "drivers/power/supply/qcom_battmgr.c",
+        "drivers/power/supply/sc8547a.c",
+        "drivers/power/supply/sc8547a.h",
+        "tools/testing/selftests/power_supply/Makefile"
+      ]
+    },
+    {
+      "name": "08-audio",
+      "commit": "c598073af920e29dd1dad5990062e7234bf6371f",
+      "paths": [
+        "drivers/soundwire/qcom.c",
+        "include/dt-bindings/sound/qcom,q6dsp-lpass-ports.h",
+        "include/uapi/sound/snd_ar_tokens.h",
+        "sound/soc/codecs/Kconfig",
+        "sound/soc/codecs/aw88261.c",
+        "sound/soc/codecs/lpass-rx-macro.c",
+        "sound/soc/codecs/lpass-tx-macro.c",
+        "sound/soc/codecs/lpass-va-macro.c",
+        "sound/soc/codecs/lpass-wsa-macro.c",
+        "sound/soc/codecs/wcd-common.c",
+        "sound/soc/codecs/wcd939x.c",
+        "sound/soc/codecs/wcd939x.h",
+        "sound/soc/qcom/Kconfig",
+        "sound/soc/qcom/common.c",
+        "sound/soc/qcom/common.h",
+        "sound/soc/qcom/qdsp6/audioreach.c",
+        "sound/soc/qcom/qdsp6/audioreach.h",
+        "sound/soc/qcom/qdsp6/q6apm-dai.c",
+        "sound/soc/qcom/qdsp6/q6apm-lpass-dais.c",
+        "sound/soc/qcom/qdsp6/q6apm.c",
+        "sound/soc/qcom/qdsp6/q6prm-clocks.c",
+        "sound/soc/qcom/qdsp6/q6prm.h",
+        "sound/soc/qcom/qdsp6/topology.c",
+        "sound/soc/qcom/sc8280xp.c"
+      ]
+    },
+    {
+      "name": "09-wifi",
+      "commit": "9e10133e5b4562028775dc78b1e5bccf6162504f",
+      "paths": [
+        "drivers/net/wireless/ath/ath12k/core.c",
+        "drivers/net/wireless/ath/ath12k/core.h",
+        "drivers/net/wireless/ath/ath12k/hw.h",
+        "drivers/net/wireless/ath/ath12k/mac.c",
+        "drivers/net/wireless/ath/ath12k/qmi.c",
+        "drivers/net/wireless/ath/ath12k/qmi.h",
+        "drivers/net/wireless/ath/ath12k/reg.c",
+        "drivers/net/wireless/ath/ath12k/wifi7/dp_rx.c",
+        "drivers/net/wireless/ath/ath12k/wifi7/hal.c",
+        "drivers/net/wireless/ath/ath12k/wifi7/hw.c",
+        "drivers/net/wireless/ath/ath12k/wifi7/pci.c",
+        "drivers/net/wireless/ath/ath12k/wmi.c",
+        "tools/testing/selftests/net/ath12k-of-freq-test.py",
+        "tools/testing/selftests/net/ath12k-range-scan-test.py",
+        "tools/testing/selftests/net/ath12k-reg-event-test.py"
+      ]
+    },
+    {
+      "name": "10-bluetooth",
+      "commit": "8cd7f8c0046ab0734bcc1a47f6e24b28a04d2feb",
+      "paths": [
+        "drivers/bluetooth/brahma_peripheral.h",
+        "drivers/bluetooth/btqca.c",
+        "drivers/bluetooth/btqca.h",
+        "drivers/bluetooth/hci_qca.c",
+        "drivers/bluetooth/hci_serdev.c",
+        "tools/testing/selftests/bluetooth/brahma-peripheral-test.c"
+      ]
+    },
+    {
+      "name": "11-usb-and-uart",
+      "commit": "96cf5b229964ceb9d678e689b7f62cdcacad217c",
+      "paths": [
+        "drivers/tty/serial/qcom_geni_serial.c",
+        "drivers/usb/dwc3/dwc3-qcom.c",
+        "drivers/usb/gadget/function/f_ncm.c",
+        "drivers/usb/typec/mux/wcd939x-usbss.c",
+        "drivers/usb/typec/ucsi/Kconfig",
+        "drivers/usb/typec/ucsi/ucsi.c",
+        "drivers/usb/typec/ucsi/ucsi_glink.c",
+        "drivers/usb/typec/ucsi/ucsi_glink_test.c",
+        "include/linux/usb/wcd939x-usbss.h"
+      ]
+    },
+    {
+      "name": "12-camera-and-video",
+      "commit": "fa2b1defdbf18c7a5db57eb1c26de56624a2100a",
+      "paths": [
+        "drivers/media/i2c/Kconfig",
+        "drivers/media/i2c/Makefile",
+        "drivers/media/i2c/cn3927.c",
+        "drivers/media/i2c/sc1300cs.c",
+        "drivers/media/i2c/sc820cs.c",
+        "drivers/media/platform/qcom/camss/Kconfig",
+        "drivers/media/platform/qcom/camss/Makefile",
+        "drivers/media/platform/qcom/camss/camss-csid-980.c",
+        "drivers/media/platform/qcom/camss/camss-csid-gen4.c",
+        "drivers/media/platform/qcom/camss/camss-csid.c",
+        "drivers/media/platform/qcom/camss/camss-csid.h",
+        "drivers/media/platform/qcom/camss/camss-csiphy.c",
+        "drivers/media/platform/qcom/camss/camss-csiphy.h",
+        "drivers/media/platform/qcom/camss/camss-tpg-gen1.c",
+        "drivers/media/platform/qcom/camss/camss-vfe-gen4.c",
+        "drivers/media/platform/qcom/camss/camss-vfe.c",
+        "drivers/media/platform/qcom/camss/camss-vfe.h",
+        "drivers/media/platform/qcom/camss/camss.c",
+        "drivers/media/platform/qcom/camss/camss.h",
+        "drivers/media/platform/qcom/iris/iris_buffer.c",
+        "drivers/media/platform/qcom/iris/iris_core.c",
+        "drivers/media/platform/qcom/iris/iris_core.h",
+        "drivers/media/platform/qcom/iris/iris_ctrls.c",
+        "drivers/media/platform/qcom/iris/iris_ctrls.h",
+        "drivers/media/platform/qcom/iris/iris_hfi_common.c",
+        "drivers/media/platform/qcom/iris/iris_hfi_gen1.c",
+        "drivers/media/platform/qcom/iris/iris_hfi_gen1_command.c",
+        "drivers/media/platform/qcom/iris/iris_hfi_gen1_defines.h",
+        "drivers/media/platform/qcom/iris/iris_hfi_gen2.c",
+        "drivers/media/platform/qcom/iris/iris_hfi_gen2_command.c",
+        "drivers/media/platform/qcom/iris/iris_hfi_gen2_defines.h",
+        "drivers/media/platform/qcom/iris/iris_hfi_gen2_response.c",
+        "drivers/media/platform/qcom/iris/iris_platform_common.h",
+        "drivers/media/platform/qcom/iris/iris_probe.c",
+        "drivers/media/platform/qcom/iris/iris_resources.c",
+        "drivers/media/platform/qcom/iris/iris_resources.h",
+        "drivers/media/platform/qcom/iris/iris_vdec.c",
+        "drivers/media/platform/qcom/iris/iris_vidc.c",
+        "drivers/media/platform/qcom/iris/iris_vpu_common.c",
+        "drivers/phy/qualcomm/phy-qcom-mipi-csi2-3ph-dphy.c",
+        "drivers/phy/qualcomm/phy-qcom-mipi-csi2-core.c",
+        "drivers/phy/qualcomm/phy-qcom-mipi-csi2.h"
+      ]
+    },
+    {
+      "name": "13-gunyah",
+      "commit": "169e4bf721cedea2d4b0938fd8a98489a7ca4b4e",
+      "paths": [
+        "Documentation/devicetree/bindings/firmware/gunyah-cma-mem.yaml",
+        "Documentation/devicetree/bindings/firmware/gunyah-hypervisor.yaml",
+        "Documentation/virt/gunyah/index.rst",
+        "Documentation/virt/gunyah/message-queue.rst",
+        "arch/arm64/Kbuild",
+        "arch/arm64/gunyah/Makefile",
+        "arch/arm64/gunyah/gunyah_hypercall.c",
+        "arch/arm64/gunyah/timer.c",
+        "arch/arm64/include/asm/gunyah.h",
+        "arch/arm64/mm/fault.c",
+        "drivers/virt/gunyah/Kconfig",
+        "drivers/virt/gunyah/Makefile",
+        "drivers/virt/gunyah/gunyah.c",
+        "drivers/virt/gunyah/gunyah_ioeventfd.c",
+        "drivers/virt/gunyah/gunyah_irqfd.c",
+        "drivers/virt/gunyah/gunyah_platform_hooks.c",
+        "drivers/virt/gunyah/gunyah_qcom.c",
+        "drivers/virt/gunyah/gunyah_qtvm.c",
+        "drivers/virt/gunyah/gunyah_vcpu.c",
+        "drivers/virt/gunyah/gunyah_vendor_hooks.h",
+        "drivers/virt/gunyah/rsc_mgr.c",
+        "drivers/virt/gunyah/rsc_mgr.h",
+        "drivers/virt/gunyah/rsc_mgr_rpc.c",
+        "drivers/virt/gunyah/trace_vcpu.h",
+        "drivers/virt/gunyah/vm_mgr.c",
+        "drivers/virt/gunyah/vm_mgr.h",
+        "drivers/virt/gunyah/vm_mgr_cma_mem.c",
+        "drivers/virt/gunyah/vm_mgr_mem.c",
+        "include/linux/gunyah.h",
+        "include/linux/gunyah_qtvm.h",
+        "include/uapi/linux/gunyah.h"
+      ]
+    },
+    {
+      "name": "14-device-tree",
+      "commit": "bbb5243d2bdcaddf4dfcb385705e297467a84ba0",
+      "paths": [
+        "arch/arm64/boot/dts/qcom/Makefile",
+        "arch/arm64/boot/dts/qcom/sm8750-erhai.dts",
+        "arch/arm64/boot/dts/qcom/sm8750.dtsi"
+      ]
+    },
+    {
+      "name": "15-hardware-config",
+      "commit": "489b87ae5cb9aec330244aa596bc86c808272e1b",
+      "paths": [
+        "arch/arm64/configs/erhai-firstboot.config",
+        "arch/arm64/configs/sm8750-netfilter.config",
+        "arch/arm64/configs/sm8750-peripherals.config",
+        "arch/arm64/configs/sm8750-snap.config",
+        "arch/arm64/configs/sm8750-virt.config",
+        "arch/arm64/configs/sm8750-waydroid.config"
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "path": "Documentation/devicetree/bindings/clock/qcom,sm8450-camcc.yaml",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "Documentation/devicetree/bindings/display/msm/gpu.yaml",
+      "type": "content",
+      "count": 2
+    },
+    {
+      "path": "Documentation/devicetree/bindings/display/panel/novatek,nt36536.yaml",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "Documentation/devicetree/bindings/sound/qcom,sm8250.yaml",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/clk/clk_test.c",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/phy/phy-core.c",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/remoteproc/qcom_q6v5.c",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/remoteproc/qcom_q6v5_pas.c",
+      "type": "content",
+      "count": 3
+    },
+    {
+      "path": "drivers/soc/qcom/Kconfig",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/soc/qcom/ubwc_config.c",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/thermal/qcom/Kconfig",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/thermal/qcom/Makefile",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/gpu/drm/msm/dp/dp_ctrl.c",
+      "type": "content",
+      "count": 2
+    },
+    {
+      "path": "drivers/gpu/drm/msm/dp/dp_display.c",
+      "type": "content",
+      "count": 2
+    },
+    {
+      "path": "drivers/gpu/drm/msm/dsi/dsi_host.c",
+      "type": "content",
+      "count": 4
+    },
+    {
+      "path": "drivers/gpu/drm/panel/Kconfig",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/gpu/drm/panel/panel-novatek-nt36536.c",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/spi/spi-geni-qcom.c",
+      "type": "content",
+      "count": 2
+    },
+    {
+      "path": "include/dt-bindings/sound/qcom,q6dsp-lpass-ports.h",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "sound/soc/codecs/aw88261.c",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "sound/soc/codecs/lpass-rx-macro.c",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "sound/soc/codecs/lpass-tx-macro.c",
+      "type": "content",
+      "count": 6
+    },
+    {
+      "path": "sound/soc/codecs/lpass-va-macro.c",
+      "type": "content",
+      "count": 6
+    },
+    {
+      "path": "sound/soc/codecs/lpass-wsa-macro.c",
+      "type": "content",
+      "count": 5
+    },
+    {
+      "path": "sound/soc/qcom/common.c",
+      "type": "content",
+      "count": 2
+    },
+    {
+      "path": "sound/soc/qcom/common.h",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "sound/soc/qcom/qdsp6/audioreach.c",
+      "type": "content",
+      "count": 3
+    },
+    {
+      "path": "sound/soc/qcom/qdsp6/audioreach.h",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "sound/soc/qcom/qdsp6/q6prm-clocks.c",
+      "type": "content",
+      "count": 2
+    },
+    {
+      "path": "sound/soc/qcom/qdsp6/q6prm.h",
+      "type": "content",
+      "count": 2
+    },
+    {
+      "path": "sound/soc/qcom/qdsp6/topology.c",
+      "type": "content",
+      "count": 2
+    },
+    {
+      "path": "sound/soc/qcom/sc8280xp.c",
+      "type": "content",
+      "count": 10
+    },
+    {
+      "path": "drivers/bluetooth/hci_qca.c",
+      "type": "content",
+      "count": 2
+    },
+    {
+      "path": "drivers/tty/serial/qcom_geni_serial.c",
+      "type": "content",
+      "count": 8
+    },
+    {
+      "path": "drivers/media/platform/qcom/iris/iris_ctrls.c",
+      "type": "content",
+      "count": 3
+    },
+    {
+      "path": "drivers/media/platform/qcom/iris/iris_ctrls.h",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "drivers/media/platform/qcom/iris/iris_platform_common.h",
+      "type": "content",
+      "count": 1
+    },
+    {
+      "path": "arch/arm64/boot/dts/qcom/sm8750.dtsi",
+      "type": "content",
+      "count": 1
+    }
+  ],
+  "upstream_equivalent": [
+    "Documentation/devicetree/bindings/sound/qcom,q6apm-lpass-dais.yaml",
+    "drivers/clk/qcom/common.c",
+    "drivers/clk/qcom/gxclkctl-kaanapali.c",
+    "drivers/remoteproc/qcom_q6v5.h",
+    "drivers/iio/adc/qcom-spmi-adc5-gen3.c",
+    "drivers/thermal/qcom/qcom-spmi-adc-tm5-gen3.c",
+    "include/linux/iio/adc/qcom-adc5-gen3-common.h",
+    "drivers/gpu/drm/msm/dp/dp_audio.c",
+    "drivers/media/platform/qcom/iris/iris_hfi_gen1.c",
+    "drivers/media/platform/qcom/iris/iris_hfi_gen1_defines.h"
+  ],
+  "excluded": [
+    ".github/CONTRIBUTING.md",
+    ".github/pull_request_template.md",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ]
+}

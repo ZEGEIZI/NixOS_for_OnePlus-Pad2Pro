@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-11-13T19:08:44.327095+00:00",
+  "release": "7.3.4-erhai-p2",
+  "system": "/nix/store/6v7rk00fv3ms47jbragv0xpmmg0r7mhn-nixos-system-pad2pro-erhai-p2-panel-trace",
+  "boot_id": "nixos-4dc3cfe7319fdcbb5591a38098d29d87",
+  "result": "immediate reset; user directly recovered original current without Android",
+  "recovery_boot_id": "e179d731-7b2e-4e1e-9574-dbcc6885fe2e",
+  "pstore": {
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-panel-trace-recovery/var/lib/systemd/pstore/console-ramoops-0",
+    "bytes": 262132,
+    "sha256": "75345d2ca1335a26e110638cd2cd7e4a4dde3b4d22fd0268d3f5f4f76bb1c616",
+    "nul_bytes": 489,
+    "corrupted": true
+  },
+  "readable_progress": [
+    "Both DSI host power-on calls returned 0",
+    "GPU runtime suspend ran; a6xx_gmu_stop returned 0",
+    "novatek_nt36536_prepare entered",
+    "vreg_l12b_1p8 enable, delay and completion events printed",
+    "No later lcd_vsp/lcd_vsn, reset GPIO or DCS event is readable"
+  ],
+  "interpretation": "The last visible step is VDDIO enable before a 2-3 ms sleep. No readable panic or call trace. This does not yet identify the failed operation.",
+  "source_audit": {
+    "panel_power_reset_dcs": "unchanged from working old custom panel",
+    "bias_status": "ktz8868_bias_is_enabled reads cached bool, not regmap or I2C",
+    "bias_enable": "GPIO-only, no I2C",
+    "regulator_core": "is_enabled runs before the regulator enable tracepoint; add entry/return probes to cover it",
+    "sleep": "Actual p2 vmlinux disassembly confirms regulator_enable then usleep_range_state(2000,3000,TASK_UNINTERRUPTIBLE), before lcd_vsp enable"
+  },
+  "next": "Trace regulator/bias entry and return, usleep entry and return, and PSCI domain idle enter/exit with the same p2 payload. No speculative I2C change.",
+  "hardware_accepted": false
+}

@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-11-13T22:43:45.828202+00:00",
+  "release": "7.3.4-erhai-p5",
+  "patch_head": "4a4041f5921c6cbe29946bf36a1035b601ff3400",
+  "kernel": "/nix/store/c5vs9hqhyr5csx4r6n6bsna1pq4bc6rv-linux-erhai-aarch64-unknown-linux-gnu-7.3.4",
+  "kernel_drv": "/nix/store/h4m10db616b308g1mvl5p7pijni1r5sc-linux-erhai-aarch64-unknown-linux-gnu-7.3.4.drv",
+  "dev": "/nix/store/891p9vvhxgmy0hmvm4zb7ya9p6n4gks3-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-dev",
+  "modules": "/nix/store/zz8smds7gr5cl90hb96ncjlj8yc7fmmw-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-modules",
+  "sample_vermagic": "7.3.4-erhai-p5 SMP preempt mod_unload aarch64",
+  "compiler_architecture": "x86_64 to ARM64 cross",
+  "config_fragments": "all requests and final release override passed",
+  "config_sha256": "1eca5d4ecb3dad261540515000fbd373e8deef23f3fc4e235330aa9fd0256595",
+  "vmlinux_architecture": "AArch64",
+  "vmlinux_btf": "present",
+  "adsp_heap": "dedicated no-map; reusable absent in actual compiled DTB",
+  "vddio_constraint_uV": {
+    "regulator-min-microvolt": 1896000,
+    "regulator-max-microvolt": 1896000
+  },
+  "checks": {
+    "strict_replay": "/nix/store/fm4jgcqipjwg298aiqlmq3ddxsznmnrb-erhai-patchset-replay",
+    "device_regression": "/nix/store/ilzla2469qfmdrlf0vkrk1m0jb5divdc-erhai-device-regression",
+    "wifi_firmware": "/nix/store/ylp7ig9bkpzqcfp3pb15p7cz5c96fkjc-opd2413-wifi-firmware-tests",
+    "cps8601_firmware": "/nix/store/ahmq2cj569pbxwdaj9kn3acdpzaskjw1-cps8601-firmware-tests",
+    "boot_publication_85_cases": "/nix/store/z6p675zc0cgkh1s3mhjjv2j6kxwvc9fx-kshim-publication-tests"
+  },
+  "postInstall_DTB_guard": "passed in actual kernel installation phase",
+  "payloads": [
+    {
+      "path": "/nix/store/c5vs9hqhyr5csx4r6n6bsna1pq4bc6rv-linux-erhai-aarch64-unknown-linux-gnu-7.3.4/Image",
+      "bytes": 54635008,
+      "sha256": "5ed951998bbf2c77bb9a3d04f508216d1f85d7b417b9c4ef2ce9f1de8f2f1a10"
+    },
+    {
+      "path": "/nix/store/c5vs9hqhyr5csx4r6n6bsna1pq4bc6rv-linux-erhai-aarch64-unknown-linux-gnu-7.3.4/dtbs/qcom/sm8750-erhai.dtb",
+      "bytes": 193956,
+      "sha256": "4d069f620fcf6b09f258683a0ab23dcd819e415585b637ec1da4a4a86b790178"
+    }
+  ],
+  "full_system_built": false,
+  "complete_native_kernel_built": false,
+  "hardware_verified": false,
+  "remaining": "healthy tablet recovery, complete system/initrd/boot tree, p5 boot and memory-load/native validation, cold boot and final promotion"
+}

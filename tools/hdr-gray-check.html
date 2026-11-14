@@ -1,0 +1,32 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>HDR 灰阶对照</title>
+<style>html{background:#181818;color:#ddd;font:18px system-ui}body{max-width:1120px;margin:24px auto;padding:0 20px}h1{font-size:26px}h2{font-size:18px;margin:16px 0 6px}.labels{display:flex}.labels span{width:20%;text-align:center}canvas{display:block;width:100%;height:110px}video{display:block;width:100%;height:150px;object-fit:fill}p{line-height:1.5}pre{white-space:pre-wrap;font-size:13px}button{padding:8px 16px;font:inherit}</style>
+<h1>HDR 灰阶对照</h1><p>保持 GNOME 的 HDR 开启。比较每行右侧三块是否逐级变亮、彼此可分辨。数字是内容的输入亮度。</p>
+<div class="labels"><span>100 nit</span><span>203 nit</span><span>400 nit</span><span>600 nit</span><span>1000 nit</span></div>
+<h2>A · PQ 画布，8-bit / standard（直接像素写入）</h2><canvas id="a" width="1000" height="100"></canvas>
+<h2>B · PQ 画布，浮点 / standard</h2><canvas id="b" width="1000" height="100"></canvas>
+<h2>C · PQ 画布，浮点 / extended</h2><canvas id="c" width="1000" height="100"></canvas>
+<h2>D · 浏览器播放同一段 HDR10 视频（提供测试片时）</h2><video controls id="v" autoplay loop muted playsinline ></video>
+<p id="mode"></p><button onclick="location.reload()">刷新状态</button><details><summary>测试信息</summary><pre id="status"></pre></details>
+<script>
+const levels=[100,203,400,600,1000];
+function pq(n){const p=(n/10000)**(2610/16384);return ((3424/4096+(2413/128)*p)/(1+(2392/128)*p))**(2523/32)}
+window.results={levels,rows:{}};
+const videoURL=new URLSearchParams(location.search).get('video');
+if(videoURL)document.getElementById('v').src=videoURL;
+for(const [id,colorType,mode] of [['a','unorm8','standard'],['b','float16','standard'],['c','float16','extended']]){
+ try{
+  const c=document.getElementById(id),ctx=c.getContext('2d',{colorSpace:'rec2100-pq',colorType,toneMapping:{mode},alpha:false});
+  const pixelFormat=colorType==='float16'?'rgba-float16':'rgba-unorm8';
+  const data=colorType==='float16'?new Float16Array(c.width*c.height*4):new Uint8ClampedArray(c.width*c.height*4);
+  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
+   const offset=(y*c.width+x)*4,value=pq(levels[Math.floor(x/(c.width/5))]);
+   data[offset]=data[offset+1]=data[offset+2]=colorType==='float16'?value:Math.round(value*255);data[offset+3]=colorType==='float16'?1:255;
+  }
+  ctx.putImageData(new ImageData(data,c.width,c.height,{colorSpace:'rec2100-pq',pixelFormat}),0,0);
+  const samples=levels.map((_,i)=>Array.from(ctx.getImageData(i*200+100,50,1,1,{colorSpace:'rec2100-pq',pixelFormat:'rgba-float16'}).data));
+  results.rows[id]={attributes:ctx.getContextAttributes(),samples};
+ }catch(e){results.rows[id]={error:String(e)};}
+}
+function report(){results.hdr=matchMedia('(dynamic-range:high)').matches;results.videoHDR=matchMedia('(video-dynamic-range:high)').matches;results.depth=screen.colorDepth;results.video={readyState:v.readyState,width:v.videoWidth,height:v.videoHeight,error:v.error?.message,source:v.currentSrc};document.getElementById('mode').textContent=results.hdr?'浏览器检测：HDR':'浏览器检测：SDR，请先开启 GNOME HDR';document.getElementById('status').textContent=JSON.stringify(results,null,2);}
+report();v.addEventListener('loadeddata',report);v.addEventListener('error',report);matchMedia('(dynamic-range:high)').addEventListener('change',report);
+</script></html>

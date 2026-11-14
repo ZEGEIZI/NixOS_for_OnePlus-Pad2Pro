@@ -1,0 +1,23 @@
+{
+  "started_at": "2026-11-13T19:23:58.206749+00:00",
+  "patch_head": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
+  "kernel_drv": "/nix/store/jx041ccgq5dns0iaj7p1a4q3fv77f8vn-linux-erhai-7.3.4.drv",
+  "build_platform": "aarch64-linux",
+  "host_platform": "aarch64-linux",
+  "toolchain": "current locked nixpkgs",
+  "status": "interrupted by user manual noidle-debug boot during kernel unpack phase",
+  "log": "/tmp/erhai-native-kernel-p2-build-02.log",
+  "hardware_accepted": false,
+  "result": "Source preparation and native configuration completed; full kernel compilation did not start. SSH/daemon connection dropped during the authorized manual test.",
+  "native_full_kernel_built": false,
+  "prior_attempts": [
+    {
+      "started_at": "2026-11-13T18:00:25.848055+00:00",
+      "status": "interrupted by manual diagnostic boot while dependencies were building",
+      "result": "not a compile failure; daemon connection dropped when the device booted gpu-off-debug",
+      "log": "/tmp/erhai-native-kernel-p2-build-01.log"
+    }
+  ],
+  "ended_at": "2026-11-13T19:28:16.176495+00:00",
+  "native_config_validation": "native-config-p2-validation.json"
+}

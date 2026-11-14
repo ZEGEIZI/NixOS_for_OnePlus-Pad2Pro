@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-11-13T19:17:19.585686+00:00",
+  "release": "7.3.4-erhai-p2",
+  "system": "/nix/store/rkn39zgippp7rdjf5yh4mxqkc8lmjj0b-nixos-system-pad2pro-erhai-p2-noidle-debug",
+  "boot_id": "nixos-a9496e2caf46a448c4588a694b81d0da",
+  "cmdline_bytes": 1300,
+  "only_boot_param_delta": "cpuidle.off=1",
+  "same_p2_payloads": true,
+  "validation": "Complete system/boot tree, payload hashes, initrd and boot parameter delta checks passed",
+  "probe_registration": "Unchanged definitions; power-trace-probe-validation.json",
+  "menu_entries": 3,
+  "boot_readonly": true,
+  "default": "nixos/current",
+  "result": "immediate reset; user directly recovered original current without Android",
+  "hardware_accepted": false,
+  "recovery_boot_id": "6ea593ea-1519-4f8b-86b5-5e8a29173347",
+  "pstore": {
+    "path": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-noidle-debug-recovery/var/lib/systemd/pstore/console-ramoops-0",
+    "bytes": 262132,
+    "sha256": "b98b5602cc71f609767b38516f0e70ee6edf5577a1f0f746ca6781f85d704ef0",
+    "nul_bytes": 481,
+    "corrupted": true
+  },
+  "cpuidle_off_effective": "cpuidle_init returned -ENODEV and PSCI cpuidle driver registration failed, as expected",
+  "readable_progress": [
+    "Panel VDDIO regulator_enable returned 0",
+    "Panel delay usleep_range_state(2000,3000) entered",
+    "GPU runtime suspend completed afterwards with return 0",
+    "No panel sleep return or later regulator event is readable"
+  ],
+  "interpretation": "Disabling the cpuidle driver alone does not prevent the reset. Generic runtime-PM/domain callbacks after the driver return remain unobserved; no readable panic or stack.",
+  "next": "Trace runtime PM events, power-domain names, SMMU suspend and clock disable/unprepare. Keep cpuidle.off for this trace comparison.",
+  "menu_entry": "replaced by rpm-trace"
+}

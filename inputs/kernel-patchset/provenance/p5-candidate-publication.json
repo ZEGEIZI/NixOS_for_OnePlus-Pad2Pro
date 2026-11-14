@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-11-14T04:09:44.062223+00:00",
+  "release": "7.3.4-erhai-p5",
+  "system": "/nix/store/qpg8bai4351gb89qxxijhl7k2lba71ci-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "boot_id": "nixos-ee22dcee575e67dfce63d33b808a6547",
+  "recovery_boot_uuid": "15c28357-0507-4280-985c-097ef581511b",
+  "recovery_release": "7.2.15-nixos-erhai-efc39b9d9726-upstream4-ebpf1",
+  "manifest_and_payloads_verified": true,
+  "original_current": "nixos-b2b0bfb7071b917422b5034591a85c15",
+  "original_previous": "nixos-8a13fae19c084a7a9f2965b6f6027b15",
+  "shared_default": "nixos/current",
+  "backup_directory": "/var/lib/erhai-patchset/20261114-120700-candidate",
+  "menu_entries": [
+    "nixos-ee22dcee575e67dfce63d33b808a6547",
+    "nixos-b2b0bfb7071b917422b5034591a85c15",
+    "nixos-8a13fae19c084a7a9f2965b6f6027b15"
+  ],
+  "retired": [
+    "nixos-d6c28ef76672e20826d28ef808c2511a"
+  ],
+  "boot_mount_readonly": true,
+  "profile_unchanged": true,
+  "etc_nixos_replaced": false,
+  "hardware_verified": false,
+  "next": "manual p5 boot, live reservation and anonymous THP checks, complete physical native build"
+}

@@ -1,0 +1,75 @@
+--- a/src/wayland/meta-wayland-color-management.c
++++ b/src/wayland/meta-wayland-color-management.c
+@@ -29,6 +29,8 @@
+ 
+ #include "backends/meta-color-device.h"
+ #include "backends/meta-color-manager.h"
++#include "backends/meta-xn242-hdr.h"
++#include "backends/meta-monitor-private.h"
+ #include "compositor/meta-surface-actor-wayland.h"
+ #include "wayland/meta-wayland-client-private.h"
+ #include "wayland/meta-wayland-private.h"
+@@ -610,7 +612,10 @@
+                                                 (uint32_t) lum->ref);
+   wp_image_description_info_v1_send_target_luminance (info_resource,
+                                                       float_to_scaled_uint32 (lum->min),
+-                                                      (uint32_t) lum->max);
++                                                      (uint32_t)
++                                                      (eotf->type == CLUTTER_EOTF_TYPE_NAMED &&
++                                                       eotf->tf_name == CLUTTER_TRANSFER_FUNCTION_PQ
++                                                         ? lum->mastering_max : lum->max));
+ }
+ 
+ static void
+@@ -677,8 +682,10 @@
+   MetaMonitorManager *monitor_manager = get_monitor_manager (color_manager);
+   MetaWaylandSurface *surface = cm_surface->surface;
+   MetaLogicalMonitor *logical_monitor;
++  MetaMonitor *monitor;
+   ClutterColorState *color_state = NULL;
+   GList *l;
++  g_autoptr (ClutterColorState) pq_preferred = NULL;
+   gboolean initial = !cm_surface->preferred_color_state;
+ 
+   g_return_if_fail (surface != NULL);
+@@ -696,7 +703,39 @@
+ 
+       g_return_if_fail (monitors != NULL);
+ 
+-      color_state = get_output_color_state (color_manager, monitors->data);
++      monitor = monitors->data;
++
++      color_state = get_output_color_state (color_manager, monitor);
++      if (meta_xn242_adaptive_hdr_enabled (meta_output_get_info (meta_monitor_get_main_output (monitor))) &&
++          CLUTTER_IS_COLOR_STATE_PARAMS (color_state))
++        {
++          ClutterColorStateParams *params = CLUTTER_COLOR_STATE_PARAMS (color_state);
++          const ClutterLuminance *output_lum = clutter_color_state_get_luminance (color_state);
++          const ClutterEOTF *output_eotf = clutter_color_state_params_get_eotf (params);
++
++          if (output_eotf->type == CLUTTER_EOTF_TYPE_NAMED &&
++              output_eotf->tf_name == CLUTTER_TRANSFER_FUNCTION_GAMMA22 &&
++              output_lum->max > output_lum->ref)
++            {
++              ClutterEOTF pq_eotf = {
++                .type = CLUTTER_EOTF_TYPE_NAMED,
++                .tf_name = CLUTTER_TRANSFER_FUNCTION_PQ,
++              };
++              ClutterLuminance pq_lum = *output_lum;
++
++              /* Prefer absolute PQ for clients. Chromium 157 otherwise composes
++               * in the panel's gamma space but describes a different peak.
++               * This is a client preference; the DSI sink stays native gamma.
++               * Keep the actual sink peak in target_luminance, independently
++               * of PQ's fixed 10000-nit encoding range. */
++              pq_lum.mastering_max = output_lum->max;
++              pq_preferred = clutter_color_state_params_new_from_primitives (
++                get_clutter_context (color_manager),
++                *clutter_color_state_params_get_colorimetry (params),
++                pq_eotf, pq_lum);
++              color_state = pq_preferred;
++            }
++        }
+     }
+ 
+   if (!color_state)

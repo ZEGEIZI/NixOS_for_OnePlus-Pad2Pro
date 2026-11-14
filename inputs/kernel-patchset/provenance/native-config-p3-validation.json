@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-11-13T20:47:23.107424+00:00",
+  "release": "7.3.4-erhai-p3",
+  "patch_head": "d31d13f5d0b1117160e2930da43996219933f14d",
+  "fragment_checks": "both native and cross passed",
+  "config_difference": {
+    "CONFIG_CC_VERSION_TEXT": {
+      "cross": "\"aarch64-unknown-linux-gnu-gcc (GCC) 16.2.0\"",
+      "native": "\"gcc (GCC) 16.2.0\""
+    }
+  },
+  "native_sha256": "1281ba1b691213fd2eab4adc51e659d75335aa3ed82565362c3297d7e8f57667",
+  "cross_sha256": "5cff108ebbf37d9fb6f006c8316e14d9d6ea48093d5cb00b9ae75d02d357f75c",
+  "normal_kernel_params": [
+    "console=tty0",
+    "mem_sleep_default=s2idle",
+    "root=fstab",
+    "loglevel=6",
+    "lsm=landlock,yama,bpf"
+  ],
+  "scope": "Configuration generation and requested-value validation only. Complete cross build running; complete native build and hardware acceptance remain pending.",
+  "hardware_verified": false
+}

@@ -1,0 +1,107 @@
+{
+  "timestamp": "2026-11-13T21:51:51.641497+00:00",
+  "release": "7.3.4-erhai-p4",
+  "patch_head": "bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb",
+  "system": "/nix/store/kkqlnxwpxpw7yjx0jcfnqlgn17vxmwch-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "boot_uuid": "e2b5cfee-1c2b-4fb9-a25f-5ea723bcad5e",
+  "identity_verified": true,
+  "desktop": "user confirmed normal graphical session",
+  "bluetooth": {
+    "firmware_bootstrap": "two successful peripheral bootstraps, ret=0",
+    "controller": "present and powered; factory address service Result=success, ExecMainStatus=0",
+    "settings": "user confirmed switch can be enabled",
+    "connection_and_use": "user confirmed Bluetooth device connection and actual use normal"
+  },
+  "gpu": {
+    "renderer": "Adreno (TM) 830v1",
+    "version": "OpenGL ES 3.2 Mesa 26.3.0",
+    "test": "GLES3 shaders, triangle rasterization, fence completion and RGBA8 readback",
+    "pixel": [
+      64,
+      128,
+      191,
+      255
+    ],
+    "gl_error": 0,
+    "result": "passed"
+  },
+  "suspend_resume": {
+    "manual_wake": "user confirmed screen, touch and Bluetooth recovered; kernel success counter1 fail0",
+    "rtc_wake": {
+      "before": {
+        "boottime": 373.405491046,
+        "monotonic": 316.951212473,
+        "boot_id": "e2b5cfee-1c2b-4fb9-a25f-5ea723bcad5e",
+        "stats": {
+          "failed_resume": "0",
+          "last_failed_errno": "0",
+          "failed_suspend_noirq": "0",
+          "failed_freeze": "0",
+          "failed_resume_early": "0",
+          "success": "1",
+          "failed_suspend_late": "0",
+          "last_failed_step": "",
+          "failed_resume_noirq": "0",
+          "failed_prepare": "0",
+          "failed_suspend": "0",
+          "fail": "0",
+          "last_failed_dev": ""
+        }
+      },
+      "after": {
+        "boottime": 396.268826756,
+        "monotonic": 319.765104703,
+        "boot_id": "e2b5cfee-1c2b-4fb9-a25f-5ea723bcad5e",
+        "stats": {
+          "failed_resume": "0",
+          "last_failed_errno": "0",
+          "failed_suspend_noirq": "0",
+          "failed_freeze": "0",
+          "failed_resume_early": "0",
+          "success": "2",
+          "failed_suspend_late": "0",
+          "last_failed_step": "",
+          "failed_resume_noirq": "0",
+          "failed_prepare": "0",
+          "failed_suspend": "0",
+          "fail": "0",
+          "last_failed_dev": ""
+        }
+      },
+      "same_boot": true,
+      "boottime_elapsed": 22.86333571,
+      "awake_elapsed": 2.8138922300000218,
+      "success": true,
+      "failures_unchanged": true
+    },
+    "post_resume": "SSH reconnected, controller powered and no failed services"
+  },
+  "boot_cleanup": {
+    "dry_run": false,
+    "orphan_roots_removed": [],
+    "previous": "nixos-8a13fae19c084a7a9f2965b6f6027b15",
+    "protected_systems": {
+      "activated": "/nix/store/kkqlnxwpxpw7yjx0jcfnqlgn17vxmwch-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+      "booted": "/nix/store/kkqlnxwpxpw7yjx0jcfnqlgn17vxmwch-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+      "profile": "/nix/store/ydgdj9pf21541af9z7px8drixdmcns61-nixos-system-pad2pro-26.11.20261107.f4a03c0"
+    },
+    "removed": [
+      "nixos-59e14b93b0d3683e29ed643a28d3bf53"
+    ],
+    "retained": [
+      "nixos-d6c28ef76672e20826d28ef808c2511a",
+      "nixos-b2b0bfb7071b917422b5034591a85c15",
+      "nixos-8a13fae19c084a7a9f2965b6f6027b15"
+    ],
+    "system_profiles_changed": false
+  },
+  "normal_default_and_profile_promoted": false,
+  "remaining": [
+    "fix ADSP remote heap memory ownership",
+    "complete native ARM64 system build",
+    "native candidate boot and cold boot",
+    "final source/profile/default migration and account recheck"
+  ],
+  "hardware_accepted": false,
+  "late_failure": "Native full build exposed DSP-owned reusable-CMA memory access aborts. Earlier peripheral checks stand; p4 is not accepted for daily promotion."
+}

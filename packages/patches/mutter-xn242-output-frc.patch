@@ -1,0 +1,250 @@
+--- a/clutter/clutter/clutter-stage-view.c
++++ b/clutter/clutter/clutter-stage-view.c
+@@ -26,6 +26,7 @@
+ 
+ #include "clutter/clutter-color-pipeline-shader.h"
+ #include "clutter/clutter-color-state.h"
++#include "clutter/clutter-color-state-params.h"
+ #include "clutter/clutter-context-private.h"
+ #include "clutter/clutter-damage-history.h"
+ #include "clutter/clutter-frame-clock.h"
+@@ -80,6 +81,9 @@
+   guint ensure_offscreen_idle_id;
+   CoglOffscreen *offscreen;
+   CoglPipeline *offscreen_pipeline;
++  gboolean output_frc_enabled;
++  unsigned int output_frc_phase;
++  int output_frc_phase_uniform;
+ 
+   gboolean use_shadowfb;
+   struct {
+@@ -170,6 +174,8 @@
+   return priv->framebuffer;
+ }
+ 
++static gboolean uses_output_frc (ClutterStageViewPrivate *priv);
++
+ static void
+ ensure_stage_view_offscreen (ClutterStageView *view)
+ {
+@@ -192,7 +198,15 @@
+ 
+   required_format = clutter_color_state_required_format (priv->color_state);
+ 
+-  if (required_format <= CLUTTER_ENCODING_REQUIRED_FORMAT_UINT8)
++  if (uses_output_frc (priv))
++    {
++      /* Half floats have only 11 significant bits near white. Keep the
++       * native gamma values in UNORM16 until the final 8+4-bit quantizer.
++       * FP32 is a lossless fallback; FP16 would merge adjacent FRC levels. */
++      formats[n_formats++] = COGL_PIXEL_FORMAT_RGBA_16161616_PRE;
++      formats[n_formats++] = COGL_PIXEL_FORMAT_RGBA_FP_32323232_PRE;
++    }
++  else if (required_format <= CLUTTER_ENCODING_REQUIRED_FORMAT_UINT8)
+     {
+       formats[n_formats++] =
+         cogl_framebuffer_get_internal_format (priv->framebuffer);
+@@ -232,7 +246,61 @@
+   if (!offscreen)
+     g_error ("Failed to allocate back buffer texture: %s", local_error->message);
+ 
++  if (uses_output_frc (priv))
++    g_message ("XN242 HDR output: 8+4-bit FRC, %s composition buffer",
++               cogl_pixel_format_to_string (
++                 cogl_framebuffer_get_internal_format (COGL_FRAMEBUFFER (offscreen))));
++
+   g_set_object (&priv->offscreen, offscreen);
++}
++
++static gboolean
++uses_output_frc (ClutterStageViewPrivate *priv)
++{
++  const ClutterLuminance *luminance;
++  const ClutterEOTF *eotf;
++
++  if (!priv->output_frc_enabled ||
++      !CLUTTER_IS_COLOR_STATE_PARAMS (priv->output_color_state))
++    return FALSE;
++
++  luminance = clutter_color_state_get_luminance (priv->output_color_state);
++  eotf = clutter_color_state_params_get_eotf (
++    CLUTTER_COLOR_STATE_PARAMS (priv->output_color_state));
++
++  return eotf->type == CLUTTER_EOTF_TYPE_NAMED &&
++         eotf->tf_name == CLUTTER_TRANSFER_FUNCTION_GAMMA22 &&
++         luminance->type == CLUTTER_LUMINANCE_TYPE_EXPLICIT &&
++         luminance->max > luminance->ref;
++}
++
++static void
++add_output_frc (ClutterStageViewPrivate *priv,
++                CoglPipeline            *pipeline)
++{
++  g_autoptr (CoglSnippet) snippet = NULL;
++
++  /* A 4x4 Bayer tile contains each threshold on every refresh. Rotate
++   * the thresholds by five so each pixel visits all sixteen phases. */
++  snippet = cogl_snippet_new (
++    COGL_SNIPPET_HOOK_FRAGMENT,
++    "uniform highp float output_frc_phase;\n"
++    "highp float output_frc_bayer2 (highp vec2 p) {\n"
++    "  return 2.0 * abs (p.x - p.y) + p.y;\n"
++    "}\n",
++    "highp vec2 pixel = mod (floor (gl_FragCoord.xy), 4.0);\n"
++    "highp float rank = 4.0 * output_frc_bayer2 (mod (pixel, 2.0)) +\n"
++    "                   output_frc_bayer2 (floor (pixel * 0.5));\n"
++    "rank = mod (rank + output_frc_phase, 16.0);\n"
++    "highp vec3 value = floor (clamp (cogl_color_out.rgb, 0.0, 1.0) * 4080.0 + 0.5);\n"
++    "highp vec3 base = floor (value * 0.0625);\n"
++    "highp vec3 code = base + step (vec3 (rank + 1.0), value - 16.0 * base);\n"
++    /* Place the chosen 8-bit code in the high bits of the XR30 channel.
++     * This leaves zero fractional bits for the DPU's 10-to-8 dither. */
++    "cogl_color_out.rgb = code * (4.0 / 1023.0);\n");
++  cogl_pipeline_add_snippet (pipeline, snippet);
++  priv->output_frc_phase_uniform =
++    cogl_pipeline_get_uniform_location (pipeline, "output_frc_phase");
+ }
+ 
+ static void
+@@ -270,6 +338,9 @@
+                                                  priv->output_color_state,
+                                                  CLUTTER_COLOR_STATE_TRANSFORM_OPAQUE);
+ 
++  if (uses_output_frc (priv))
++    add_output_frc (priv, pipeline);
++
+   g_set_object (&priv->offscreen_pipeline, pipeline);
+ }
+ 
+@@ -299,7 +370,8 @@
+       clutter_stage_view_schedule_update (view);
+     }
+ 
+-  if (priv->transform == MTK_MONITOR_TRANSFORM_NORMAL &&
++  if (!uses_output_frc (priv) &&
++      priv->transform == MTK_MONITOR_TRANSFORM_NORMAL &&
+       !clutter_color_pipeline_shader_needs_color_state (priv->color_state,
+                                                         priv->output_color_state,
+                                                         CLUTTER_COLOR_STATE_TRANSFORM_OPAQUE))
+@@ -323,6 +395,16 @@
+                                                       view, NULL);
+   mtk_source_set_name_by_id (priv->ensure_offscreen_idle_id,
+                              "[clutter] on_ensure_offscreen_idle");
++}
++
++void
++clutter_stage_view_enable_output_frc (ClutterStageView *view)
++{
++  ClutterStageViewPrivate *priv =
++    clutter_stage_view_get_instance_private (view);
++
++  priv->output_frc_enabled = TRUE;
++  clutter_stage_view_invalidate_offscreen (view);
+ }
+ 
+ static void
+@@ -520,25 +602,35 @@
+ 
+   if (priv->offscreen)
+     {
++      CoglFramebuffer *destination = priv->framebuffer;
++      gboolean output_frc = uses_output_frc (priv);
++      gboolean gl_dither_enabled = FALSE;
++
+       if (priv->shadow.framebuffer)
++        destination = COGL_FRAMEBUFFER (priv->shadow.framebuffer);
++
++      if (output_frc)
+         {
+-          CoglFramebuffer *shadowfb =
+-            COGL_FRAMEBUFFER (priv->shadow.framebuffer);
+-
+-          paint_transformed_framebuffer (view,
+-                                         priv->offscreen_pipeline,
+-                                         priv->offscreen,
+-                                         shadowfb,
+-                                         redraw_clip);
++          cogl_pipeline_set_uniform_1f (priv->offscreen_pipeline,
++                                        priv->output_frc_phase_uniform,
++                                        priv->output_frc_phase);
++          priv->output_frc_phase = (priv->output_frc_phase + 5) % 16;
++          gl_dither_enabled = cogl_framebuffer_get_dither_enabled (destination);
++          cogl_framebuffer_set_dither_enabled (destination, FALSE);
++
++          /* All output pixels can change phase on the next refresh. */
++          clutter_stage_view_add_redraw_clip (view, NULL);
++          clutter_stage_view_schedule_update (view);
+         }
+-      else
+-        {
+-          paint_transformed_framebuffer (view,
+-                                         priv->offscreen_pipeline,
+-                                         priv->offscreen,
+-                                         priv->framebuffer,
+-                                         redraw_clip);
+-        }
++
++      paint_transformed_framebuffer (view,
++                                     priv->offscreen_pipeline,
++                                     priv->offscreen,
++                                     destination,
++                                     redraw_clip);
++
++      if (output_frc)
++        cogl_framebuffer_set_dither_enabled (destination, gl_dither_enabled);
+     }
+ }
+ 
+@@ -844,6 +936,8 @@
+   ClutterStageViewPrivate *priv =
+     clutter_stage_view_get_instance_private (view);
+ 
++  if (uses_output_frc (priv))
++    scanout = NULL;
+   g_set_object (&priv->next_scanout, scanout);
+ }
+ 
+@@ -853,6 +947,8 @@
+   ClutterStageViewPrivate *priv =
+     clutter_stage_view_get_instance_private (view);
+ 
++  if (uses_output_frc (priv))
++    g_clear_object (&priv->next_scanout);
+   return g_steal_pointer (&priv->next_scanout);
+ }
+ 
+--- a/clutter/clutter/clutter-stage-view.h
++++ b/clutter/clutter/clutter-stage-view.h
+@@ -90,6 +90,9 @@
+ ClutterColorState * clutter_stage_view_get_output_color_state (ClutterStageView *view);
+ 
+ CLUTTER_EXPORT
++void clutter_stage_view_enable_output_frc (ClutterStageView *view);
++
++CLUTTER_EXPORT
+ MtkMonitorTransform clutter_stage_view_get_transform (ClutterStageView *view);
+ 
+ CLUTTER_EXPORT
+--- a/src/backends/native/meta-renderer-native.c
++++ b/src/backends/native/meta-renderer-native.c
+@@ -50,6 +50,7 @@
+ #include "backends/meta-color-manager.h"
+ #include "backends/meta-cursor-tracker-private.h"
+ #include "backends/meta-logical-monitor-private.h"
++#include "backends/meta-xn242-hdr.h"
+ #include "backends/native/meta-backend-native-private.h"
+ #include "backends/native/meta-cursor-renderer-native.h"
+ #include "backends/native/meta-crtc-kms.h"
+@@ -968,6 +969,12 @@
+                                      cogl_display_egl_get_egl_context (cogl_display_egl));
+     }
+ 
++  if (META_IS_ONSCREEN_NATIVE (framebuffer) &&
++      crtc_mode_info->refresh_rate >= 100.0f &&
++      meta_xn242_has_native_hdr (meta_output_get_info (output)) &&
++      g_file_test ("/etc/mutter/xn242-output-frc", G_FILE_TEST_IS_REGULAR))
++    clutter_stage_view_enable_output_frc (CLUTTER_STAGE_VIEW (view_native));
++
+   return META_RENDERER_VIEW (view_native);
+ }
+ 

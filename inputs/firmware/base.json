@@ -1,0 +1,570 @@
+{
+  "inputs": {
+    "rocknix-extra-firmware": {
+      "kind": "archive",
+      "path": "cache/extra-firmware.tar.gz",
+      "sha256": "1c1db6a797f23a3d179904941e4a869679a514c6f43687e20954c5d96cad4f49",
+      "url": "https://github.com/ROCKNIX/extra-firmware/archive/2b7207cfcb80c53c09dc6e04165789ecaf2d3348.tar.gz",
+      "license": "Qualcomm proprietary, redistributed by ROCKNIX",
+      "origin": "download the pinned archive; WCN7860 Wi-Fi and Bluetooth are not in upstream linux-firmware"
+    },
+    "linux-firmware": {
+      "kind": "url-base",
+      "base_url": "https://gitlab.com/kernel-firmware/linux-firmware/-/raw/main/",
+      "cache": "cache/linux-firmware",
+      "license": "linux-firmware, qcom redistributable",
+      "origin": "fetched once into the cache and kept by its pinned hash"
+    },
+    "stock-dtbo": {
+      "kind": "dtb",
+      "path": "cache/stock-c34/images/dtbo.img",
+      "sha256": "3830055b17ed9963d3809e3661221a01de83ad0a08e17425611258301ec101d2",
+      "license": "Proprietary vendor firmware; original vendor terms apply, not covered by the project GPL.",
+      "origin": "the stock OTA package of the ColorOS build the tablet runs (payload dumper)",
+      "release": "OPD2413_11.C.34_1340_202607031844"
+    },
+    "stock-modem": {
+      "kind": "fat",
+      "path": "cache/stock-c34-full/images/modem.img",
+      "sha256": "7f2e8f6c81b00e32615639c823f28072dc1585c0bcf5e02b16639bf228650fb8",
+      "license": "Proprietary vendor firmware; original vendor terms apply, not covered by the project GPL.",
+      "origin": "the same stock OTA package; read with mtools, so the build needs no privileges",
+      "release": "OPD2413_11.C.34_1340_202607031844"
+    },
+    "stock-odm": {
+      "kind": "erofs",
+      "path": "cache/stock-c34-full/images/odm.img",
+      "sha256": "66178408a76a657e0ad5309b2730fe06eb98e972a7663eccd6fe0251b5752eac",
+      "url": "https://gauss-compota-c-cn.allawnfs.com/remove-b0608b3ac0ca59a1e916aec540e6a9f5/g-10eab6008d5642cf42abd2aa41f847cb/component-ota/26/07/07/1d5489232fd6471cbdd222dd701e771a.zip",
+      "archive_sha256": "71bd5d0cf23b2a46e7b134a3a362c3703322aaaaf3a9951938c827d8b3a67bde",
+      "release": "OPD2413_11.C.34_1340_202607031844",
+      "license": "Proprietary vendor firmware; original vendor terms apply, not covered by the project GPL.",
+      "origin": "Official OnePlus OTA payload, odm partition; read with erofs-utils without mounting. The CDN URL requires a fresh vendor download signature."
+    },
+    "stock-vendor": {
+      "kind": "erofs",
+      "path": "cache/stock-c34-full/images/vendor.img",
+      "sha256": "e632b0ff3ad829a805e4dbb61c798eba2c22e79fd2331d273494fd979e12919a",
+      "url": "https://gauss-compota-c-cn.allawnfs.com/remove-b0608b3ac0ca59a1e916aec540e6a9f5/g-10eab6008d5642cf42abd2aa41f847cb/component-ota/26/07/07/1d5489232fd6471cbdd222dd701e771a.zip",
+      "archive_sha256": "71bd5d0cf23b2a46e7b134a3a362c3703322aaaaf3a9951938c827d8b3a67bde",
+      "release": "OPD2413_11.C.34_1340_202607031844",
+      "license": "Proprietary vendor firmware; original vendor terms apply, not covered by the project GPL.",
+      "origin": "Official OnePlus OTA payload, vendor partition; read with erofs-utils without mounting. The CDN URL requires a fresh vendor download signature."
+    },
+    "qca-swiss-army-knife": {
+      "kind": "ath12k-bdencoder",
+      "path": "cache/tools/qca-swiss-army-knife-6df4dae3e2f5e4c2903f3cafd40996fc1b3639ce.tar.gz",
+      "sha256": "e01064b46b3787fc35d1ed593094670f305eaf3a94e8707eb5fa17111a4004db",
+      "url": "https://github.com/qca/qca-swiss-army-knife/archive/6df4dae3e2f5e4c2903f3cafd40996fc1b3639ce.tar.gz",
+      "tool": "qca-swiss-army-knife-6df4dae3e2f5e4c2903f3cafd40996fc1b3639ce/tools/scripts/ath12k/ath12k-bdencoder",
+      "tool_sha256": "fdcc8dc9628d67e500d496a1de22e82e136ddeaec32669ea1b3add93f2980652",
+      "license": "ISC (the encoder); it adds only the board-2.bin framing and board names, never firmware content",
+      "origin": "download the pinned archive; only --refresh-from-rom runs the encoder, over data taken from the other inputs"
+    }
+  },
+  "notes": {
+    "novatek/nt36536-xn242.bin": "the vendor keeps the touch application firmware as a property inside a dtbo overlay (nt36536@0/firmware-data-0); the driver loses it on every panel prepare and requests it again, so the installed root has to carry it",
+    "qca/gngbtfw20.mbn": "what mainline hci_qca asks a WCN7860 for (qca/gngbtfw%02x.mbn plus a gngbtnv name built from the board id). Confirmed on this unit on 2026-09-22, once BT_EN was wired to the right PMIC: the driver requests exactly these two names and the controller comes up on them -- \"QCA Downloading qca/gngbtfw20.mbn\", then \"qca/gngbtnv20.bin\", then \"QCA FW build version: BTFW.GANGES.2.0.0-00440-PATCHZ-1_DEF\". No board-id variant is needed: btqca reads this unit's board id as 0 and so asks for the plain gngbtnv20.bin rather than a gngbtnv20.b<id>. The stock stack uses a different set entirely -- brhbtfw10.tlv and brhbtnv10.b* in bluetooth.img -- which this port does not use.",
+    "qcom/sm8750/gen80000_zap.mbn": "the linux-firmware zap, signed with the SecTools test root for Qualcomm reference devices; this retail unit's TZ rejects it. Kept because a unit whose TZ accepts the test root needs it. qcom/sm8750/erhai/gen80000_zap.mbn is the same shader signed for this product",
+    "qcom/sm8750/erhai/": "the ADSP PIL set is per-firmware-build; it is the modem_a content of the ColorOS build this tablet runs, and the DT points remoteproc at adsp.mdt and adsp_dtb.mdt under this directory",
+    "awinic/erhai/aw88261_acf.bin": "Unmodified /odm/firmware/aw882xx_acf.bin, verified against the running stock system. AW88261 V0 ACF; the codec firmware-name must select this board-specific path. Channel profiles are ROM data, not per-unit factory calibration. The kernel DT selects it for all six amplifiers; their DVDD supply is still a placeholder and playback is unverified.",
+    "qcom/sm8750/erhai/vpu35_4v.mbn": "Unmodified /vendor/firmware/vpu35_4v.mbn, the signed Iris (VPU 3.5) video core image of this ColorOS build. Upstream linux-firmware has no SM8750 Iris image, and a retail unit's TZ only authenticates the vendor-signed one, so the DT names this board-specific path with firmware-name. Staged for the video decoder bring-up; the iris node is not yet enabled in the shipped DT and decoding is unverified.",
+    "qcom/sm8750/erhai/gen80000_zap.mbn": "Unmodified /vendor/firmware/gen80000_zap.mbn of this ColorOS build. Its code segments are byte-identical to the linux-firmware zap; only the hash segment and signature differ: it chains to OPLUS ROOT CA 1, the root this unit's TZ already accepts for the ADSP image in the same directory. It replaces the test-signed zap on this unit only, selected by the gpu zap-shader node's firmware-name once the DT enables it; the shipped DT keeps that node disabled and loading it is unverified",
+    "ath12k/WCN7860/hw2.0/erhai/": "Board data candidate from this product's own ROM, next to the ROCKNIX set rather than over it. ath12k builds every board-* path from the fixed ath12k/<fw.dir>/ directory and firmware-name does not apply to board files, so the driver never reads this directory: switching means installing these two files at ath12k/WCN7860/hw2.0/board-2.bin and regdb.bin in place of the ROCKNIX pair, which erhai-firmware owns outright. board-2.bin is /odm/etc/wifi/peach/bdwlan.elf and regdb.bin packed by ath12k-bdencoder under the two names ROCKNIX's board-2.bin uses, the first of which is the name this unit's ath12k asks for (board_id 0xff); the stock Android WLAN driver loads the same two files from /odm/etc/wifi ahead of the modem partition. Radio behaviour is unverified"
+  },
+  "schema": 1,
+  "comment": [
+    "Device firmware inventory maintained by this project. Hash-pinned archives are bundled in inputs/firmware/archives; OEM Wi-Fi and Bluetooth have separate inventories."
+  ],
+  "imported_from": {
+    "repository": "https://github.com/yzddmr6/onepluspad-2pro-mainline",
+    "revision": "4cc3570c7c14689d77e58c081d2430170288f72a",
+    "path": "packaging/firmware-manifest.json"
+  },
+  "files": [
+    {
+      "install": "qca/gngbtfw20.mbn",
+      "from": "rocknix-extra-firmware",
+      "member": "extra-firmware-2b7207cfcb80c53c09dc6e04165789ecaf2d3348/SM8750/qca/gngbtfw20.mbn",
+      "sha256": "84e210e2ba386a9bad91a2d9dd5d1f4e2559b385f226b463dcfa4d8159f5937f",
+      "size": 260616
+    },
+    {
+      "install": "qca/gngbtnv20.bin",
+      "from": "rocknix-extra-firmware",
+      "member": "extra-firmware-2b7207cfcb80c53c09dc6e04165789ecaf2d3348/SM8750/qca/gngbtnv20.bin",
+      "sha256": "a4586f5205dc3752f7d52fd6b7106b02ffe877774e5633018ac48be99d5a079b",
+      "size": 13415
+    },
+    {
+      "install": "qcom/gen80000_sqe.fw",
+      "from": "linux-firmware",
+      "member": "qcom/gen80000_sqe.fw",
+      "sha256": "30ee3301534f95799d4afaf73864f3c369baa5a5dea8481e7f0cb8cc941f396c",
+      "size": 111476
+    },
+    {
+      "install": "qcom/gen80000_gmu.bin",
+      "from": "linux-firmware",
+      "member": "qcom/gen80000_gmu.bin",
+      "sha256": "1ad8175e6cd01ea76c64d20b83600038c52dd29844b48d57b11b769b038863a5",
+      "size": 88896
+    },
+    {
+      "install": "qcom/gen80000_aqe.fw",
+      "from": "linux-firmware",
+      "member": "qcom/gen80000_aqe.fw",
+      "sha256": "67562ad5baae3a133c92a6e48a9d1b1a9a867fe2f85b49324e244e963f3b89c5",
+      "size": 25044
+    },
+    {
+      "install": "qcom/sm8750/gen80000_zap.mbn",
+      "from": "linux-firmware",
+      "member": "qcom/sm8750/gen80000_zap.mbn",
+      "sha256": "0e3ae03f7dd3170621e7b231802639535410bbc2a1c3ba0829c15ab4cf3996cf",
+      "size": 12088
+    },
+    {
+      "install": "qcom/sm8750/erhai/gen80000_zap.mbn",
+      "from": "stock-vendor",
+      "member": "firmware/gen80000_zap.mbn",
+      "sha256": "06ae284fff4c953bdd0da2e628a28d531cfa6503e6a982fcbc3b7f75cc6b3746",
+      "size": 12088
+    },
+    {
+      "install": "novatek/nt36536-xn242.bin",
+      "from": "stock-dtbo",
+      "node": "nt36536@0",
+      "property": "firmware-data-0",
+      "sha256": "3e3596895975b28459b1937ea35c819b96386b82cbdcc9c61592af8488db702b",
+      "size": 258048
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b00",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b00",
+      "sha256": "2046042b8d4450278b4d7d0ceb55208830d02c7d9793a0de56177c4e244563f5",
+      "size": 1812
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b01",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b01",
+      "sha256": "ee7924d4e54c1e76dff49fe658f0a4b8badb07894bdba2e715ac362ff2dc8f6f",
+      "size": 20896
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b02",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b02",
+      "sha256": "a78175a6afc24e64d8b3b6a46c3735098828746a8d5457ce9971e4895d8ff4cc",
+      "size": 38924
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b03",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b03",
+      "sha256": "6b60acee23c56396486d043d8fe283b3c5001abec470d68da7efc9c89fd33e54",
+      "size": 110723
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b04",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b04",
+      "sha256": "75fb5b59d51113770ea95d01659589e7826df48cb2dea0dd46d55b3a3a5f90a0",
+      "size": 32756
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b05",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b05",
+      "sha256": "0d4eabda3f29ba18f11648c63e6fb8c5c9572ae07fc50b4f27e5b5dab450a981",
+      "size": 84180
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b06",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b06",
+      "sha256": "e6620acbbb26225bad34dc1a3d447547ed397c9bf049cb46e2f1acc7091b960f",
+      "size": 196608
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b07",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b07",
+      "sha256": "051eb4806e182424f093cb723f38b023f96b35ca29387bda3afa536bff16e154",
+      "size": 368
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b08",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b08",
+      "sha256": "a3446b252604c139f7f1ccf20fa96197e4025b49aa59252ea0c1a3a46cf6c230",
+      "size": 9236
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b09",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b09",
+      "sha256": "ae197f26cb783554f7e0a095a5bd7463c2694237471c27ab5d6ac5483f6ff646",
+      "size": 3117680
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b10",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b10",
+      "sha256": "41b627bc800a8c109288e7c2686f26602b0e38eebe37b2595f06c76a49c8f4a4",
+      "size": 266100
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b11",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b11",
+      "sha256": "048cb22769ae424fee74b87367433363a589c96514eca2f6f9c97602302c6b22",
+      "size": 2584
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b12",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b12",
+      "sha256": "dc9b5da0663857370f60fa47ed8bcd1616fb13b21b145b1352b684f2fdb637bc",
+      "size": 62148
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b13",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b13",
+      "sha256": "1fb37eb8f3cd0a2c381c45ca98012d8450cce0a80425ff60e1dab68993334d4d",
+      "size": 7112
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b14",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b14",
+      "sha256": "cb741f83c8d0507bb88826e5b5efd5da59befd511fb51258abe33f8de72f8467",
+      "size": 255112
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b15",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b15",
+      "sha256": "bf43099dc2bc6d70215d3dcfe60299939cd8563cf0f847f33b994eeaea454726",
+      "size": 163980
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b16",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b16",
+      "sha256": "e8659cc30f8b0c373d74311a9db980ed2ef5d7a1da4e2a839e1611784900ab72",
+      "size": 454656
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b17",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b17",
+      "sha256": "29b34e45e1da4fd252bfd751ee50ebf6bda4fdb6909bee2dd0ac6c77378654b6",
+      "size": 3073252
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b18",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b18",
+      "sha256": "bbaf377b615740442fd8db366a64d24e98fb62b6be86d6978aaa1c51a87eaea8",
+      "size": 30576
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b19",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b19",
+      "sha256": "0f4fdca6caa09f5797bea00b6cfb1096812b2123c207c7e997aa157c7eaaf894",
+      "size": 272
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b20",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b20",
+      "sha256": "cba3a139e17a8bd3698ef2e1fd162b0a50f0e9eb7aeeb1cef6e6d2dd9cf8b015",
+      "size": 452508
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b21",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b21",
+      "sha256": "e0a6b69a87373de2584260f0cc219c3c441f783a4d82e79d2b6a724890938b31",
+      "size": 622592
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b22",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b22",
+      "sha256": "c618bc778f52edbcc5ae5269cf53f5fbc92fb6fea0d50527fd44db18882c84d4",
+      "size": 3729304
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b23",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b23",
+      "sha256": "63935e5a5e3f6955922980cf5356368f3952e8e8141680108936cd75239bfc06",
+      "size": 6197252
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b25",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b25",
+      "sha256": "436cdafe2ba672d46d7661c1376a7cffc99b0e85c69ed2e7ad857c1ab3a7d283",
+      "size": 592
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b26",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b26",
+      "sha256": "96640a2cf71c104f901179fd263af2dee3183b04306457e25bf5591f942cdd47",
+      "size": 15876
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b27",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b27",
+      "sha256": "c0da3b4e46434234a4d4a322515ea04ba5a1da3f909d57740666f594519a749a",
+      "size": 39144
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b28",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b28",
+      "sha256": "5a6c7eab888bf53812e068d9f93ba171094b472ca278df181974b3d3ed20895b",
+      "size": 1032668
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b29",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b29",
+      "sha256": "1e003b0231a60e25a7c71dff03dd879bbc42adb344ef11bfefda318385643b3c",
+      "size": 212800
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b30",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b30",
+      "sha256": "db926af16cf2b99dd5ab4ed3be03d266b73d8839025df7ad7ecab8ff35b096ad",
+      "size": 174156
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b31",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b31",
+      "sha256": "e24da6e864c2f3633ca24def525a2a818779babd7753e2c5d9e5358a491cb03f",
+      "size": 170792
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b32",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b32",
+      "sha256": "f983300f2bae27ae3de35e1ef9993b64b10dfd474939880e9fece682e48cf6fa",
+      "size": 16796
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b33",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b33",
+      "sha256": "194fd4a8d1d5ac4b0d19525ab4313007d95716573add828cb5ac84e3be80e251",
+      "size": 191496
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b34",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b34",
+      "sha256": "17fcd8d88bfb8794e45374c84dea4d97a0601ed69242b46a093b955989e88428",
+      "size": 91264
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b35",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b35",
+      "sha256": "7ee2d72c84379efcec8cf4a85a80408e8a65481164b9b081e27a350ade676354",
+      "size": 70744
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b36",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b36",
+      "sha256": "6c098f276e313457e089ea96d1f115ce8e80a91f75bf1ad4213a5720c2615105",
+      "size": 298068
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b37",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b37",
+      "sha256": "4c3c78ad12aedd723e90cc08b4c018bc93b7d935ec77228034699115ff690b50",
+      "size": 229376
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b38",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b38",
+      "sha256": "659955897c2d426ac71fa4f145a1c0d5173b0d01357a579435ff4d41bb814f3d",
+      "size": 7612348
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b39",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b39",
+      "sha256": "18fe933d718e8cd351be4121c45b86040e4fc5b3bbf37ec678802c060a8b6be7",
+      "size": 1646600
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b40",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b40",
+      "sha256": "271c5783def587733c57edd67523fd9890a97b12fd2ee0ad4237226454bb6b85",
+      "size": 20
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b41",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b41",
+      "sha256": "792d7f9b66ff796f016b7958830d93c614c4895356e3682b22dd9bd05c34cee1",
+      "size": 89456
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b42",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b42",
+      "sha256": "0cfdc597a59a7b0d4d2fa3ebfd514eaf83077543392fda6d1c620153cf314ac3",
+      "size": 28672
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b43",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b43",
+      "sha256": "392fef76143872917c91ccae3beaf8fdd72dcd13d87b3e0c320ee48ee8eddda2",
+      "size": 33256
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b44",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b44",
+      "sha256": "a028fbcb83978bd79da03a87626d33ac49627b19b72751e71392bcb6cc3aa865",
+      "size": 524252
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b45",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b45",
+      "sha256": "aaae7f4c029f21d22eb12121f65933d02c5c7ba95b9784f21a546792a9d997f1",
+      "size": 10052
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b46",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b46",
+      "sha256": "41d0d2cfaed6275007b42843ac4ad450258efa36dae76626c7d9d34f4a0142ee",
+      "size": 237256
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b47",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b47",
+      "sha256": "c9d1f620d793fd9a7885a156a07f039309658e4f9ac778ac16b2b1d92cc09d1c",
+      "size": 82
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b48",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b48",
+      "sha256": "4cfe75d5f0c7e640aa8472baa59a207a1b2a5990b014cd82c2a25428b840cb57",
+      "size": 81920
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b49",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b49",
+      "sha256": "c118a999be579b73501bc3aa70c6f83e5bb917efad123eb6500c47c07704ff94",
+      "size": 87127
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b50",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b50",
+      "sha256": "a0e4c9127cc096f0b641716cd42ca7ff1899d410899873f5236fda978ae2a5b7",
+      "size": 958464
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b51",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b51",
+      "sha256": "7eb727ecd97eb46bcbf9d25b076444821d5c11fae0d5b752ce1c3b54bfefc881",
+      "size": 53248
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b52",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b52",
+      "sha256": "c97cc464ae702282292a0d0d937f900cb689241b8828bc8a2c64c2c43b32e961",
+      "size": 6987560
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.b54",
+      "from": "stock-modem",
+      "member": "::/image/adsp.b54",
+      "sha256": "9d86b334bc23c306bc097b990448b6c46ad3831794b7cf23bc7237e8e9977fd4",
+      "size": 6392
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp.mdt",
+      "from": "stock-modem",
+      "member": "::/image/adsp.mdt",
+      "sha256": "d8ba0913598e8d91f68cf3f43f6a63b67c792aa5ec364244f38dcefbeae89c07",
+      "size": 8204
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp_dtb.b00",
+      "from": "stock-modem",
+      "member": "::/image/adsp_dtb.b00",
+      "sha256": "35890c629637501aa43d3f22572def470d8b888188c17be91a8f345a608c050f",
+      "size": 148
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp_dtb.b01",
+      "from": "stock-modem",
+      "member": "::/image/adsp_dtb.b01",
+      "sha256": "f9fd22e909a4f06dd105e81d92251903b4cb03f33454a62ff0a741676c49921a",
+      "size": 159284
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp_dtb.b02",
+      "from": "stock-modem",
+      "member": "::/image/adsp_dtb.b02",
+      "sha256": "42030acc6255dd233f6056d8387762a0b820d010bb88e62c80d43558e393b2f8",
+      "size": 3896
+    },
+    {
+      "install": "qcom/sm8750/erhai/adsp_dtb.mdt",
+      "from": "stock-modem",
+      "member": "::/image/adsp_dtb.mdt",
+      "sha256": "4c472279c7f1c29ba5eef171592e9325e47e4d398e35280c511d827406ca3336",
+      "size": 4044
+    },
+    {
+      "install": "qcom/sm8750/erhai/soccp.mbn",
+      "from": "stock-modem",
+      "member": "::/image/soccp.mbn",
+      "sha256": "5e7dc01e9098c782ff33373f69726d7d65a060d53d38096cf55309abd7dbbe6b",
+      "size": 565924
+    },
+    {
+      "install": "awinic/erhai/aw88261_acf.bin",
+      "from": "stock-odm",
+      "member": "firmware/aw882xx_acf.bin",
+      "sha256": "97ae5a34df87637eb7b68e92dbfedf1930253a1843c0140389d9fb0ae09d1ac7",
+      "size": 4976
+    },
+    {
+      "install": "qcom/sm8750/erhai/vpu35_4v.mbn",
+      "from": "stock-vendor",
+      "member": "firmware/vpu35_4v.mbn",
+      "sha256": "4fbe0a9709449bbb714a20acad9503b5e4e8feff51e0b76988370d1e753f9c65",
+      "size": 2417352
+    }
+  ]
+}

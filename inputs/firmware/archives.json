@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "archives": {
+    "base": {
+      "file": "archives/opd2413-base-firmware.tar",
+      "sha256": "e8b136c046db35e07e5260a0b08d92b2c1935fcb6563bbcece0b9b1397727e66",
+      "manifest": "base.json",
+      "size": 43837440
+    },
+    "wifi": {
+      "file": "archives/opd2413-wifi-firmware.tar",
+      "sha256": "c486e1c9e5caa56a49c746fdca4b098ceb355ae1426d5b66a60856540be8a8fc",
+      "manifest": "wifi.json",
+      "size": 7362560
+    },
+    "bluetooth": {
+      "file": "archives/opd2413-bluetooth-firmware.tar",
+      "sha256": "a7343f5cc4db8f717ea2ab3dc4c665358ffd1fad9ffb97f4c5dbce2a6d8d4df5",
+      "manifest": "bluetooth.json",
+      "size": 460800
+    }
+  }
+}

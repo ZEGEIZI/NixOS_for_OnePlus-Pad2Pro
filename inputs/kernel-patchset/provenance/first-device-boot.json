@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-11-13T16:29:39.581225+00:00",
+  "patch_head": "bfc760b9caa7d621afe907d592bda39187186411",
+  "release": "7.3.4-erhai-p1",
+  "boot_id": "nixos-8d9fce5af2f85880e32598b607964523",
+  "result": "failed to enter NixOS; reset reported by user",
+  "automated_observation": "No NCM/SSH; Android ADB was briefly available after reset. No crash log collected yet.",
+  "user_report": "选择7.3.4-erhai-p1，没办法成功进nixos，重启了",
+  "daily_current": "retained nixos-b2b0bfb7071b917422b5034591a85c15",
+  "hardware_accepted": false,
+  "next": "Recover the existing generation, restore the normal boot default and collect pstore/journal before changing the target kernel."
+}

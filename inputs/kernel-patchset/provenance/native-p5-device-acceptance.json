@@ -1,0 +1,250 @@
+{
+  "timestamp": "2026-11-14T05:03:05.521409+00:00",
+  "release": "7.3.4-erhai-p5",
+  "system": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "boot_uuid": "da34a74f-0f9a-41d0-9f16-21c482e4dcb4",
+  "compiler": "native GCC 16.2.0 / binutils 2.46 from current nixpkgs",
+  "cold_boot": "user confirmed selected native 9bfa09dd after normal power-off",
+  "boot_mount_readonly_without_manual_remount": true,
+  "online_cpus": "0-7",
+  "kernel_taint": 0,
+  "user_acceptance": {
+    "touch": "passed",
+    "speaker_settings_test": "passed",
+    "bluetooth_connection_and_actual_use": "passed"
+  },
+  "daily_profile_promoted": false,
+  "etc_nixos_replaced": false,
+  "remaining": "declarative-source installation, profile/current/default promotion, repeated activation/account checks and final ordinary reboot",
+  "adsp_reservation": {
+    "timestamp": "2026-11-14T04:52:51.528815+00:00",
+    "release": "7.3.4-erhai-p5",
+    "boot_id": "da34a74f-0f9a-41d0-9f16-21c482e4dcb4",
+    "pool": "/sys/firmware/devicetree/base/reserved-memory/adsp-rpc-remote-heap",
+    "physical_start": "0xfec00000",
+    "physical_end": "0xff7fffff",
+    "bytes": 12582912,
+    "dt_no_map": true,
+    "dt_reusable": false,
+    "kernel_reservation_log": "[    0.000000] OF: reserved mem: 0x00000000fec00000..0x00000000ff7fffff (12288 KiB) nomap non-reusable adsp-rpc-remote-heap",
+    "live_memblock_nomap": [
+      "16: 0x00000000fec00000..0x00000000ff7fffff    0 NOMAP"
+    ],
+    "system_ram_overlap": [],
+    "kernel_taint": 0,
+    "passed": true
+  },
+  "memory_load": {
+    "release": "7.3.4-erhai-p5",
+    "workers": 8,
+    "concurrent_bytes": 2147483648,
+    "total_bytes_written": 8589934592,
+    "elapsed_seconds": 4.331868739000001,
+    "results": [
+      {
+        "worker": 0,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 1,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 2,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 3,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 4,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 5,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 6,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      },
+      {
+        "worker": 7,
+        "cycles": 4,
+        "bytes_per_cycle": 268435456,
+        "huge_kib_per_cycle": [
+          262144,
+          262144,
+          262144,
+          262144
+        ],
+        "passed": true
+      }
+    ],
+    "kernel_taint_after": 0,
+    "scope": "anonymous mappings, huge-page faults, pattern samples and repeated release/reallocation; physical memory devices are never opened",
+    "passed": true
+  },
+  "gpu_render": {
+    "renderer": "Adreno (TM) 830v1",
+    "version": "OpenGL ES 3.2 Mesa 26.3.0",
+    "test": "GLES3 shaders, triangle rasterization, fence completion and RGBA8 readback",
+    "pixel": [
+      64,
+      128,
+      191,
+      255
+    ],
+    "gl_error": 0,
+    "result": "passed"
+  },
+  "wifi": {
+    "interface": "wlp1s0",
+    "access_points_discovered": 1,
+    "connected_after_scan": true,
+    "gateway_ping": "3 packets passed",
+    "kernel_taint": 0,
+    "passed": true
+  },
+  "charging": {
+    "before": {
+      "status": "Discharging",
+      "capacity": "84",
+      "current_now": "-118411",
+      "voltage_now": "4290423",
+      "charge_control_start_threshold": "75",
+      "charge_control_end_threshold": "80"
+    },
+    "temporary_samples": [
+      {
+        "status": "Charging",
+        "capacity": "84",
+        "current_now": "802026",
+        "voltage_now": "4316504",
+        "charge_control_start_threshold": "92",
+        "charge_control_end_threshold": "95"
+      }
+    ],
+    "after": {
+      "status": "Discharging",
+      "capacity": "84",
+      "current_now": "-9765",
+      "voltage_now": "4296067",
+      "charge_control_start_threshold": "75",
+      "charge_control_end_threshold": "80"
+    },
+    "thresholds_restored": true,
+    "passed": true
+  },
+  "suspend_resume": {
+    "before": {
+      "boottime": 266.150949976,
+      "monotonic": 266.150950445,
+      "boot_id": "da34a74f-0f9a-41d0-9f16-21c482e4dcb4",
+      "stats": {
+        "failed_resume": "0",
+        "last_failed_errno": "0",
+        "failed_suspend_noirq": "0",
+        "failed_freeze": "0",
+        "failed_resume_early": "0",
+        "success": "0",
+        "failed_suspend_late": "0",
+        "last_failed_step": "",
+        "failed_resume_noirq": "0",
+        "failed_prepare": "0",
+        "failed_suspend": "0",
+        "fail": "0",
+        "last_failed_dev": ""
+      }
+    },
+    "after": {
+      "boottime": 289.374225097,
+      "monotonic": 273.210730052,
+      "boot_id": "da34a74f-0f9a-41d0-9f16-21c482e4dcb4",
+      "stats": {
+        "failed_resume": "0",
+        "last_failed_errno": "0",
+        "failed_suspend_noirq": "0",
+        "failed_freeze": "0",
+        "failed_resume_early": "0",
+        "success": "1",
+        "failed_suspend_late": "0",
+        "last_failed_step": "",
+        "failed_resume_noirq": "0",
+        "failed_prepare": "0",
+        "failed_suspend": "0",
+        "fail": "0",
+        "last_failed_dev": ""
+      }
+    },
+    "same_boot": true,
+    "boottime_elapsed": 23.22327512100003,
+    "awake_elapsed": 7.059779606999996,
+    "success": true,
+    "failures_unchanged": true
+  },
+  "accounts": {
+    "ordinary_accounts_checked": 1,
+    "uid_gid_home_owner_password_and_groups_preserved": true,
+    "subordinate_ranges_preserved": true,
+    "issues": [],
+    "baseline_accounts": "/var/lib/erhai-patchset/20261114-124721-candidate/accounts"
+  }
+}

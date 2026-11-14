@@ -1,0 +1,155 @@
+{
+  "timestamp": "2026-11-14T05:13:34.635762+00:00",
+  "source_installation": {
+    "timestamp": "2026-11-14T05:06:57.901042+00:00",
+    "backup": "/var/lib/erhai-patchset/20261114-130657-final-install",
+    "account_backup": "/var/lib/erhai-patchset/20261114-130657-final-install/accounts",
+    "previous_profile": "/nix/store/ydgdj9pf21541af9z7px8drixdmcns61-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+    "booted_system": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "source_staged": "/var/lib/erhai-patchset/20261114-130535-native-source/source",
+    "expected_system": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "etc_nixos_replaced": true,
+    "profile_promoted": false,
+    "installed_source": "/etc/nixos",
+    "installed_evaluation": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "previous_source_directory": "/etc/nixos.erhai-before-20261114-130657",
+    "private_firmware_archives_preserved": true
+  },
+  "standard_rebuild": {
+    "command": [
+      "/run/current-system/sw/bin/nixos-rebuild",
+      "switch",
+      "--flake",
+      "/etc/nixos#pad2pro"
+    ],
+    "log": "/var/lib/erhai-patchset/20261114-130657-final-install/activation-01.log",
+    "exit_code": 0,
+    "profile": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "activated": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "booted": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "boot_options": "ro,noatime,stripe=128",
+    "entries": "format=2\ncurrent=nixos-9bfa09ddd760960fdd359c52b6b842ce\nprevious=nixos-b2b0bfb7071b917422b5034591a85c15\nversions=nixos-9bfa09ddd760960fdd359c52b6b842ce,nixos-b2b0bfb7071b917422b5034591a85c15\n",
+    "shared_boot_config": "format=1\nsystems=nixos\ndefault=nixos/current\ntimeout_ms=8000\n",
+    "kernel_taint": 0
+  },
+  "repeat_activation": {
+    "command": [
+      "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3/bin/switch-to-configuration",
+      "switch"
+    ],
+    "log": "/var/lib/erhai-patchset/20261114-130657-final-install/activation-02.log",
+    "exit_code": 0,
+    "profile": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "activated": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "booted": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "boot_options": "ro,noatime,stripe=128",
+    "entries": "format=2\ncurrent=nixos-9bfa09ddd760960fdd359c52b6b842ce\nprevious=nixos-b2b0bfb7071b917422b5034591a85c15\nversions=nixos-9bfa09ddd760960fdd359c52b6b842ce,nixos-b2b0bfb7071b917422b5034591a85c15\n",
+    "shared_boot_config": "format=1\nsystems=nixos\ndefault=nixos/current\ntimeout_ms=8000\n",
+    "kernel_taint": 0
+  },
+  "accounts_after_first": {
+    "ordinary_accounts_checked": 1,
+    "uid_gid_home_owner_password_and_groups_preserved": true,
+    "subordinate_ranges_preserved": true,
+    "issues": [],
+    "baseline_accounts": "/var/lib/erhai-patchset/20261114-130657-final-install/accounts"
+  },
+  "accounts_after_second": {
+    "ordinary_accounts_checked": 1,
+    "uid_gid_home_owner_password_and_groups_preserved": true,
+    "subordinate_ranges_preserved": true,
+    "issues": [],
+    "baseline_accounts": "/var/lib/erhai-patchset/20261114-130657-final-install/accounts"
+  },
+  "menu_entries": 2,
+  "fallback": "nixos-b2b0bfb7071b917422b5034591a85c15 (original 7.2.15, recovery only)",
+  "kernel_target": "official 7.3.4 + Erhai p5, forward maintenance only",
+  "final_ordinary_reboot": {
+    "user_confirmed_default_current_and_original_account_login": true,
+    "timestamp": "2026-11-14T05:18:06.561671+00:00",
+    "boot_uuid": "0456c5d4-acce-4682-8a06-2e3f8e1ef569",
+    "links": {
+      "profile": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+      "activated": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+      "booted": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3"
+    },
+    "source_evaluation": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "boot_mount_options": [
+      "ro",
+      "noatime",
+      "stripe=128"
+    ],
+    "catalog": {
+      "format": "2",
+      "current": "nixos-9bfa09ddd760960fdd359c52b6b842ce",
+      "previous": "nixos-b2b0bfb7071b917422b5034591a85c15",
+      "versions": [
+        "nixos-9bfa09ddd760960fdd359c52b6b842ce",
+        "nixos-b2b0bfb7071b917422b5034591a85c15"
+      ]
+    },
+    "shared_config": {
+      "format": "1",
+      "systems": "nixos",
+      "default": "nixos/current",
+      "timeout_ms": "8000"
+    },
+    "payload_manifests_verified": {
+      "nixos-9bfa09ddd760960fdd359c52b6b842ce": {
+        "format": "1",
+        "system_id": "nixos",
+        "title": "NixOS Zokor 26.11.20261111.d4f25a3 (Linux 7.3.4-erhai-p5)",
+        "boot_id": "nixos-9bfa09ddd760960fdd359c52b6b842ce",
+        "kernel_release": "7.3.4-erhai-p5",
+        "device": "oneplus,opd2413",
+        "image": "Image",
+        "image_size": "54635008",
+        "image_sha256": "10f2445b52aa251c4681e6ce75cf501bfa47a1d467724a08138d4e780e2deb76",
+        "dtb": "board.dtb",
+        "dtb_size": "193956",
+        "dtb_sha256": "4d069f620fcf6b09f258683a0ab23dcd819e415585b637ec1da4a4a86b790178",
+        "initrd": "initramfs.img",
+        "initrd_size": "50429073",
+        "initrd_sha256": "118d363f17b6f18de3207f3137d2924573166d5f5659dc79b9cfde39358162f4",
+        "cmdline": "console=tty0 mem_sleep_default=s2idle root=fstab loglevel=6 lsm=landlock,yama,bpf init=/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3/init"
+      },
+      "nixos-b2b0bfb7071b917422b5034591a85c15": {
+        "format": "1",
+        "system_id": "nixos",
+        "title": "NixOS",
+        "boot_id": "nixos-b2b0bfb7071b917422b5034591a85c15",
+        "kernel_release": "7.2.15-nixos-erhai-efc39b9d9726-upstream4-ebpf1",
+        "device": "oneplus,opd2413",
+        "image": "Image",
+        "image_size": "53084672",
+        "image_sha256": "03fa78099fb26574581a9361b2fdff4b2f6700014c0c809860c0b1f559b6bc79",
+        "dtb": "board.dtb",
+        "dtb_size": "188913",
+        "dtb_sha256": "37ab6a7e271643b44cb1eb93f4505b7ce82c2b5efe29aeca0b70507aa51982fd",
+        "initrd": "initramfs.img",
+        "initrd_size": "50425037",
+        "initrd_sha256": "c848098a78541422f677ec11ba4472b8eb9834c375f744e22a9a76dddfe9dbd1",
+        "cmdline": "console=tty0 mem_sleep_default=s2idle root=fstab loglevel=6 lsm=landlock,yama,bpf init=/nix/store/ydgdj9pf21541af9z7px8drixdmcns61-nixos-system-pad2pro-26.11.20261107.f4a03c0/init"
+      }
+    },
+    "gcroots": {
+      "nixos-9bfa09ddd760960fdd359c52b6b842ce": "/nix/store/any5fc45rnicn7baqb8i8zgy77bgqfx7-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+      "nixos-b2b0bfb7071b917422b5034591a85c15": "/nix/store/ydgdj9pf21541af9z7px8drixdmcns61-nixos-system-pad2pro-26.11.20261107.f4a03c0"
+    },
+    "kernel_taint": 0,
+    "online_cpus": "0-7",
+    "btf": "available",
+    "failed_services": [],
+    "passed": true
+  },
+  "accounts_after_reboot": {
+    "ordinary_accounts_checked": 1,
+    "uid_gid_home_owner_password_and_groups_preserved": true,
+    "subordinate_ranges_preserved": true,
+    "issues": [],
+    "baseline_accounts": "/var/lib/erhai-patchset/20261114-130657-final-install/accounts"
+  },
+  "installation_verified": true,
+  "profile_promoted": true,
+  "source_installed": true
+}

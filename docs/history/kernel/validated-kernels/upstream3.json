@@ -1,0 +1,6 @@
+{
+  "release": "7.2.15-nixos-erhai-c3583ea3a35f-upstream3",
+  "out": "/nix/store/fxd5qr0lcm98b77d09dad2iyzw024lkb-linux-erhai-aarch64-unknown-linux-gnu-7.2.15",
+  "modules": "/nix/store/8528k3x10ywgqn3kzmyfl0f7dl6xjkn6-linux-erhai-aarch64-unknown-linux-gnu-7.2.15-modules",
+  "cps8601": "/nix/store/cqbpgv6vgivzxi22n89j391n2caadzpr-cps8601-optional-firmware-aarch64-unknown-linux-gnu-1"
+}

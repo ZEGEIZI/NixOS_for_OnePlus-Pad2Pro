@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-11-13T18:16:26.732388+00:00",
+  "symptom": "After forced reset from gpu-off-debug, kShimC no longer displayed NixOS entries.",
+  "target": {
+    "partlabel": "KShinC_BOOT",
+    "partuuid": "d4d95497-250b-4023-98eb-a8977664e385",
+    "device": "/dev/block/sda16",
+    "bytes": 1073741824
+  },
+  "cause": "Clean-state value was 1, but ext4 incompat features included needs_recovery (0x4). The read-only kShimC ext4 reader rejects this flag.",
+  "backup": {
+    "timestamp": "2026-11-13T18:13:30.228142+00:00",
+    "device": "/dev/block/sda16",
+    "partlabel": "KShinC_BOOT",
+    "partuuid": "d4d95497-250b-4023-98eb-a8977664e385",
+    "bytes": 1073741824,
+    "backup": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-boot-recovery/android/KShinC_BOOT-before.img",
+    "sha256": "e97f69fd7d7fff95bdb0473b00e434663803182e3a82846f4a0dc6f9b6d39f0c",
+    "device_sha256_matches": true,
+    "partition_was_unmounted": true,
+    "adb_dd_status_saved_separately": "/zpool/storage_01/build/LinuxForOneplus/NixOS_for_OnePlus-Pad2Pro/.work/patchset-boot-recovery/android/KShinC_BOOT-before.adb-stream"
+  },
+  "offline_trial": "Replayed journal on a reflink copy; kShimC parser then found all seven entries and verified all payload hashes. Full e2fsck -fn passed.",
+  "device_repair": "e2fsck -p -E journal_only on the unmounted, UUID/size-verified partition; full read-only e2fsck passed afterwards.",
+  "after": {
+    "needs_recovery": false,
+    "filesystem_state": 1,
+    "readback_sha256": "e3d7281383622179596e4d68853ba9433179aaa87b12806b78864e79324b30fd",
+    "runtime_parser_status": 0,
+    "entries": 7,
+    "all_payloads_verified": true,
+    "current": "nixos-b2b0bfb7071b917422b5034591a85c15"
+  },
+  "physical_menu_confirmation": "User confirmed entries restored and booted original current",
+  "android_boot_partitions_written": false,
+  "prevention": "Future diagnostic variants mount /boot ro and disable automatic boot cleanup; normal daily configuration remains separately maintained.",
+  "confirmed_at": "2026-11-13T18:17:43.242583+00:00"
+}

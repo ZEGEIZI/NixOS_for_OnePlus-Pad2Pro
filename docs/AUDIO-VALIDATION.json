@@ -1,0 +1,50 @@
+{
+  "date": "2026-11-12",
+  "device": "oneplus,opd2413",
+  "reference_revision": "4cc3570c7c14689d77e58c081d2430170288f72a",
+  "topology_source_revision": "993a17dcb672357998a463a73f120064d6c74f4f",
+  "system": "/nix/store/pdpyvx780wkk4gagv2cnakp2s0za4haq-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+  "boot_id": "nixos-e843b71d8d923caa0cb9f43b9b71a989",
+  "previous_boot_id": "nixos-2f1ef471c080276e1b80e8f8ebcbde4c",
+  "kernel_release": "7.2.15-nixos-erhai-870167fad062-color1",
+  "kernel_modules_dtb_unchanged": true,
+  "unchanged_existing_firmware_files": 77,
+  "topology_archive_hash_verified": true,
+  "topology_compiled_and_decoded": true,
+  "ucm_hifi_mic_speaker_activation": "passed",
+  "alsa_card": "OnePlus-Pad-2-Pro",
+  "playback_node": "alsa_output.platform-sound.HiFi__Speaker__sink",
+  "capture_node": "alsa_input.platform-sound.HiFi__Mic__source",
+  "playback_and_capture": {
+    "format": "S16_LE",
+    "rate_hz": 48000,
+    "channels": 2,
+    "pcm_running_and_frame_counters_advancing": true
+  },
+  "amplifier_control_level": 270,
+  "amplifier_gain_db": -22.5,
+  "dsp_gain_q13": 8192,
+  "speaker_channelmix_max_volume": 1.0,
+  "user_confirmed": {
+    "gnome_output_and_input_visible": true,
+    "speaker_channel_test_normal": true,
+    "microphone_speech_level_meter_normal": true
+  },
+  "python_regression_tests_passed": 60,
+  "system_build_and_switch": "passed",
+  "system_failed_units": 0,
+  "user_failed_units": 0,
+  "boot_generations_with_verified_payload_sizes_and_hashes": 3,
+  "published_payloads_match_system": true,
+  "system_profile_and_gc_root_match": true,
+  "boot_conf_unchanged": true,
+  "boot_mount_read_only": true,
+  "not_validated": [
+    "reboot_into_audio_generation",
+    "independent_microphone_recording_and_playback",
+    "suspend_resume_audio",
+    "sustained_high_volume_playback"
+  ],
+  "vendor_dsp_speaker_protection_implemented": false,
+  "user_recording_saved": false
+}

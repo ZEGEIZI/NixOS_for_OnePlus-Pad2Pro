@@ -1,0 +1,164 @@
+{
+  "Documentation/devicetree/bindings/clock/qcom,sm8450-camcc.yaml": [
+    "custom"
+  ],
+  "Documentation/devicetree/bindings/display/msm/gpu.yaml": [
+    "union",
+    "union"
+  ],
+  "Documentation/devicetree/bindings/display/panel/novatek,nt36536.yaml": [
+    "custom"
+  ],
+  "Documentation/devicetree/bindings/sound/qcom,sm8250.yaml": [
+    "theirs"
+  ],
+  "drivers/clk/clk_test.c": [
+    "custom"
+  ],
+  "drivers/phy/phy-core.c": [
+    "theirs"
+  ],
+  "drivers/remoteproc/qcom_q6v5.c": [
+    "ours"
+  ],
+  "drivers/remoteproc/qcom_q6v5_pas.c": [
+    "union",
+    "union",
+    "custom"
+  ],
+  "drivers/soc/qcom/Kconfig": [
+    "custom"
+  ],
+  "drivers/soc/qcom/ubwc_config.c": [
+    "custom"
+  ],
+  "drivers/thermal/qcom/Kconfig": [
+    "ours"
+  ],
+  "drivers/thermal/qcom/Makefile": [
+    "ours"
+  ],
+  "drivers/gpu/drm/msm/dp/dp_ctrl.c": [
+    "custom",
+    "ours"
+  ],
+  "drivers/gpu/drm/msm/dp/dp_display.c": [
+    "theirs",
+    "custom"
+  ],
+  "drivers/gpu/drm/msm/dsi/dsi_host.c": [
+    "theirs",
+    "theirs",
+    "ours",
+    "ours"
+  ],
+  "drivers/gpu/drm/panel/Kconfig": [
+    "custom"
+  ],
+  "drivers/gpu/drm/panel/panel-novatek-nt36536.c": [
+    "ours"
+  ],
+  "drivers/spi/spi-geni-qcom.c": [
+    "union",
+    "custom"
+  ],
+  "include/dt-bindings/sound/qcom,q6dsp-lpass-ports.h": [
+    "ours"
+  ],
+  "sound/soc/codecs/aw88261.c": [
+    "theirs"
+  ],
+  "sound/soc/codecs/lpass-rx-macro.c": [
+    "custom"
+  ],
+  "sound/soc/codecs/lpass-tx-macro.c": [
+    "ours",
+    "ours",
+    "ours",
+    "ours",
+    "ours",
+    "ours"
+  ],
+  "sound/soc/codecs/lpass-va-macro.c": [
+    "ours",
+    "ours",
+    "ours",
+    "ours",
+    "ours",
+    "ours"
+  ],
+  "sound/soc/codecs/lpass-wsa-macro.c": [
+    "ours",
+    "ours",
+    "ours",
+    "ours",
+    "ours"
+  ],
+  "sound/soc/qcom/common.c": [
+    "theirs",
+    "theirs"
+  ],
+  "sound/soc/qcom/common.h": [
+    "theirs"
+  ],
+  "sound/soc/qcom/qdsp6/audioreach.c": [
+    "theirs",
+    "custom",
+    "theirs"
+  ],
+  "sound/soc/qcom/qdsp6/audioreach.h": [
+    "theirs"
+  ],
+  "sound/soc/qcom/qdsp6/q6prm-clocks.c": [
+    "union",
+    "ours"
+  ],
+  "sound/soc/qcom/qdsp6/q6prm.h": [
+    "union",
+    "ours"
+  ],
+  "sound/soc/qcom/qdsp6/topology.c": [
+    "theirs",
+    "theirs"
+  ],
+  "sound/soc/qcom/sc8280xp.c": [
+    "ours",
+    "ours",
+    "ours",
+    "custom",
+    "ours",
+    "ours",
+    "ours",
+    "ours",
+    "custom",
+    "ours"
+  ],
+  "drivers/bluetooth/hci_qca.c": [
+    "theirs",
+    "theirs"
+  ],
+  "drivers/tty/serial/qcom_geni_serial.c": [
+    "ours",
+    "custom",
+    "custom",
+    "ours",
+    "union",
+    "custom",
+    "union",
+    "ours"
+  ],
+  "drivers/media/platform/qcom/iris/iris_ctrls.c": [
+    "theirs",
+    "theirs",
+    "ours"
+  ],
+  "drivers/media/platform/qcom/iris/iris_ctrls.h": [
+    "ours"
+  ],
+  "drivers/media/platform/qcom/iris/iris_platform_common.h": [
+    "custom"
+  ],
+  "arch/arm64/boot/dts/qcom/sm8750.dtsi": [
+    "union"
+  ]
+}

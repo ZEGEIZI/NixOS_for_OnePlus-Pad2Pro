@@ -1,0 +1,161 @@
+{
+  "date": "2026-11-12",
+  "system": "/nix/store/g774yvbkc5h0jp9gvhyzb2632p3m5sri-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+  "kernel": {
+    "release": "7.2.15-nixos-erhai-870167fad062-brahma1",
+    "out": "/nix/store/a166vz0zqciyfid2nxl9lfrdrlkw6kxk-linux-erhai-aarch64-unknown-linux-gnu-7.2.15",
+    "modules": "/nix/store/jvmzmhwx052dh95jri6klddpz7j7x78v-linux-erhai-aarch64-unknown-linux-gnu-7.2.15-modules",
+    "cps8601": "/nix/store/gw10v5jdjcp3z7gq3rny8bk3k9gpzvj5-cps8601-optional-firmware-aarch64-unknown-linux-gnu-1"
+  },
+  "boot_generation": "nixos-80c6521597b673e4d69d3c6d0644463e",
+  "reference_revision": "937d88a2c28a67153d572bcf7f89049eaada93f2",
+  "firmware_archive_sha256": "a7343f5cc4db8f717ea2ab3dc4c665358ffd1fad9ffb97f4c5dbce2a6d8d4df5",
+  "verified_oem_firmware_files": 14,
+  "python_regressions_passed": 62,
+  "protocol_sanitizer_tests": "passed",
+  "kernel_system_builds": "passed",
+  "runtime_patch_export_matches_shared_sources": true,
+  "boot_payload_hashes_and_sizes_verified": true,
+  "system_profile_and_gc_root_match_running": true,
+  "boot_read_only": true,
+  "boots": [
+    {
+      "kernel_release": "7.2.15-nixos-erhai-870167fad062-brahma1",
+      "boot_id": "7508a205-3119-4807-8686-5eb223dbfbe0",
+      "system": "/nix/store/g774yvbkc5h0jp9gvhyzb2632p3m5sri-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+      "first_setup_completed_at_seconds": 2.607044,
+      "all_setup_completion_times_seconds": [
+        2.607044,
+        8.604194,
+        33.718355
+      ],
+      "peripheral_bootstrap_successes": 3,
+      "bluetooth_timeout_or_frame_errors": false,
+      "oem_patch_download_observed": true,
+      "oem_default_nvm_download_observed": true,
+      "ganges_firmware_download_observed": false,
+      "factory_address_service": {
+        "Result": "success",
+        "NRestarts": "0",
+        "ExecMainStatus": "0"
+      },
+      "factory_identity_verified": true,
+      "fiio_connected": true,
+      "audio_nodes": [
+        {
+          "media.class": "Audio/Sink",
+          "node.name": "alsa_output.platform-sound.HiFi__Speaker__sink",
+          "alsa.card_name": "OnePlus-Pad-2-Pro"
+        },
+        {
+          "media.class": "Audio/Source",
+          "node.name": "alsa_input.platform-sound.HiFi__Mic__source",
+          "alsa.card_name": "OnePlus-Pad-2-Pro"
+        },
+        {
+          "media.class": "Audio/Sink",
+          "api.bluez5.codec": "ldac",
+          "api.bluez5.profile": "a2dp-sink"
+        }
+      ],
+      "wifi_state": "100 (connected)",
+      "failed_system_units": "",
+      "failed_user_units": ""
+    },
+    {
+      "kernel_release": "7.2.15-nixos-erhai-870167fad062-brahma1",
+      "boot_id": "b113a6eb-9802-4c98-8250-73cc6794ea5f",
+      "system": "/nix/store/g774yvbkc5h0jp9gvhyzb2632p3m5sri-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+      "first_setup_completed_at_seconds": 2.518609,
+      "all_setup_completion_times_seconds": [
+        2.518609,
+        8.406461
+      ],
+      "peripheral_bootstrap_successes": 2,
+      "bluetooth_timeout_or_frame_errors": false,
+      "oem_patch_download_observed": true,
+      "oem_default_nvm_download_observed": true,
+      "ganges_firmware_download_observed": false,
+      "factory_address_service": {
+        "Result": "success",
+        "NRestarts": "0",
+        "ExecMainStatus": "0"
+      },
+      "factory_identity_verified": true,
+      "fiio_connected": true,
+      "audio_nodes": [
+        {
+          "media.class": "Audio/Sink",
+          "node.name": "alsa_output.platform-sound.HiFi__Speaker__sink",
+          "alsa.card_name": "OnePlus-Pad-2-Pro"
+        },
+        {
+          "media.class": "Audio/Source",
+          "node.name": "alsa_input.platform-sound.HiFi__Mic__source",
+          "alsa.card_name": "OnePlus-Pad-2-Pro"
+        },
+        {
+          "media.class": "Audio/Sink",
+          "api.bluez5.codec": "ldac",
+          "api.bluez5.profile": "a2dp-sink"
+        }
+      ],
+      "wifi_state": "100 (connected)",
+      "failed_system_units": "",
+      "failed_user_units": ""
+    },
+    {
+      "kernel_release": "7.2.15-nixos-erhai-870167fad062-brahma1",
+      "boot_id": "cb02661b-22b3-45fc-bfaa-02807f3494d5",
+      "system": "/nix/store/g774yvbkc5h0jp9gvhyzb2632p3m5sri-nixos-system-pad2pro-26.11.20261107.f4a03c0",
+      "first_setup_completed_at_seconds": 3.631786,
+      "all_setup_completion_times_seconds": [
+        3.631786,
+        8.466817
+      ],
+      "peripheral_bootstrap_successes": 2,
+      "bluetooth_timeout_or_frame_errors": false,
+      "oem_patch_download_observed": true,
+      "oem_default_nvm_download_observed": true,
+      "ganges_firmware_download_observed": false,
+      "factory_address_service": {
+        "Result": "success",
+        "NRestarts": "0",
+        "ExecMainStatus": "0"
+      },
+      "factory_identity_verified": true,
+      "fiio_connected": true,
+      "audio_nodes": [
+        {
+          "media.class": "Audio/Sink",
+          "node.name": "alsa_output.platform-sound.HiFi__Speaker__sink",
+          "alsa.card_name": "OnePlus-Pad-2-Pro"
+        },
+        {
+          "media.class": "Audio/Source",
+          "node.name": "alsa_input.platform-sound.HiFi__Mic__source",
+          "alsa.card_name": "OnePlus-Pad-2-Pro"
+        }
+      ],
+      "wifi_state": "100 (connected)",
+      "failed_system_units": "",
+      "failed_user_units": ""
+    }
+  ],
+  "user_confirmed": {
+    "fiio_music_normal": true,
+    "no_observed_playback_stutter_or_disconnect": true,
+    "manual_reconnection_then_playback_normal": true,
+    "third_reboot_was_user_requested": true
+  },
+  "automatic_reconnect": "not passed: user reports manual connection required",
+  "not_validated": [
+    "power-off cold boot",
+    "return from Android",
+    "sustained playback duration",
+    "HFP microphone/calls",
+    "suspend/resume"
+  ],
+  "backups": "No backups retained from this migration; temporary configuration backups removed at user request.",
+  "subsequent_autoconnect_fix": "BLUETOOTH-AUTOCONNECT-VALIDATION.json"
+}

@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-11-13T19:11:12.362008+00:00",
+  "kernel_release": "7.3.4-erhai-p2",
+  "params": [
+    "console=tty0",
+    "mem_sleep_default=s2idle",
+    "trace_event=power:psci_domain_idle_enter,power:psci_domain_idle_exit,regulator:*,gpio:gpio_value",
+    "tp_printk",
+    "fb.lockless_register_fb=1",
+    "kprobe_event=p:erhai/runtime_suspend,adreno_runtime_suspend;r:erhai/runtime_suspended,adreno_runtime_suspend,ret=$retval:s32;p:erhai/gmu_stop,a6xx_gmu_stop;r:erhai/gmu_stopped,a6xx_gmu_stop,ret=$retval:s32;p:erhai/panel,novatek_nt36536_prepare;r:erhai/panel_return,novatek_nt36536_prepare,ret=$retval:s32;p:erhai/reg_enable,regulator_enable,reg=$arg1:x64;r:erhai/reg_done,regulator_enable,ret=$retval:s32;p:erhai/bias_state,ktz8868_bias_is_enabled;r:erhai/bias_status,ktz8868_bias_is_enabled,ret=$retval:s32;p:erhai/bias_enable,ktz8868_bias_enable;r:erhai/bias_done,ktz8868_bias_enable,ret=$retval:s32;p:erhai/sleep,usleep_range_state,min=$arg1:u64,max=$arg2:u64;r:erhai/awake,usleep_range_state;p:erhai/dcs,mipi_dsi_dcs_write_buffer,cmd=+0($arg2):u8,len=$arg3:u64;p:erhai/xfer,dsi_host_transfer;r:erhai/xfer_return,dsi_host_transfer,ret=$retval:s64",
+    "nr_cpus=1",
+    "nokaslr",
+    "arm64.nohaft",
+    "arm64.nowfxt",
+    "irqchip.gicv3_pseudo_nmi=0",
+    "ignore_loglevel",
+    "initcall_debug",
+    "log_buf_len=8M",
+    "panic=0",
+    "root=fstab",
+    "loglevel=6",
+    "lsm=landlock,yama,bpf"
+  ],
+  "scope": "Actual p2 Image under QEMU: validates probe and tracepoint registration and console printing; expected no-rootfs panic, no physical device coverage.",
+  "definition_registration": "passed",
+  "host_probe_printed": true,
+  "log_sha256": "f143c1dd226497420289a2b1d71e7cf41dd0fa610627f333e1e492351f1b2b0f",
+  "change": "Trace-only: no cpuidle disabling, no source or payload change. Sleep/bias probes replace completed initialization probes.",
+  "publication": {
+    "system": "/nix/store/4ckg073izrgdzlgs9imhvqq54d41j4ri-nixos-system-pad2pro-erhai-p2-power-trace",
+    "boot_id": "nixos-3849e76da2314444df04fcc67496a3df",
+    "cmdline_bytes": 1285,
+    "same_p2_payloads": true,
+    "boot_readonly": true,
+    "menu_entries": 3,
+    "previous_trace_removed": [
+      "nixos-4dc3cfe7319fdcbb5591a38098d29d87"
+    ],
+    "default": "nixos/current",
+    "hardware_result": "immediate reset; see power-trace-device-boot.json",
+    "menu_entry": "replaced by noidle-debug"
+  }
+}
