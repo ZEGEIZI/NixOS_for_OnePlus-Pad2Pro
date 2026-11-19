@@ -1,4 +1,4 @@
-From d31d13f5d0b1117160e2930da43996219933f14d Mon Sep 17 00:00:00 2001
+From eaad4b4a0b6f832620cc0dc4a5f917293991f6d5 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Sat, 14 Nov 2026 04:35:10 +0800
 Subject: [PATCH] arm64: dts: qcom: erhai: pin panel VDDIO to 1.896 V

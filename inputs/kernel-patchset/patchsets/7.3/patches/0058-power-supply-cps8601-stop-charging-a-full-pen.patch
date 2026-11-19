@@ -1,0 +1,79 @@
+From 4457d3dd09a76c04b50dda388ade03f82eeba182 Mon Sep 17 00:00:00 2001
+From: ZEGEIZI <ZEGEIZI@users.noreply.github.com>
+Date: Thu, 19 Nov 2026 14:41:23 +0800
+Subject: [PATCH] power: supply: cps8601: stop charging a full pen
+
+Use the in-band battery report to inhibit charging and return the boost
+rail to standby once the pen reports 100 percent. Keep the full state
+for the current attachment and preserve fault inhibition on removal.
+---
+ drivers/power/supply/cps8601.c | 28 ++++++++++++++++++++++------
+ 1 file changed, 22 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/power/supply/cps8601.c b/drivers/power/supply/cps8601.c
+index 9f60f5ffe..1af405505 100644
+--- a/drivers/power/supply/cps8601.c
++++ b/drivers/power/supply/cps8601.c
+@@ -184,6 +184,7 @@ struct cps8601 {
+ 	int			pen_soc;
+ 	bool			present;
+ 	bool			charge_blocked;
++	bool			charge_full;
+ 	u64			pen_addr;
+ 	u64			frame_addr;
+ 	u32			frame_check;
+@@ -817,11 +818,18 @@ static void cps8601_handle_rx_frame(struct cps8601 *chip)
+ 	}
+ 
+ 	if (frame[0] == 0x28 && frame[1] == 0x17) {
+-		chip->pen_soc = frame[2];
+-		if (chip->pen_soc >= 100)
+-			dev_info(chip->dev, "pen full\n");
+-		else
+-			dev_info(chip->dev, "pen soc %d%%\n", chip->pen_soc);
++		if (!chip->present || chip->charge_full || frame[2] > 100)
++			return;
++
++		if (frame[2] == 100) {
++			WRITE_ONCE(chip->charge_full, true);
++			gpiod_set_value(chip->off_state_gpiod, 1);
++			schedule_work(&chip->attach_work);
++			dev_info(chip->dev, "pen full, charging stopped\n");
++		} else if (frame[2] != chip->pen_soc) {
++			dev_info(chip->dev, "pen soc %d%%\n", frame[2]);
++		}
++		WRITE_ONCE(chip->pen_soc, frame[2]);
+ 	} else if (frame[0] == 0x48) {
+ 		cps8601_pen_address(chip, frame);
+ 	}
+@@ -891,7 +899,8 @@ static void cps8601_attach_work(struct work_struct *work)
+ 		return;
+ 
+ 	cps8601_hboost_req(chip, READ_ONCE(chip->present) &&
+-			   !READ_ONCE(chip->charge_blocked) ?
++			   !READ_ONCE(chip->charge_blocked) &&
++			   !READ_ONCE(chip->charge_full) ?
+ 			   CPS8601_HBOOST_ATTACH_CODE :
+ 			   CPS8601_HBOOST_DEFAULT_CODE);
+ }
+@@ -920,6 +929,12 @@ static irqreturn_t cps8601_irq(int irq, void *data)
+ 	}
+ 	if (active & CPS8601_IRQ_RX_DETACH) {
+ 		WRITE_ONCE(chip->present, false);
++		if (chip->charge_full) {
++			WRITE_ONCE(chip->charge_full, false);
++			if (!chip->charge_blocked && !READ_ONCE(chip->suspended) &&
++			    !READ_ONCE(chip->removing))
++				gpiod_set_value(chip->off_state_gpiod, 0);
++		}
+ 		if (chip->charge_blocked && !(active & CPS8601_IRQ_RX_ATTACH) &&
+ 		    !READ_ONCE(chip->suspended) && !READ_ONCE(chip->removing)) {
+ 			int ret;
+@@ -1303,6 +1318,7 @@ static int cps8601_quiesce(struct cps8601 *chip)
+ 	chip->ready = false;
+ 	chip->present = false;
+ 	chip->charge_blocked = false;
++	chip->charge_full = false;
+ 	cps8601_forget_pen(chip);
+ 	chip->pen_soc = -1;
+ 	active = chip->hboost_active;

@@ -1,0 +1,56 @@
+From 15782178af6198bf13b3d8a0adb5279ac36a2951 Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:32:47 +0800
+Subject: [PATCH] misc: fastrpc: set the coherent DMA mask before attaching the
+ pool
+
+The RPMsg device starts with a zero coherent DMA mask. The reserved
+memory code checks this mask at attach time, so it warns even when
+the pool is below 4 GiB. Set the existing 32-bit coherent mask
+before the check. Keep streaming DMA setup at its existing point.
+---
+ drivers/misc/fastrpc.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/misc/fastrpc.c b/drivers/misc/fastrpc.c
+index adc6f850e..44089bdf0 100644
+--- a/drivers/misc/fastrpc.c
++++ b/drivers/misc/fastrpc.c
+@@ -2567,9 +2567,6 @@ static int fastrpc_rpmsg_probe(struct rpmsg_device *rpdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (of_reserved_mem_device_init_by_idx(rdev, rdev->of_node, 0))
+-		dev_info(rdev, "no reserved DMA memory for FASTRPC\n");
+-
+ 	vmcount = of_property_read_variable_u32_array(rdev->of_node,
+ 				"qcom,vmids", &vmids[0], 0, FASTRPC_MAX_VMIDS);
+ 	if (vmcount < 0)
+@@ -2577,10 +2574,18 @@ static int fastrpc_rpmsg_probe(struct rpmsg_device *rpdev)
+ 	else if (!qcom_scm_is_available())
+ 		return -EPROBE_DEFER;
+ 
++	/* The reserved DMA pool is checked against this mask on attach. */
++	err = dma_set_coherent_mask(rdev, DMA_BIT_MASK(32));
++	if (err)
++		return dev_err_probe(rdev, err, "failed to set coherent DMA mask\n");
++
+ 	data = kzalloc_obj(*data);
+ 	if (!data)
+ 		return -ENOMEM;
+ 
++	if (of_reserved_mem_device_init_by_idx(rdev, rdev->of_node, 0))
++		dev_info(rdev, "no reserved DMA memory for FASTRPC\n");
++
+ 	if (vmcount) {
+ 		data->vmcount = vmcount;
+ 		for (i = 0; i < data->vmcount; i++) {
+@@ -2630,7 +2635,7 @@ static int fastrpc_rpmsg_probe(struct rpmsg_device *rpdev)
+ 	atomic_set(&data->ctx_seq, 0);
+ 
+ 	rdev->dma_mask = &data->dma_mask;
+-	dma_set_mask_and_coherent(rdev, DMA_BIT_MASK(32));
++	dma_set_mask(rdev, DMA_BIT_MASK(32));
+ 	INIT_LIST_HEAD(&data->users);
+ 	INIT_LIST_HEAD(&data->invoke_interrupted_mmaps);
+ 	spin_lock_init(&data->lock);

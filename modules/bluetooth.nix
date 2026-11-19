@@ -7,6 +7,9 @@ in
   # factory identity through MGMT before BlueZ enumerates controllers.
   # Keep device identity outside the Nix store and generic system images.
   boot.kernelModules = lib.mkIf config.hardware.bluetooth.enable [ "socinfo" ];
+  # Some BLE mice omit GAP discoverability flags. Let desktop discovery
+  # enumerate them too; pairing and trust still require the user's action.
+  hardware.bluetooth.settings.General.FilterDiscoverable = lib.mkDefault false;
   # AutoEnable powers the adapter; BlueZ's policy reconnects after link loss.
   # PipeWire 1.6 defaults reconnect_profiles to NONE, so explicitly request
   # startup A2DP connections once the active seat's audio monitor is ready.

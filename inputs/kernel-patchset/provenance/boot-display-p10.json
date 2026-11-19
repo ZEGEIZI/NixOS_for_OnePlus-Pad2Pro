@@ -1,0 +1,9 @@
+{
+  "base_release": "p9",
+  "base_commit": "5b49cde232f03d6df8b3ba40eda505c175de2801",
+  "patch_origin": "Uncommitted diff against the strictly replayed p9 sources",
+  "splash_origin": "Erhai stock Android runtime DTB, /reserved-memory/splash_region",
+  "splash_physical_base": "0xfc800000",
+  "splash_size": "0x02b00000",
+  "display_stream_id": "0x800"
+}

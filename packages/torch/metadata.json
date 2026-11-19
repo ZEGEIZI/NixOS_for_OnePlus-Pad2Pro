@@ -1,0 +1,7 @@
+{
+  "uuid": "erhai-torch@erhai.local",
+  "name": "Erhai Torch",
+  "description": "Control both rear flashlight LEDs from Quick Settings",
+  "shell-version": ["51"],
+  "version": 1
+}

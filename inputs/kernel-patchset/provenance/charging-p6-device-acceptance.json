@@ -1,0 +1,287 @@
+{
+  "date": "2026-11-16",
+  "release": "7.3.4-erhai-p6",
+  "source_head": "9b519649fc7a717ac8fa51f128639116b60557bd",
+  "device": "OnePlus Pad 2 Pro (OPD2413)",
+  "charger": "VCBAOBCH",
+  "kernel_taint": 0,
+  "failed_system_units": [],
+  "build": {
+    "kernel": "passed; complete AArch64 cross kernel, modules and BTF using current nixpkgs GCC 16.2.0",
+    "userland": "passed; native ARM64 system and boot tree built on tablet",
+    "duplicate_native_kernel": "canceled; not a successful native kernel build",
+    "project_regressions": 108,
+    "all_systems_flake_evaluation": "passed; nix flake check --all-systems --no-build"
+  },
+  "supervooc": {
+    "result": "passed",
+    "entry_soc_percent": 89,
+    "model": 105,
+    "dual_pumps": true,
+    "initial_input_approx_v": 9.27,
+    "initial_aggregate_pump_input_approx_a": 2.48,
+    "initial_net_battery_approx_w": 17.5,
+    "observed_cell_temperature_c": [
+      32,
+      35
+    ],
+    "note": "Measured values from this charging session, not a promised power rating."
+  },
+  "locked_screen_off": {
+    "result": "passed",
+    "off_samples": 44,
+    "duration_s": 86.54859373,
+    "all_supervooc_and_pumps": true,
+    "battery_net_w_range": [
+      6.702479841599,
+      17.236177871562
+    ],
+    "charge_wakeup_active": true,
+    "suspend_success_before": 0,
+    "suspend_success_after": 0,
+    "gnome_inhibitor_app": "tablet-charge-idle",
+    "gnome_inhibitor_flags": 4
+  },
+  "tail": {
+    "result": "passed",
+    "supervooc_exit": "low-current-full",
+    "qc_mv": 9000,
+    "ffc_steps": [
+      0,
+      1,
+      2
+    ],
+    "actual_status": "Full",
+    "buck_phase": 5,
+    "buck_full": 1,
+    "buck_enable": 0,
+    "buck_error": 0,
+    "buck_gauge_error": 0
+  },
+  "full_attached_awake": {
+    "result": "passed",
+    "samples": 14,
+    "duration_s": 65.158416772,
+    "all_status_full": true,
+    "all_charge_wakeup_active": true,
+    "suspend_success_before": 0,
+    "suspend_success_after": 0,
+    "desktop_helper_status": "inhibit",
+    "usb_online": 1
+  },
+  "detach_suspend_resume": {
+    "result": "charging inhibition released; 20 s suspend/resume passed with LocalSearch temporarily stopped",
+    "usb_online": 0,
+    "charge_wakeup_active_ms": 0,
+    "desktop_helper": "allow",
+    "gnome_inhibitors": [],
+    "first_two_attempts": "failed at freeze/-16: localsearch task blocked in FUSE lookup/stat; Connect2 SSHFS, portal and GVFS mounts present",
+    "isolated_attempt": {
+      "before": {
+        "wall_ns": 1794815929688554013,
+        "monotonic_s": 263.014700488,
+        "boottime_s": 263.014701477,
+        "online": "0",
+        "suspend_success": 0,
+        "wake": {
+          "active_time_ms": "0",
+          "active_count": "0",
+          "event_count": "0"
+        }
+      },
+      "after": {
+        "wall_ns": 1794815952319391003,
+        "monotonic_s": 265.634320246,
+        "boottime_s": 285.645538311,
+        "online": "0",
+        "suspend_success": 1,
+        "wake": {
+          "active_time_ms": "0",
+          "active_count": "0",
+          "event_count": "0"
+        }
+      },
+      "rtcwake_returncode": 0,
+      "stdout": "rtcwake\uff1a\u5c06\u5047\u8bbe RTC \u4f7f\u7528 UTC...\nrtcwake\uff1a\u4ece\u201cmem\u201d\u5524\u9192\uff0c\u4f7f\u7528 /dev/rtc0\uff0c\u65f6\u95f4 Mon Nov 16 07:59:10 2026\n",
+      "stderr": "",
+      "suspended_s": 20.01121707599998,
+      "passed": true
+    },
+    "local_search_restored": true,
+    "limitation": "Unmodified desktop session with indexing active did not suspend in two attempts. The FUSE/indexer conflict is not fixed by this charging port."
+  },
+  "reattach": {
+    "result": "charging and inhibition passed during recorded observation",
+    "entry_soc_percent": 99,
+    "samples": 20,
+    "duration_s": 38.228907423,
+    "all_supervooc_and_pumps": true,
+    "rx_errors": [
+      "0",
+      "0"
+    ],
+    "tx_errors": [
+      "0",
+      "0"
+    ],
+    "route_exit_count": [
+      "5",
+      "5"
+    ],
+    "charge_wakeup_active": true,
+    "desktop_helper": "inhibit",
+    "gnome_inhibitor_app": "tablet-charge-idle",
+    "gnome_inhibitor_flags": 4,
+    "initial_display_measured_v": 9.247,
+    "initial_display_measured_a": 2.043,
+    "initial_display_net_battery_w": 12.56413982878
+  },
+  "publication": {
+    "system": "/nix/store/gw6syq0liq49q52v0m8y3yfbjpjndzz4-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "boot_id": "nixos-279f9637b4fb2d5e4a93ae6f02462a7c",
+    "fallback_p5": "nixos-8f1b82c9e57b28e2d4e88fe682dd4900",
+    "nixos_rebuild_switch": "passed",
+    "final_reboot": "passed; user confirmed NixOS; SSH recovered, booted/current/profile all match final gw6syq0liq49q52v0m8y3yfbjpjndzz4 system",
+    "source_evaluation": "latest portable source evaluates to the installed gw6syq0liq49q52v0m8y3yfbjpjndzz4 system; metadata changes do not rebuild the kernel",
+    "source_sync": "passed; 9 documentation/manifest/acceptance metadata files synced to /etc/nixos with SHA-256 verification and root-owned backup; local.nix preserved; later running system configuration left untouched",
+    "final_boot_id": "f9698182-a835-42e4-8f69-3d85776d782b"
+  },
+  "not_physically_tested": [
+    "UFCS",
+    "PPS",
+    "fixed PD",
+    "magnetic/keyboard cover lid switch"
+  ],
+  "limitations": [
+    "QC 9 V observed as tail mode on VCBAOBCH; standalone QC charger not tested.",
+    "No battery protection thresholds or charge current limits were overridden.",
+    "Two ordinary desktop suspend attempts failed while LocalSearch was blocked in FUSE; test succeeded only after temporarily stopping LocalSearch, which was restarted afterward."
+  ],
+  "evidence": {
+    "locked_screen_off": [
+      {
+        "time_ns": 1794813275209857986,
+        "contract": "fixed_pd_mv=0 fixed_icl_ua=0 qc_mv=0 serial_probe=1 detected_type=2 serial_source=1 serial_icl_vote=0 serial_buck_suspended=1 buck_tail=0 fixed_exit=qualified protocol retry buck_phase=1 ffc_step=0 ffc_used=0 buck_fv_mv=4490 buck_fcc_ua=-1 buck_enable=1 buck_cutoff_mv=4440 buck_cutoff_ma=597 buck_recharge_mv=4390 buck_v_hits=0 buck_i_hits=0 buck_full=0 buck_error=0 buck_gauge_error=0 buck_mv=4454 buck_ma=1220 buck_temp=340 buck_sample_age_ms=391912 btb_batt_mc=40034 btb_usb_mc=39282 btb_valid=1 btb_hot=0 btb_samples=0 btb_age_ms=20 btb_err=0/0 svooc_last_exit=none svooc_last_retry=none rehandshakes=0 rehandshakes_answered=0 missed_asks=0 missed_code=0 missed_predata=0x0000 missed_peak_ibus_ma=-1 curve_temp=340 sample_temp=350 entry_temp=350 entry_soc=89 curve_vbat_mv=4512 cell_vbat_mv=4531 lcf_count=0 lcf_region=4 cp_full_count=0 curve_code=25 thermal_code=20 curve_idx=0 warm_boundary=440 protocol=supervooc state=deliver model=105 allow_sent=1 pre_allow_buck_ua=0 first_request_code=25 target_code=20 request_code=20 request_ma=2000 pending_code=-1 predata=0x6602 above_samples=0 model_rx=0x8c92 model_flags=0x0707 vbus_mv=9172 pump=1 pump_ibus_ma=2024 master_ibus_ma=1006 slave_ibus_ma=1018 master_pump=1 slave_pump=1 frame_age_ms=38 last_rx=0x82 flags=0x07 reg06=4 rx_errors=0 tx_errors=4 frame_gap_us=45295 max_gap_us=76213 exits=0 last_exit=none",
+        "battery": {
+          "status": "Charging",
+          "capacity": "95",
+          "voltage_now": "4520476",
+          "current_now": "1732840",
+          "temp": "350"
+        },
+        "suspend_success": "0",
+        "dpms": {
+          "card0-DSI-1": "On"
+        },
+        "charge_awake_ms": "424776"
+      },
+      {
+        "time_ns": 1794813363766411651,
+        "contract": "fixed_pd_mv=0 fixed_icl_ua=0 qc_mv=0 serial_probe=1 detected_type=2 serial_source=1 serial_icl_vote=0 serial_buck_suspended=1 buck_tail=0 fixed_exit=qualified protocol retry buck_phase=1 ffc_step=0 ffc_used=0 buck_fv_mv=4490 buck_fcc_ua=-1 buck_enable=1 buck_cutoff_mv=4440 buck_cutoff_ma=597 buck_recharge_mv=4390 buck_v_hits=0 buck_i_hits=0 buck_full=0 buck_error=0 buck_gauge_error=0 buck_mv=4454 buck_ma=1220 buck_temp=340 buck_sample_age_ms=480468 btb_batt_mc=38880 btb_usb_mc=38209 btb_valid=1 btb_hot=0 btb_samples=0 btb_age_ms=388 btb_err=0/0 svooc_last_exit=none svooc_last_retry=none rehandshakes=0 rehandshakes_answered=0 missed_asks=0 missed_code=0 missed_predata=0x0000 missed_peak_ibus_ma=-1 curve_temp=340 sample_temp=340 entry_temp=350 entry_soc=89 curve_vbat_mv=4533 cell_vbat_mv=4552 lcf_count=0 lcf_region=4 cp_full_count=0 curve_code=25 thermal_code=20 curve_idx=0 warm_boundary=440 protocol=supervooc state=deliver model=105 allow_sent=1 pre_allow_buck_ua=0 first_request_code=25 target_code=20 request_code=20 request_ma=2000 pending_code=-1 predata=0x6a02 above_samples=0 model_rx=0x8c92 model_flags=0x0707 vbus_mv=9236 pump=1 pump_ibus_ma=1786 master_ibus_ma=870 slave_ibus_ma=916 master_pump=1 slave_pump=1 frame_age_ms=15 last_rx=0x82 flags=0x07 reg06=4 rx_errors=0 tx_errors=5 frame_gap_us=47008 max_gap_us=76213 exits=0 last_exit=none",
+        "battery": {
+          "status": "Charging",
+          "capacity": "97",
+          "voltage_now": "4552201",
+          "current_now": "2877894",
+          "temp": "340"
+        },
+        "suspend_success": "0",
+        "dpms": {
+          "card0-DSI-1": "Off"
+        },
+        "charge_awake_ms": "513337"
+      }
+    ],
+    "full_attached_awake": [
+      {
+        "time_ns": 1794814726547615518,
+        "contract": "fixed_pd_mv=0 fixed_icl_ua=2000000 qc_mv=9000 serial_probe=0 detected_type=2 serial_source=1 serial_icl_vote=0 serial_buck_suspended=0 buck_tail=1 fixed_exit=charger removed buck_phase=5 ffc_step=2 ffc_used=1 buck_fv_mv=4490 buck_fcc_ua=4500000 buck_enable=0 buck_cutoff_mv=4440 buck_cutoff_ma=597 buck_recharge_mv=4390 buck_v_hits=0 buck_i_hits=0 buck_full=1 buck_error=0 buck_gauge_error=0 buck_mv=4497 buck_ma=-216 buck_temp=320 buck_sample_age_ms=312 btb_batt_mc=34638 btb_usb_mc=34833 btb_valid=1 btb_hot=0 btb_samples=0 btb_age_ms=348 btb_err=0/0 svooc_last_exit=low-current-full svooc_last_retry=none rehandshakes=0 rehandshakes_answered=0 missed_asks=0 missed_code=0 missed_predata=0x0000 missed_peak_ibus_ma=-1 protocol=none state=idle request_mv=0 request_ma=0 pump=0 pump_ibus_ma=0 exits=0 last_exit=none",
+        "battery": {
+          "status": "Full",
+          "capacity": "100",
+          "voltage_now": "4494395",
+          "current_now": "-325937",
+          "temp": "320"
+        },
+        "suspend_success": "0",
+        "dpms": {
+          "card0-DSI-1": "Off"
+        },
+        "charge_awake_ms": "1120769"
+      },
+      {
+        "time_ns": 1794814791706032290,
+        "contract": "fixed_pd_mv=0 fixed_icl_ua=2000000 qc_mv=9000 serial_probe=0 detected_type=2 serial_source=1 serial_icl_vote=0 serial_buck_suspended=0 buck_tail=1 fixed_exit=charger removed buck_phase=5 ffc_step=2 ffc_used=1 buck_fv_mv=4490 buck_fcc_ua=4500000 buck_enable=0 buck_cutoff_mv=4440 buck_cutoff_ma=597 buck_recharge_mv=4390 buck_v_hits=0 buck_i_hits=0 buck_full=1 buck_error=0 buck_gauge_error=0 buck_mv=4493 buck_ma=-231 buck_temp=310 buck_sample_age_ms=4032 btb_batt_mc=34387 btb_usb_mc=34541 btb_valid=1 btb_hot=0 btb_samples=0 btb_age_ms=612 btb_err=0/0 svooc_last_exit=low-current-full svooc_last_retry=none rehandshakes=0 rehandshakes_answered=0 missed_asks=0 missed_code=0 missed_predata=0x0000 missed_peak_ibus_ma=-1 protocol=none state=idle request_mv=0 request_ma=0 pump=0 pump_ibus_ma=0 exits=0 last_exit=none",
+        "battery": {
+          "status": "Full",
+          "capacity": "100",
+          "voltage_now": "4491281",
+          "current_now": "-272225",
+          "temp": "310"
+        },
+        "suspend_success": "0",
+        "dpms": {
+          "card0-DSI-1": "Off"
+        },
+        "charge_awake_ms": "1185933"
+      }
+    ],
+    "reattach": [
+      {
+        "time_ns": 1794816050684589781,
+        "contract": "fixed_pd_mv=0 fixed_icl_ua=0 qc_mv=0 serial_probe=1 detected_type=9 serial_source=1 serial_icl_vote=0 serial_buck_suspended=1 buck_tail=0 fixed_exit=none buck_phase=1 ffc_step=0 ffc_used=0 buck_fv_mv=-1 buck_fcc_ua=-1 buck_enable=-1 buck_cutoff_mv=4440 buck_cutoff_ma=597 buck_recharge_mv=4390 buck_v_hits=0 buck_i_hits=0 buck_full=0 buck_error=0 buck_gauge_error=0 buck_mv=4451 buck_ma=-164 buck_temp=310 buck_sample_age_ms=34472 btb_batt_mc=36530 btb_usb_mc=36290 btb_valid=1 btb_hot=0 btb_samples=0 btb_age_ms=424 btb_err=0/0 svooc_last_exit=route-released svooc_last_retry=none rehandshakes=0 rehandshakes_answered=0 missed_asks=0 missed_code=0 missed_predata=0x0000 missed_peak_ibus_ma=-1 curve_temp=320 sample_temp=320 entry_temp=320 entry_soc=99 curve_vbat_mv=4521 cell_vbat_mv=4535 lcf_count=0 lcf_region=4 cp_full_count=0 curve_code=15 thermal_code=20 curve_idx=1 warm_boundary=440 protocol=supervooc state=deliver model=105 allow_sent=1 pre_allow_buck_ua=0 first_request_code=20 target_code=15 request_code=15 request_ma=1500 pending_code=-1 predata=0x6a02 above_samples=0 model_rx=0x8c92 model_flags=0x0707 vbus_mv=9172 pump=1 pump_ibus_ma=1483 master_ibus_ma=718 slave_ibus_ma=765 master_pump=1 slave_pump=1 frame_age_ms=18 last_rx=0x82 flags=0x07 reg06=4 rx_errors=0 tx_errors=0 frame_gap_us=45139 max_gap_us=74141 exits=5 last_exit=route-released",
+        "battery": {
+          "status": "Charging",
+          "capacity": "99",
+          "voltage_now": "4535462",
+          "current_now": "2013610",
+          "temp": "320"
+        },
+        "suspend_success": "1",
+        "dpms": {
+          "card0-DSI-1": "On"
+        },
+        "charge_awake_ms": "34517"
+      },
+      {
+        "time_ns": 1794816088913497204,
+        "contract": "fixed_pd_mv=0 fixed_icl_ua=0 qc_mv=0 serial_probe=1 detected_type=9 serial_source=1 serial_icl_vote=0 serial_buck_suspended=1 buck_tail=0 fixed_exit=none buck_phase=1 ffc_step=0 ffc_used=0 buck_fv_mv=-1 buck_fcc_ua=-1 buck_enable=-1 buck_cutoff_mv=4440 buck_cutoff_ma=597 buck_recharge_mv=4390 buck_v_hits=0 buck_i_hits=0 buck_full=0 buck_error=0 buck_gauge_error=0 buck_mv=4451 buck_ma=-164 buck_temp=310 buck_sample_age_ms=72700 btb_batt_mc=36928 btb_usb_mc=36702 btb_valid=1 btb_hot=0 btb_samples=0 btb_age_ms=380 btb_err=0/0 svooc_last_exit=route-released svooc_last_retry=none rehandshakes=0 rehandshakes_answered=0 missed_asks=0 missed_code=0 missed_predata=0x0000 missed_peak_ibus_ma=-1 curve_temp=320 sample_temp=320 entry_temp=320 entry_soc=99 curve_vbat_mv=4528 cell_vbat_mv=4542 lcf_count=0 lcf_region=4 cp_full_count=0 curve_code=15 thermal_code=20 curve_idx=1 warm_boundary=440 protocol=supervooc state=deliver model=105 allow_sent=1 pre_allow_buck_ua=0 first_request_code=20 target_code=15 request_code=15 request_ma=1500 pending_code=-1 predata=0x6b02 above_samples=0 model_rx=0x8c92 model_flags=0x0707 vbus_mv=9206 pump=1 pump_ibus_ma=1500 master_ibus_ma=720 slave_ibus_ma=780 master_pump=1 slave_pump=1 frame_age_ms=16 last_rx=0x82 flags=0x07 reg06=4 rx_errors=0 tx_errors=0 frame_gap_us=42934 max_gap_us=74141 exits=5 last_exit=route-released",
+        "battery": {
+          "status": "Charging",
+          "capacity": "99",
+          "voltage_now": "4540523",
+          "current_now": "2049622",
+          "temp": "320"
+        },
+        "suspend_success": "1",
+        "dpms": {
+          "card0-DSI-1": "On"
+        },
+        "charge_awake_ms": "72749"
+      }
+    ]
+  },
+  "desktop_final_session": {
+    "extension": "charge-indicator@tablet-linux",
+    "enabled": true,
+    "state": "ACTIVE",
+    "idle_service": "active",
+    "detached_helper": "allow",
+    "detached_session_inhibitors": [],
+    "helper_path": "final k9pyvk9vaxpkdns5pfz7cnzmgglwd7da package verified in loaded extension",
+    "visual_user_confirmation": "not received at report time; extension ACTIVE and loaded final helper path verified over session bus and source"
+  },
+  "network_followup": "Historical 16:02 loss was not diagnosed. On resuming this task around 21:25 SSH works on a different boot, c5c87786-ca7b-450e-b187-5704cf2c853f, running a later system 10j5qyl0l9d4z8dzcd8rf6wsf1gifngg with the same p6 charging package. Do not infer that this explains the earlier loss.",
+  "later_followup": {
+    "boot_id": "c5c87786-ca7b-450e-b187-5704cf2c853f",
+    "system": "/nix/store/10j5qyl0l9d4z8dzcd8rf6wsf1gifngg-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+    "charging": "SUPERVOOC delivering at SOC100, net battery 13.36 W, measured input 9.243 V / 2.044 A",
+    "extension": "ACTIVE, final k9py charging helper",
+    "suspend_success": 1,
+    "failed_units": [
+      "systemd-suspend.service"
+    ],
+    "suspend_journal": "One successful systemd suspend at 21:21:50; another attempt at 21:22:15 waited 60 seconds freezing user.slice then was refused by the kernel while charging. These operations were not initiated by this resumed task.",
+    "ufcs_idle_warning": "ufcs_sm reported hung-task in its wait_event idle loop; UFCS physical operation remains untested."
+  }
+}

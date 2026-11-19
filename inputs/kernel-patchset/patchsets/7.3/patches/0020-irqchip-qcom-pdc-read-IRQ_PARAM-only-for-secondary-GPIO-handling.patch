@@ -1,4 +1,4 @@
-From 21a8aa69b8c68e995f41d7307d70d023171bdf3d Mon Sep 17 00:00:00 2001
+From 3426cafdf049728720989bf25ec4ccf1125d8c64 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Sat, 14 Nov 2026 00:47:25 +0800
 Subject: [PATCH] irqchip/qcom-pdc: read IRQ_PARAM only for secondary GPIO

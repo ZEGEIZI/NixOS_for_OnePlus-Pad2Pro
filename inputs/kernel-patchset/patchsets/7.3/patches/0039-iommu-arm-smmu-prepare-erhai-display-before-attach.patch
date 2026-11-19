@@ -1,0 +1,52 @@
+From 6da7826d8977fcef4dcbbbb27822fd358fc23219 Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:25:22 +0800
+Subject: [PATCH] iommu arm smmu prepare erhai display before attach
+
+---
+ drivers/iommu/arm/arm-smmu/arm-smmu.c | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/iommu/arm/arm-smmu/arm-smmu.c b/drivers/iommu/arm/arm-smmu/arm-smmu.c
+index 889a0966d..525d6d32a 100644
+--- a/drivers/iommu/arm/arm-smmu/arm-smmu.c
++++ b/drivers/iommu/arm/arm-smmu/arm-smmu.c
+@@ -918,12 +918,8 @@ static struct iommu_domain *arm_smmu_domain_alloc_paging(struct device *dev)
+ 	struct arm_smmu_domain *smmu_domain;
+ 	struct arm_smmu_master_cfg *cfg = dev_iommu_priv_get(dev);
+ 	struct arm_smmu_device *smmu = cfg->smmu;
++	int ret;
+ 
+-	/*
+-	 * Allocate the domain and initialise some of its data structures.
+-	 * We can't really do anything meaningful until we've added a
+-	 * master.
+-	 */
+ 	smmu_domain = kzalloc_obj(*smmu_domain);
+ 	if (!smmu_domain)
+ 		return NULL;
+@@ -932,7 +928,24 @@ static struct iommu_domain *arm_smmu_domain_alloc_paging(struct device *dev)
+ 	spin_lock_init(&smmu_domain->cb_lock);
+ 	smmu_domain->domain.pgsize_bitmap = smmu->pgsize_bitmap;
+ 
++	if (of_device_is_compatible(dev->of_node, "qcom,sm8750-mdss") &&
++	    of_machine_is_compatible("oneplus,opd2413") &&
++	    of_property_present(dev->of_node, "memory-region")) {
++		ret = arm_smmu_rpm_get(smmu);
++		if (ret < 0)
++			goto out_free;
++
++		ret = arm_smmu_init_domain_context(smmu_domain, smmu, dev);
++		arm_smmu_rpm_put(smmu);
++		if (ret)
++			goto out_free;
++	}
++
+ 	return &smmu_domain->domain;
++
++out_free:
++	kfree(smmu_domain);
++	return ERR_PTR(ret);
+ }
+ 
+ static void arm_smmu_domain_free(struct iommu_domain *domain)

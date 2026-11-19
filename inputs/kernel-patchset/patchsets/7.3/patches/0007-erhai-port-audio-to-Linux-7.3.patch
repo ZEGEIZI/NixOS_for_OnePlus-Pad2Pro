@@ -1,4 +1,4 @@
-From 770d10b2bf5470d25381b0a7052d41dc3ab5300a Mon Sep 17 00:00:00 2001
+From 7fd86d902f0e1b004cb35683c5a54d95f2ee75f1 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:33 +0800
 Subject: [PATCH] erhai: port audio to Linux 7.3

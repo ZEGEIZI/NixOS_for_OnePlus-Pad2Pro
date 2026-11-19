@@ -1,0 +1,35 @@
+From d31d13f5d0b1117160e2930da43996219933f14d Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Sat, 14 Nov 2026 04:35:10 +0800
+Subject: [PATCH] arm64: dts: qcom: erhai: pin panel VDDIO to 1.896 V
+
+The stock 1.9 V request lies between the nldo515 voltage steps. RPMh readback now maps it upward to 1.904 V, which the previous interval allowed. With that cached selection the board resets at first panel enable. A temporary 1.896 V consumer constraint allows panel preparation, touch firmware loading and a visible 120 Hz test pattern; GPU runtime suspend also completes successfully. Fix both bounds at the intended lower step so initial readback cannot select the upper one.
+---
+ arch/arm64/boot/dts/qcom/sm8750-erhai.dts | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+index bcc953da8..fd517bf4b 100644
+--- a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
++++ b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+@@ -1020,13 +1020,15 @@ vreg_l12b_1p8: ldo12 {
+ 			/*
+ 			 * Panel/touch vddio; the stock display supply entry for this
+ 			 * board asks for 1.9V. The nldo515 8mV grid has no 1.9V step
+-			 * (an unsatisfiable constraint fails the whole PMIC), so take
+-			 * the step just below. The panel switches it together with
+-			 * the LCD bias; the touch controller in the same die is only
+-			 * used while the panel is prepared.
++			 * (an unsatisfiable constraint fails the whole PMIC), so fix
++			 * both bounds at the step just below. Allowing 1.904V lets
++			 * RPMh's 1900mV readback round up to that step; the resulting
++			 * selection resets this board on first panel enable. The
++			 * panel switches this rail together with the LCD bias; the
++			 * touch controller is only used while the panel is prepared.
+ 			 */
+ 			regulator-min-microvolt = <1896000>;
+-			regulator-max-microvolt = <1904000>;
++			regulator-max-microvolt = <1896000>;
+ 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+ 			regulator-allow-set-load;
+ 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM

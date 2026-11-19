@@ -1,4 +1,4 @@
-From 64eb7a5d84525bef4c5eeb5364e244a5a782ef32 Mon Sep 17 00:00:00 2001
+From 79c26750fd533929a1775b15b9bcb4df571db197 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:32 +0800
 Subject: [PATCH] erhai: port backlight-and-thermal to Linux 7.3

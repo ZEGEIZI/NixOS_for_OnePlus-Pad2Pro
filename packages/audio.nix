@@ -22,10 +22,14 @@ in runCommand "erhai-audio" {
   chmod -R u+w $out/share/alsa/ucm2
   cp -r ${audio}/ucm2/. \
     $out/share/alsa/ucm2/
-  # The reference's 350 (-2.5 dB) assumes vendor speaker protection that the
-  # mainline DSP graph lacks. Start with its earlier 270 (-22.5 dB) margin.
-  substituteInPlace $out/share/alsa/ucm2/Qualcomm/sm8750/OnePlus-Pad-2-Pro/Speaker.conf \
-    --replace-fail "Volume' 350" "Volume' 270"
+
+  rotation=${audio}/speaker-rotation
+  install -Dm644 "$rotation/55-erhai-speaker-rotation.conf" \
+    "$out/share/pipewire/pipewire.conf.d/55-erhai-speaker-rotation.conf"
+  for context in client pipewire-pulse; do
+    install -Dm644 "$rotation/50-erhai-speaker-upmix.conf" \
+      "$out/share/pipewire/$context.conf.d/50-erhai-speaker-upmix.conf"
+  done
 
   mkdir -p $out/share/doc/erhai-audio
   cp ${manifest.directory}/LICENSE.BSD-3-Clause $out/share/doc/erhai-audio/

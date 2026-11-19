@@ -1,4 +1,4 @@
-From 42c66f49899d3a0db4e2bb7dd7897ba74238b781 Mon Sep 17 00:00:00 2001
+From b5c79637222f16266087a402bc00891f4a544133 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 22:09:46 +0800
 Subject: [PATCH] ASoC: lpass-rx: close runtime PM error unwind after the

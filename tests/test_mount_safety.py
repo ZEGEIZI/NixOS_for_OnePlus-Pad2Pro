@@ -84,3 +84,21 @@ class MountSafety(unittest.TestCase):
             with installer.boot_mount(self.args):
                 events.append("writing")
         self.assertEqual(events, ["locked", "mounted", "writing", "restored", "unlocked"])
+
+    def test_legacy_writable_mount_is_left_readonly(self):
+        self.mount["options"] = "rw,noatime"
+        with patch.object(installer.subprocess, "check_output", return_value=json.dumps({"filesystems": [self.mount]})), \
+                patch.object(installer.subprocess, "run") as run, \
+                patch.object(installer.protocol, "root", return_value=self.boot), patch.object(installer.os, "sync"):
+            with installer.boot_mount(self.args):
+                pass
+            run.assert_called_once_with(["mount", "-o", "remount,ro", str(self.boot)], check=True)
+
+    def test_sync_failure_still_attempts_readonly_remount(self):
+        with patch.object(installer.subprocess, "check_output", return_value=json.dumps({"filesystems": [self.mount]})), \
+                patch.object(installer.subprocess, "run") as run, \
+                patch.object(installer.protocol, "root", return_value=self.boot), \
+                patch.object(installer.os, "sync", side_effect=OSError("sync failed")):
+            with self.assertRaisesRegex(OSError, "sync failed"), installer.boot_mount(self.args):
+                pass
+            self.assertEqual(run.call_args_list[-1].args[0], ["mount", "-o", "remount,ro", str(self.boot)])

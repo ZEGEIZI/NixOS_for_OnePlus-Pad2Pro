@@ -1,0 +1,12 @@
+{
+  "base_release": "p13",
+  "controller": "OPD2413 CCI0 at 0xac7b000",
+  "transfer": "CN3927 address 0x0c first initialization write (register 0xed, value 0xab)",
+  "p13_hardware_test": {
+    "baseline_1000_ms": {"opens": 5, "timeouts": 4},
+    "forced_active": {"opens": 5, "timeouts": 5},
+    "autosuspend_0_ms": {"opens": 5, "timeouts": 0}
+  },
+  "change": "Default to immediate runtime autosuspend on this controller when idle",
+  "acceptance": "Verify cold and rapid actuator opens plus rear camera capture on the candidate"
+}

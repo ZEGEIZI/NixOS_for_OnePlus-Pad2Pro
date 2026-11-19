@@ -1,0 +1,44 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: MIT
+"""Apply and remember the charging mode for the built-in Erhai battery."""
+import fcntl
+from pathlib import Path
+import sys
+import tempfile
+
+STATE = Path('/var/lib/tablet-charge')
+KNOB = Path('/sys/class/power_supply/qcom-battmgr-bat/charge_behaviour')
+MODES = {'auto', 'inhibit-charge'}
+
+
+def apply(mode):
+    if mode not in MODES or mode not in KNOB.read_text().replace('[', '').replace(']', '').split():
+        raise ValueError('Unsupported charge behaviour')
+    KNOB.write_text(mode + '\n')
+
+
+def main():
+    if len(sys.argv) != 2 or sys.argv[1] not in MODES | {'restore'}:
+        raise SystemExit('usage: tablet-charge-behaviour {auto|inhibit-charge|restore}')
+    mode = sys.argv[1]
+    STATE.mkdir(mode=0o700, parents=True, exist_ok=True)
+    stored = STATE / 'behaviour'
+    with (STATE / 'lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if mode == 'restore':
+            if stored.exists():
+                apply(stored.read_text().strip())
+            return
+
+        with tempfile.NamedTemporaryFile(mode='w', dir=STATE, delete=False) as pending:
+            pending.write(mode + '\n')
+        path = Path(pending.name)
+        try:
+            apply(mode)
+            path.replace(stored)
+        finally:
+            path.unlink(missing_ok=True)
+
+
+if __name__ == '__main__':
+    main()

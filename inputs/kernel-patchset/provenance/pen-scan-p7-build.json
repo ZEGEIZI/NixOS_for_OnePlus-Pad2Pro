@@ -1,0 +1,24 @@
+{
+  "release": "7.3.4-erhai-p7",
+  "kernel": "/nix/store/xgpyw2r54ll1jybhp4kpz9yhfrfrwid9-linux-erhai-aarch64-unknown-linux-gnu-7.3.4",
+  "system": "/nix/store/ad0nhv0znz72i0arbz0yd6nk5147nzz4-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "kernel_derivation": "/nix/store/ygpvdkqsyh1mpl6v4xccnvrxx7dgpx4j-linux-erhai-aarch64-unknown-linux-gnu-7.3.4.drv",
+  "kernel_build": "passed",
+  "full_system_build": "passed; cross kernel on x86_64 and native aarch64 userspace on device builder",
+  "strict_replay": "passed",
+  "device_regression": "passed",
+  "boot_publication_regression": "110 tests passed",
+  "files": {
+    "Image": {
+      "bytes": 54766080,
+      "sha256": "88779693bec9cbdb16ba50535da357b8dcd5e3819597dfa7d64adc79dcb91890"
+    },
+    "dtbs/qcom/sm8750-erhai.dtb": {
+      "bytes": 194299,
+      "sha256": "3dc931c89b19aede8f8755bb095747d5b93df10d3dd3e6d7f0740b3f0f4c4168"
+    }
+  },
+  "config_sha256": "7f01ddfb13ab9c4a34d82f020277b3a7cef212e2e786db96f4567b89c0ac355f",
+  "checkpatch": "No code diagnostics; upstream patch lacks Signed-off-by and has original non-preferred Co-Authored-By capitalization, retained without inventing DCO signoff.",
+  "device_boot": "passed; provenance/pen-scan-p7-device-acceptance.json"
+}

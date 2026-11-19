@@ -1,0 +1,22 @@
+From 2fd0236a2a7cee5da39d74075b8fca7b1e5938db Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:25:22 +0800
+Subject: [PATCH] arm64 dts qcom erhai set CCI0 core clock
+
+---
+ arch/arm64/boot/dts/qcom/sm8750-erhai.dts | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+index 50d5ae7ba..e8d0364ac 100644
+--- a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
++++ b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+@@ -1396,6 +1396,8 @@ &camss_csiphy5_in {
+ };
+ 
+ &cci0 {
++	assigned-clocks = <&camcc CAM_CC_CCI_0_CLK>;
++	assigned-clock-rates = <37500000>;
+ 	pinctrl-0 = <&cci0_1_default>;
+ 	pinctrl-1 = <&cci0_1_sleep>;
+ 	status = "okay";

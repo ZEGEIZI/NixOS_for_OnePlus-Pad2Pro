@@ -35,7 +35,7 @@ let
       -o $out/qcom/sm8750-erhai.dtb ${identityOverlay}
   '';
 in {
-  imports = [ ./usb-diagnostics.nix ./bluetooth.nix ./audio.nix ];
+  imports = [ ./usb-diagnostics.nix ./bluetooth.nix ./audio.nix ./pen.nix ];
   options.hardware.oneplus-pad2pro = {
     stockBluetoothFirmware = lib.mkEnableOption "the OPD2413 Brahma OEM Bluetooth firmware (requires the matching kernel)" // {
       default = true;

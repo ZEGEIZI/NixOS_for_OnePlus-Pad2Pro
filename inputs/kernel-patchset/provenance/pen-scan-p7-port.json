@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "release": "p7",
+  "source_repository": "https://github.com/yzddmr6/linux-sm8750-erhai",
+  "source_commit": "b6fa42deb71898af5fda6ad955004d1b73529abc",
+  "reference_integration_repository": "https://github.com/yzddmr6/onepluspad-2pro-mainline",
+  "reference_integration_commit": "29c18f1604b7940cac04c2400a7d3831ae120e8c",
+  "ported_commit": "35d1b4458d7a3e33069aa4cbb656d4a139c45beb",
+  "adaptations": [],
+  "files_sha256": {
+    "drivers/input/touchscreen/nt36536/nt36536.c": "f4261d2b9513333205d0de9e808226ab9a43ab15c4a913ca45a7e3bd29d0a917",
+    "Documentation/ABI/testing/sysfs-driver-input-nt36536": "d637f32d4b0387d093ee751fe9775adbc95b9b5a15ccf94cb8c40719deaa4807"
+  },
+  "behavior": [
+    "Initialize pen_scan from novatek,pen-support; pen-capable boards scan by default.",
+    "Existing resume and ESD recovery restore requested scanning after firmware download.",
+    "Existing pressure, coordinates, tilt and buttons remain unchanged.",
+    "Runtime pen_scan override remains available; scan failure does not prevent finger input."
+  ],
+  "authorship": "Imported unchanged using git am; original author, date and Co-Authored-By trailer preserved.",
+  "validation": {
+    "strict_replay": "provenance/replay-7.3.4-p7.json",
+    "full_build": "passed; provenance/pen-scan-p7-build.json",
+    "hardware": "pen-specific acceptance passed; provenance/pen-scan-p7-device-acceptance.json"
+  },
+  "ported_files_match_source": true
+}

@@ -1,0 +1,291 @@
+From a6a36c0addc8ea8b2d7987ece8e84a13243f5624 Mon Sep 17 00:00:00 2001
+From: ZEGEIZI <ZEGEIZI@users.noreply.github.com>
+Date: Thu, 19 Nov 2026 14:03:04 +0800
+Subject: [PATCH] power: supply: cps8601: use the Erhai charger supply pulse
+
+The stock driver lowers wake and pulses MCU supply with scan asserted. Keep charging inhibited during that sequence and verify the configured protections after power returns. Refresh the boost request when the pen is removed and follow the stock fault inhibition and detach reset sequence.
+---
+ drivers/power/supply/cps8601.c | 164 +++++++++++++++++++++++++--------
+ 1 file changed, 127 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/power/supply/cps8601.c b/drivers/power/supply/cps8601.c
+index dd9b2ed73..9f60f5ffe 100644
+--- a/drivers/power/supply/cps8601.c
++++ b/drivers/power/supply/cps8601.c
+@@ -58,6 +58,7 @@
+ #define CPS8601_REG_Q_CALI_MODE		0x15	/* 1B W, 0xAA enter / 0xFF exit */
+ #define CPS8601_CALI_ENTER		0xAA
+ #define CPS8601_CALI_EXIT		0xFF
++#define CPS8601_CMD_RESET		BIT(5)
+ #define CPS8601_CMD_START_Q_CALI	0x40	/* CTRL bit 6, vendor RMW */
+ #define CPS8601_REG_RX_FRAME		0x40	/* 11B burst */
+ 
+@@ -182,6 +183,7 @@ struct cps8601 {
+ 	u16			chip_id;
+ 	int			pen_soc;
+ 	bool			present;
++	bool			charge_blocked;
+ 	u64			pen_addr;
+ 	u64			frame_addr;
+ 	u32			frame_check;
+@@ -269,12 +271,6 @@ static int cps8601_hboost_req(struct cps8601 *chip, u8 code)
+ 	return -ETIMEDOUT;
+ }
+ 
+-/*
+- * Vendor power-on (init_work_func after firmware check):
+- *   sw_en high -> wait 2.5 s for the MCU to boot -> poll chip ID
+- *   -> read fw version -> write protection thresholds
+- *   -> sleep line high, one scan burst, enable IRQ.
+- */
+ static void cps8601_power_on(struct cps8601 *chip)
+ {
+ 	/*
+@@ -831,15 +827,73 @@ static void cps8601_handle_rx_frame(struct cps8601 *chip)
+ 	}
+ }
+ 
+-/* RX_ATTACH runs in hard/atomic context but the 10 V rail request sleeps
+- * (ACK-gated glink round-trip) — vendor sends code 160 only from the attach
+- * event, never during init. */
++static int cps8601_restore_protections(struct cps8601 *chip)
++{
++	const struct {
++		u16 reg;
++		u16 value;
++	} thresholds[] = {
++		{ CPS8601_REG_OCP_TH, chip->ocp_uv },
++		{ CPS8601_REG_LVP_TH, chip->lvp_uv },
++		{ CPS8601_REG_OVP_TH, chip->ovp_uv },
++		{ CPS8601_REG_FOD_TH, chip->fod_uv },
++	};
++	unsigned int i;
++	u16 value;
++	int ret;
++
++	for (i = 0; i < ARRAY_SIZE(thresholds); i++) {
++		ret = cps8601_write16(chip, thresholds[i].reg, thresholds[i].value);
++		if (ret)
++			return ret;
++		ret = cps8601_read16(chip, thresholds[i].reg, &value);
++		if (ret)
++			return ret;
++		if (value != thresholds[i].value)
++			return -EIO;
++	}
++
++	return cps8601_write16(chip, CPS8601_REG_IRQ_ENABLE, 0xffff);
++}
++
++static int cps8601_reset_after_detach(struct cps8601 *chip)
++{
++	unsigned int ctrl;
++	u16 id;
++	int ret, i;
++
++	gpiod_set_value(chip->off_state_gpiod, 1);
++	ret = cps8601_hboost_req(chip, CPS8601_HBOOST_DEFAULT_CODE);
++	if (ret)
++		return ret;
++	ret = regmap_read(chip->regmap, CPS8601_REG_CTRL, &ctrl);
++	if (ret)
++		return ret;
++	ret = regmap_write(chip->regmap, CPS8601_REG_CTRL, ctrl | CPS8601_CMD_RESET);
++	if (ret)
++		return ret;
++
++	for (i = 0; i < 10; i++) {
++		msleep(100);
++		ret = cps8601_read16(chip, CPS8601_REG_CHIP_ID, &id);
++		if (!ret && id == CPS8601_CHIP_ID)
++			return cps8601_restore_protections(chip);
++	}
++
++	return -ETIMEDOUT;
++}
++
+ static void cps8601_attach_work(struct work_struct *work)
+ {
+ 	struct cps8601 *chip = container_of(work, struct cps8601, attach_work);
+ 
+-	if (!READ_ONCE(chip->suspended) && !READ_ONCE(chip->removing))
+-		cps8601_hboost_req(chip, CPS8601_HBOOST_ATTACH_CODE);
++	if (READ_ONCE(chip->suspended) || READ_ONCE(chip->removing))
++		return;
++
++	cps8601_hboost_req(chip, READ_ONCE(chip->present) &&
++			   !READ_ONCE(chip->charge_blocked) ?
++			   CPS8601_HBOOST_ATTACH_CODE :
++			   CPS8601_HBOOST_DEFAULT_CODE);
+ }
+ 
+ static irqreturn_t cps8601_irq(int irq, void *data)
+@@ -848,7 +902,6 @@ static irqreturn_t cps8601_irq(int irq, void *data)
+ 	u16 status = 0;
+ 	u16 active;
+ 
+-
+ 	/* The vendor enables the sources, snapshots the flags and clears them. */
+ 	if (cps8601_write16(chip, CPS8601_REG_IRQ_ENABLE, 0xffff) ||
+ 	    cps8601_read16(chip, CPS8601_REG_IRQ_STATUS, &status))
+@@ -862,12 +915,26 @@ static irqreturn_t cps8601_irq(int irq, void *data)
+ 
+ 		cps8601_read16(chip, CPS8601_REG_PING_WIDTH, &width);
+ 		cps8601_forget_pen(chip);
+-		chip->present = true;
+-		schedule_work(&chip->attach_work);
++		WRITE_ONCE(chip->present, true);
+ 		dev_info(chip->dev, "pen attached (ping width %d)\n", width);
+ 	}
+ 	if (active & CPS8601_IRQ_RX_DETACH) {
+-		chip->present = false;
++		WRITE_ONCE(chip->present, false);
++		if (chip->charge_blocked && !(active & CPS8601_IRQ_RX_ATTACH) &&
++		    !READ_ONCE(chip->suspended) && !READ_ONCE(chip->removing)) {
++			int ret;
++
++			cancel_work_sync(&chip->attach_work);
++			ret = cps8601_reset_after_detach(chip);
++			if (ret) {
++				dev_warn(chip->dev, "detach recovery failed (%d)\n", ret);
++			} else if (!READ_ONCE(chip->suspended) &&
++				   !READ_ONCE(chip->removing)) {
++				WRITE_ONCE(chip->charge_blocked, false);
++				gpiod_set_value(chip->off_state_gpiod, 0);
++				dev_info(chip->dev, "detach recovery restored protections\n");
++			}
++		}
+ 		cps8601_forget_pen(chip);
+ 		chip->pen_soc = -1;
+ 		dev_info(chip->dev, "pen removed\n");
+@@ -878,9 +945,17 @@ static irqreturn_t cps8601_irq(int irq, void *data)
+ 		u16 chg;
+ 
+ 		if (!cps8601_read16(chip, CPS8601_REG_CHG_STATUS, &chg) &&
+-		    (chg & CPS8601_CHG_ERR_MASK))
+-			dev_warn_ratelimited(chip->dev, "charge anomaly, status %#x\n", chg);
++		    (chg & CPS8601_CHG_ERR_MASK) &&
++		    !chip->charge_blocked) {
++			WRITE_ONCE(chip->charge_blocked, true);
++			gpiod_set_value(chip->off_state_gpiod, 1);
++			gpiod_set_value(chip->scan_gpiod, 1);
++			schedule_work(&chip->attach_work);
++			dev_warn(chip->dev, "pen charging inhibited, fault %#x\n", chg);
++		}
+ 	}
++	if (active & (CPS8601_IRQ_RX_ATTACH | CPS8601_IRQ_RX_DETACH))
++		schedule_work(&chip->attach_work);
+ 	if (active & CPS8601_IRQ_PING_OK)
+ 		dev_dbg(chip->dev, "ping detected\n");
+ 	if (active & CPS8601_IRQ_MISLOCATED)
+@@ -895,7 +970,6 @@ static void cps8601_init_work(struct work_struct *work)
+ 	u16 id = 0;
+ 	int ret, tries;
+ 
+-
+ 	guard(mutex)(&chip->io_lock);
+ 	/* power the coil rail through the ADSP before touching the MCU.
+ 	 * Vendor bring-up only raises the DEFAULT (7 V) code here — the
+@@ -947,23 +1021,42 @@ static void cps8601_init_work(struct work_struct *work)
+ 	ret = cps8601_read16(chip, CPS8601_REG_FW_VER, &chip->fw_version);
+ 	if (ret)
+ 		goto out_nopm;
+-	ret = cps8601_write16(chip, CPS8601_REG_OCP_TH, chip->ocp_uv);
+-	ret = ret ?: cps8601_write16(chip, CPS8601_REG_LVP_TH, chip->lvp_uv);
+-	ret = ret ?: cps8601_write16(chip, CPS8601_REG_OVP_TH, chip->ovp_uv);
+-	ret = ret ?: cps8601_write16(chip, CPS8601_REG_FOD_TH, chip->fod_uv);
++	ret = cps8601_restore_protections(chip);
+ 	if (ret)
+ 		goto out_nopm;
+ 
+-	chip->ready = true;
+-	dev_info(chip->dev, "CPS8601 ready, fw 0x%04x\n", chip->fw_version);
+-
++	/*
++	 * Stock init lowers wake and briefly cycles the MCU supply while
++	 * scan stays high. Keep charging inhibited and check all protection
++	 * registers again after the pulse.
++	 */
++	gpiod_set_value(chip->sleep_gpiod, 0);
++	gpiod_set_value(chip->sw_en_gpiod, 0);
++	msleep(50);
++	gpiod_set_value(chip->sw_en_gpiod, 1);
++	msleep(50);
++	for (tries = 0; tries < 15; tries++) {
++		ret = cps8601_read16(chip, CPS8601_REG_CHIP_ID, &id);
++		if (!ret && id == CPS8601_CHIP_ID)
++			break;
++		msleep(100);
++	}
++	if (ret || id != CPS8601_CHIP_ID) {
++		dev_warn(chip->dev, "stock GPIO sequence: chip unavailable (%d)\n", ret);
++		goto out_nopm;
++	}
++	ret = cps8601_restore_protections(chip);
++	if (ret) {
++		dev_warn(chip->dev, "stock GPIO sequence: threshold verification failed (%d)\n", ret);
++		goto out_nopm;
++	}
+ 	/* IRQ is armed only once the chip is up: the 2.5 s MCU boot window
+ 	 * would otherwise feed INT glitches into the handler before the
+ 	 * chip can answer, and the vendor driver registers it here too. */
+ 	if (READ_ONCE(chip->removing) || READ_ONCE(chip->suspended))
+ 		goto out_nopm;
+ 	ret = request_threaded_irq(chip->irq, NULL, cps8601_irq,
+-				   IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
++				   IRQF_TRIGGER_FALLING | IRQF_ONESHOT | IRQF_NO_AUTOEN,
+ 				   "cps8601", chip);
+ 	if (ret) {
+ 		dev_err(chip->dev, "irq request failed: %d\n", ret);
+@@ -974,16 +1067,19 @@ static void cps8601_init_work(struct work_struct *work)
+ 	if (READ_ONCE(chip->removing) || READ_ONCE(chip->suspended))
+ 		goto out_nopm;
+ 
+-	/*
+-	 * Allow charging, then re-arm scanning after the MCU settles.
+-	 * Keep sw_en asserted to maintain the MCU supply.
+-	 */
++	chip->ready = true;
+ 	gpiod_set_value(chip->off_state_gpiod, 0);
++	enable_irq(chip->irq);
++	dev_info(chip->dev, "CPS8601 ready, fw 0x%04x\n", chip->fw_version);
+ 	schedule_delayed_work(&chip->ready_work, msecs_to_jiffies(1250));
+ 
+ 	return;
+ 
+ out_nopm:
++	if (chip->irq_armed) {
++		free_irq(chip->irq, chip);
++		chip->irq_armed = false;
++	}
+ 	chip->ready = false;
+ 	cps8601_power_off(chip);
+ 	cps8601_hboost_req(chip, 0);
+@@ -1005,19 +1101,12 @@ static void cps8601_ready_work(struct work_struct *work)
+ 	if (READ_ONCE(chip->removing) || READ_ONCE(chip->suspended))
+ 		return;
+ 
+-	/* vendor terminal state keeps sw_en HIGH (it gates the MCU supply);
+-	 * dropping it here killed the bus right after "ready" and made every
+-	 * later register write NAK (2026-11-01 endgame). */
+-	gpiod_set_value(chip->scan_gpiod, 0);
+-	msleep(50);
+-	gpiod_set_value(chip->scan_gpiod, 1);
+ 	/* A pending event can predate registration of the falling-edge IRQ. */
+ 	if (chip->irq_armed && gpiod_get_raw_value(chip->int_gpiod) == 0) {
+ 		disable_irq(chip->irq);
+ 		cps8601_irq(chip->irq, chip);
+ 		enable_irq(chip->irq);
+ 	}
+-	dev_info(chip->dev, "scan armed (vendor post-ready state)\n");
+ }
+ 
+ static ssize_t present_show(struct device *dev,
+@@ -1213,6 +1302,7 @@ static int cps8601_quiesce(struct cps8601 *chip)
+ 	cps8601_power_off(chip);
+ 	chip->ready = false;
+ 	chip->present = false;
++	chip->charge_blocked = false;
+ 	cps8601_forget_pen(chip);
+ 	chip->pen_soc = -1;
+ 	active = chip->hboost_active;

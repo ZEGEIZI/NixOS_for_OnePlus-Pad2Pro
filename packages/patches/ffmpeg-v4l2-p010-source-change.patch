@@ -1,0 +1,261 @@
+--- a/libavcodec/v4l2_buffers.c
++++ b/libavcodec/v4l2_buffers.c
+@@ -66,11 +66,20 @@
+ {
+     int64_t v4l2_pts;
+ 
+-    if (pts == AV_NOPTS_VALUE)
+-        pts = 0;
+-
+-    /* convert pts to v4l2 timebase */
+-    v4l2_pts = av_rescale_q(pts, v4l2_get_timebase(out), v4l2_timebase);
++    V4L2m2mContext *s = buf_to_m2mctx(out);
++
++    if (av_codec_is_decoder(s->avctx->codec)) {
++        uint32_t token = ++s->pts_sequence;
++        if (!token)
++            token = ++s->pts_sequence;
++        s->pts_cache[token % V4L2_M2M_PTS_CACHE_SIZE].token = token;
++        s->pts_cache[token % V4L2_M2M_PTS_CACHE_SIZE].pts = pts;
++        v4l2_pts = token;
++    } else {
++        if (pts == AV_NOPTS_VALUE)
++            pts = 0;
++        v4l2_pts = av_rescale_q(pts, v4l2_get_timebase(out), v4l2_timebase);
++    }
+     out->buf.timestamp.tv_usec = v4l2_pts % USEC_PER_SEC;
+     out->buf.timestamp.tv_sec = v4l2_pts / USEC_PER_SEC;
+ }
+@@ -83,6 +92,16 @@
+     v4l2_pts = (int64_t)avbuf->buf.timestamp.tv_sec * USEC_PER_SEC +
+                         avbuf->buf.timestamp.tv_usec;
+ 
++    if (av_codec_is_decoder(buf_to_m2mctx(avbuf)->avctx->codec)) {
++        V4L2m2mContext *s = buf_to_m2mctx(avbuf);
++        unsigned int slot;
++        if (v4l2_pts <= 0 || v4l2_pts > UINT32_MAX)
++            return AV_NOPTS_VALUE;
++        slot = v4l2_pts % V4L2_M2M_PTS_CACHE_SIZE;
++        if (s->pts_cache[slot].token == v4l2_pts)
++            return s->pts_cache[slot].pts;
++        return AV_NOPTS_VALUE;
++    }
+     return av_rescale_q(v4l2_pts, v4l2_timebase, v4l2_get_timebase(avbuf));
+ }
+ 
+@@ -338,6 +357,7 @@
+     switch (avbuf->context->av_pix_fmt) {
+     case AV_PIX_FMT_NV12:
+     case AV_PIX_FMT_NV21:
++    case AV_PIX_FMT_P010LE:
+         if (avbuf->num_planes > 1)
+             break;
+         frame->linesize[1] = avbuf->plane_info[0].bytesperline;
+--- a/libavcodec/v4l2_context.c
++++ b/libavcodec/v4l2_context.c
+@@ -87,10 +87,12 @@
+     struct v4l2_format *fmt1 = &ctx->format;
+     int ret =  V4L2_TYPE_IS_MULTIPLANAR(ctx->type) ?
+         fmt1->fmt.pix_mp.width != fmt2->fmt.pix_mp.width ||
+-        fmt1->fmt.pix_mp.height != fmt2->fmt.pix_mp.height
++        fmt1->fmt.pix_mp.height != fmt2->fmt.pix_mp.height ||
++        fmt1->fmt.pix_mp.pixelformat != fmt2->fmt.pix_mp.pixelformat
+         :
+         fmt1->fmt.pix.width != fmt2->fmt.pix.width ||
+-        fmt1->fmt.pix.height != fmt2->fmt.pix.height;
++        fmt1->fmt.pix.height != fmt2->fmt.pix.height ||
++        fmt1->fmt.pix.pixelformat != fmt2->fmt.pix.pixelformat;
+ 
+     if (ret)
+         av_log(logger(ctx), AV_LOG_DEBUG, "%s changed (%dx%d) -> (%dx%d)\n",
+@@ -195,10 +197,20 @@
+     if (evt.type != V4L2_EVENT_SOURCE_CHANGE)
+         return 0;
+ 
++    s->waiting_for_source_change = 0;
++
+     ret = ioctl(s->fd, VIDIOC_G_FMT, &cap_fmt);
+     if (ret) {
+         av_log(logger(ctx), AV_LOG_ERROR, "%s VIDIOC_G_FMT\n", s->capture.name);
+         return 0;
++    }
++
++    /* Before the first SOURCE_CHANGE the placeholder format can have the
++     * right dimensions but the wrong bit depth and buffer size. Let the
++     * next receive call initialize CAPTURE using the parsed format. */
++    if (!s->capture.buffers) {
++        s->capture.format = cap_fmt;
++        return 1;
+     }
+ 
+     if (v4l2_resolution_changed(&s->capture, &cap_fmt)) {
+@@ -324,6 +336,23 @@
+         return NULL;
+     }
+ 
++    /* SOURCE_CHANGE can accompany POLLERR until CAPTURE is configured. */
++    /* 1. handle resolution changes */
++    if (pfd.revents & POLLPRI) {
++        ret = v4l2_handle_event(ctx);
++        if (ret < 0) {
++            /* if re-init failed, abort */
++            ctx->done = 1;
++            return NULL;
++        }
++        if (ret) {
++            /* if re-init was successful drop the buffer (if there was one)
++             * since we had to reconfigure capture (unmap all buffers)
++             */
++            return NULL;
++        }
++    }
++
+     /* 0. handle errors */
+     if (pfd.revents & POLLERR) {
+         /* if we are trying to get free buffers but none have been queued yet,
+@@ -342,22 +371,6 @@
+             av_log(logger(ctx), AV_LOG_WARNING, "%s POLLERR\n", ctx->name);
+ 
+         return NULL;
+-    }
+-
+-    /* 1. handle resolution changes */
+-    if (pfd.revents & POLLPRI) {
+-        ret = v4l2_handle_event(ctx);
+-        if (ret < 0) {
+-            /* if re-init failed, abort */
+-            ctx->done = 1;
+-            return NULL;
+-        }
+-        if (ret) {
+-            /* if re-init was successful drop the buffer (if there was one)
+-             * since we had to reconfigure capture (unmap all buffers)
+-             */
+-            return NULL;
+-        }
+     }
+ 
+     /* 2. dequeue the buffer */
+--- a/libavcodec/v4l2_fmt.c
++++ b/libavcodec/v4l2_fmt.c
+@@ -51,6 +51,7 @@
+     { AV_FMT(YUV410P),     AV_CODEC(RAWVIDEO),    V4L2_FMT(YUV410) },
+     { AV_FMT(YUV410P),     AV_CODEC(RAWVIDEO),    V4L2_FMT(YVU410) },
+     { AV_FMT(NV12),        AV_CODEC(RAWVIDEO),    V4L2_FMT(NV12) },
++    { AV_FMT(P010LE),      AV_CODEC(RAWVIDEO),    V4L2_FMT(P010) },
+     { AV_FMT(NONE),        AV_CODEC(MJPEG),       V4L2_FMT(MJPEG) },
+     { AV_FMT(NONE),        AV_CODEC(MJPEG),       V4L2_FMT(JPEG) },
+ #ifdef V4L2_PIX_FMT_SRGGB8
+--- a/libavcodec/v4l2_m2m.h
++++ b/libavcodec/v4l2_m2m.h
+@@ -25,6 +25,7 @@
+ #define AVCODEC_V4L2_M2M_H
+ 
+ #include <semaphore.h>
++#include <stdint.h>
+ #include <unistd.h>
+ #include <dirent.h>
+ #include <linux/videodev2.h>
+@@ -39,6 +40,8 @@
+ #define V4L_M2M_DEFAULT_OPTS \
+     { "num_output_buffers", "Number of buffers in the output context",\
+         OFFSET(num_output_buffers), AV_OPT_TYPE_INT, { .i64 = 16 }, 2, INT_MAX, FLAGS }
++
++#define V4L2_M2M_PTS_CACHE_SIZE 1024
+ 
+ typedef struct V4L2m2mContext {
+     char devname[PATH_MAX];
+@@ -56,6 +59,17 @@
+ 
+     /* null frame/packet received */
+     int draining;
++    /* Stateful decoders announce the parsed CAPTURE format asynchronously. */
++    int waiting_for_source_change;
++
++    /* Firmware timestamps are unsigned and can have a narrower range than
++     * AVPacket PTS. Use positive tokens on the wire and restore exact PTS
++     * after frame reordering, including negative preroll timestamps. */
++    uint32_t pts_sequence;
++    struct {
++        uint32_t token;
++        int64_t pts;
++    } pts_cache[V4L2_M2M_PTS_CACHE_SIZE];
+     AVPacket buf_pkt;
+ 
+     /* Reference to a frame. Only used during encoding */
+--- a/libavcodec/v4l2_m2m_dec.c
++++ b/libavcodec/v4l2_m2m_dec.c
+@@ -34,6 +34,8 @@
+ #include "v4l2_m2m.h"
+ #include "v4l2_fmt.h"
+ 
++static av_cold int v4l2_decode_init(AVCodecContext *avctx);
++
+ static int v4l2_try_start(AVCodecContext *avctx)
+ {
+     V4L2m2mContext *s = ((V4L2m2mPriv*)avctx->priv_data)->context;
+@@ -51,7 +53,7 @@
+         }
+     }
+ 
+-    if (capture->streamon)
++    if (capture->streamon || s->waiting_for_source_change)
+         return 0;
+ 
+     /* 2. get the capture format */
+@@ -114,6 +116,7 @@
+     memset(&sub, 0, sizeof(sub));
+     sub.type = V4L2_EVENT_SOURCE_CHANGE;
+     ret = ioctl(s->fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
++    s->waiting_for_source_change = ret >= 0;
+     if ( ret < 0) {
+         if (output->height == 0 || output->width == 0) {
+             av_log(s->avctx, AV_LOG_ERROR,
+@@ -135,10 +138,23 @@
+ 
+ static int v4l2_receive_frame(AVCodecContext *avctx, AVFrame *frame)
+ {
+-    V4L2m2mContext *s = ((V4L2m2mPriv*)avctx->priv_data)->context;
+-    V4L2Context *const capture = &s->capture;
+-    V4L2Context *const output = &s->output;
+-    int ret;
++    V4L2m2mPriv *priv = avctx->priv_data;
++    V4L2m2mContext *s;
++    V4L2Context *capture, *output;
++    int ret;
++
++    /* A seek/flush closes the old queues while outstanding frame references
++     * retain their backing memory. Reopen lazily for the next keyframe. */
++    if (!priv->context) {
++        ret = v4l2_decode_init(avctx);
++        if (ret < 0) {
++            ff_v4l2_m2m_codec_end(priv);
++            return ret;
++        }
++    }
++    s = priv->context;
++    capture = &s->capture;
++    output = &s->output;
+ 
+     if (!s->buf_pkt.size) {
+         ret = ff_decode_get_packet(avctx, &s->buf_pkt);
+@@ -218,6 +234,11 @@
+ static av_cold int v4l2_decode_close(AVCodecContext *avctx)
+ {
+     return ff_v4l2_m2m_codec_end(avctx->priv_data);
++}
++
++static void v4l2_decode_flush(AVCodecContext *avctx)
++{
++    ff_v4l2_m2m_codec_end(avctx->priv_data);
+ }
+ 
+ #define OFFSET(x) offsetof(V4L2m2mPriv, x)
+@@ -250,6 +271,7 @@
+         .init           = v4l2_decode_init, \
+         FF_CODEC_RECEIVE_FRAME_CB(v4l2_receive_frame), \
+         .close          = v4l2_decode_close, \
++        .flush          = v4l2_decode_flush, \
+         .bsfs           = bsf_name, \
+         .p.capabilities = AV_CODEC_CAP_HARDWARE | AV_CODEC_CAP_DELAY | AV_CODEC_CAP_AVOID_PROBING, \
+         .caps_internal  = FF_CODEC_CAP_NOT_INIT_THREADSAFE | \

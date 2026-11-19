@@ -1,0 +1,40 @@
+From 36b99b9f8d16000cad87443fef68719f3475da26 Mon Sep 17 00:00:00 2001
+From: ZEGEIZI <ZEGEIZI@users.noreply.github.com>
+Date: Mon, 16 Nov 2026 14:16:08 +0800
+Subject: [PATCH] thermal: qcom: share Gen4 channel encoding with immediate ADC
+ conversions
+
+Adapt the existing 7.3 thermal monitor to the imported mixed Gen3/Gen4 ADC channel helpers. Keep the 7.3 allocation API and the existing thermal trips.
+
+Link: https://github.com/yzddmr6/linux-sm8750-erhai/commit/dc8c28c12761bcc3a9b320931d6d12476ae91192
+
+Assisted-by: Codex: GPT-6
+---
+ drivers/thermal/qcom/qcom-spmi-adc-tm5-gen3.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/thermal/qcom/qcom-spmi-adc-tm5-gen3.c b/drivers/thermal/qcom/qcom-spmi-adc-tm5-gen3.c
+index 9cf552d36..7baaa4171 100644
+--- a/drivers/thermal/qcom/qcom-spmi-adc-tm5-gen3.c
++++ b/drivers/thermal/qcom/qcom-spmi-adc-tm5-gen3.c
+@@ -225,8 +225,9 @@ static int adc_tm5_gen3_configure(struct adc_tm5_gen3_channel_props *prop,
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	/* Write SID */
+-	buf[0] = FIELD_PREP(ADC5_GEN3_SID_MASK, prop->common_props.sid);
++	/* Use the same SID and bus encoding as immediate ADC conversions. */
++	buf[0] = FIELD_PREP(ADC5_GEN4_BUS_INDEX_MASK, prop->common_props.bus_index) |
++		 FIELD_PREP(ADC5_GEN4_SID_MASK, prop->common_props.sid);
+ 
+ 	/* Select TM channel and indicate there is an actual conversion request */
+ 	buf[1] = ADC5_GEN3_CHAN_CONV_REQ | prop->tm_chan_index;
+@@ -306,7 +307,7 @@ static int adc_tm5_register_tzd(struct adc_tm5_gen3_chip *adc_tm5)
+ 	int ret;
+ 
+ 	for (int i = 0; i < adc_tm5->nchannels; i++) {
+-		channel = ADC5_GEN3_V_CHAN(adc_tm5->chan_props[i].common_props);
++		channel = adc5_gen4_v_chan(&adc_tm5->chan_props[i].common_props);
+ 		tzd = devm_thermal_of_zone_register(adc_tm5->dev, channel,
+ 						    &adc_tm5->chan_props[i],
+ 						    &adc_tm_ops);

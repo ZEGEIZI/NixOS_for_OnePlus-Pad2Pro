@@ -1,0 +1,23 @@
+From 00e60bf155827a4250109abf458d5b2dcf16ce0e Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:25:23 +0800
+Subject: [PATCH] ASoC lpass va accept the default DMIC divider
+
+---
+ sound/soc/codecs/lpass-va-macro.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/codecs/lpass-va-macro.c b/sound/soc/codecs/lpass-va-macro.c
+index ae3a8b9e6..72a0ceb26 100644
+--- a/sound/soc/codecs/lpass-va-macro.c
++++ b/sound/soc/codecs/lpass-va-macro.c
+@@ -1576,7 +1576,8 @@ static int va_macro_probe(struct platform_device *pdev)
+ 	ret = of_property_read_u32(dev->of_node, "qcom,dmic-sample-rate",
+ 				   &sample_rate);
+ 	if (ret) {
+-		dev_err(dev, "qcom,dmic-sample-rate dt entry missing\n");
++		if (of_property_present(dev->of_node, "qcom,dmic-sample-rate"))
++			dev_warn(dev, "invalid qcom,dmic-sample-rate property: %d\n", ret);
+ 		va->dmic_clk_div = VA_MACRO_CLK_DIV_2;
+ 	} else {
+ 		ret = va_macro_validate_dmic_sample_rate(sample_rate, va);

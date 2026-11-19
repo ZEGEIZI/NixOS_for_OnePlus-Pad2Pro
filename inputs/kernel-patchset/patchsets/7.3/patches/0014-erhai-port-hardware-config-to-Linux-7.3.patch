@@ -1,4 +1,4 @@
-From 54ca8fcdca22c7dc0843df0fb91dfdebe628a584 Mon Sep 17 00:00:00 2001
+From ab94f1ddd466f9d4858ac1507de543a0332f9348 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:35 +0800
 Subject: [PATCH] erhai: port hardware-config to Linux 7.3

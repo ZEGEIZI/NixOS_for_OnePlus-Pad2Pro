@@ -1,0 +1,114 @@
+From adc175d99163bcfd25cbc856ba58c7fa31a73c46 Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Fri, 13 Nov 2026 22:35:11 +0800
+Subject: [PATCH] ASoC: qcom: retain the upstream machine driver with Erhai DAI
+ formats
+
+Keep LPI interfaces and the upstream private data layout. Apply the board DAI format and multi-codec TDM setup without duplicating hw_params. Require both LCD bias supplies for the independently matched XN242 panel.
+---
+ .../display/panel/novatek,nt36536.yaml        |  9 +++
+ sound/soc/qcom/sc8280xp.c                     | 63 +------------------
+ 2 files changed, 11 insertions(+), 61 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/display/panel/novatek,nt36536.yaml b/Documentation/devicetree/bindings/display/panel/novatek,nt36536.yaml
+index dae474921..723d24779 100644
+--- a/Documentation/devicetree/bindings/display/panel/novatek,nt36536.yaml
++++ b/Documentation/devicetree/bindings/display/panel/novatek,nt36536.yaml
+@@ -17,6 +17,15 @@ description:
+ 
+ allOf:
+   - $ref: panel-common-dual.yaml#
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: csot,xn242
++    then:
++      required:
++        - vsn-supply
++        - vsp-supply
+ 
+ properties:
+   compatible:
+diff --git a/sound/soc/qcom/sc8280xp.c b/sound/soc/qcom/sc8280xp.c
+index 459dfa229..5e4af6516 100644
+--- a/sound/soc/qcom/sc8280xp.c
++++ b/sound/soc/qcom/sc8280xp.c
+@@ -252,75 +252,16 @@ static int sc8280xp_snd_hw_params(struct snd_pcm_substream *substream,
+ 	int bclk_freq = sc8280xp_get_bclk_freq(params);
+ 	int ret;
+ 
+-	switch (cpu_dai->id) {
+-	case PRIMARY_MI2S_RX ... QUATERNARY_MI2S_TX:
+-	case QUINARY_MI2S_RX ... QUINARY_MI2S_TX:
+-	case SENARY_MI2S_RX ... SENARY_MI2S_TX:
+-		ret = snd_soc_dai_set_fmt(cpu_dai, cpu_fmt);
+-		if (ret && ret != -ENOTSUPP)
+-			return ret;
+-
+-		if (!rtd->dai_link->dai_fmt && data->snd_soc_common_priv->codec_dai_fmt) {
+-			ret = snd_soc_dai_set_fmt(codec_dai,
+-						  data->snd_soc_common_priv->codec_dai_fmt);
+-			if (ret && ret != -ENOTSUPP)
+-				return ret;
+-		}
+-
+-		if (data->snd_soc_common_priv->mi2s_mclk_enable) {
+-			ret = snd_soc_dai_set_sysclk(cpu_dai,
+-						     LPAIF_MI2S_MCLK, mclk_freq,
+-						     SND_SOC_CLOCK_OUT);
+-			if (ret)
+-				return ret;
+-		}
+-
+-		if (data->snd_soc_common_priv->mi2s_bclk_enable) {
+-			ret = snd_soc_dai_set_sysclk(cpu_dai,
+-						     LPAIF_MI2S_BCLK, bclk_freq,
+-						     SND_SOC_CLOCK_OUT);
+-			if (ret)
+-				return ret;
+-		}
+-
+-		if (data->snd_soc_common_priv->codec_sysclk_set) {
+-			ret = snd_soc_dai_set_sysclk(codec_dai,
+-						     0, mclk_freq,
+-						     SND_SOC_CLOCK_IN);
+-			if (ret)
+-				return ret;
+-		}
+-		break;
+-	case PRIMARY_TDM_RX_0 ... QUINARY_TDM_TX_7:
+-		return sc8280xp_tdm_hw_params(substream, params);
+-	default:
+-		break;
+-	}
+-
+-	return 0;
+-}
+-
+-static int sc8280xp_snd_hw_params(struct snd_pcm_substream *substream,
+-				  struct snd_pcm_hw_params *params)
+-{
+-	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
+-	struct snd_soc_dai *codec_dai = snd_soc_rtd_to_codec(rtd, 0);
+-	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
+-	struct sc8280xp_snd_data *data = snd_soc_card_get_drvdata(rtd->card);
+-	int mclk_freq = sc8280xp_get_mclk_freq(params);
+-	int bclk_freq = sc8280xp_get_bclk_freq(params);
+-	int ret;
+-
+ 	switch (cpu_dai->id) {
+ 	case PRIMARY_MI2S_RX ... QUATERNARY_MI2S_TX:
+ 	case QUINARY_MI2S_RX ... QUINARY_MI2S_TX:
+ 	case SENARY_MI2S_RX ... SENARY_MI2S_TX:
+ 	case LPI_MI2S_RX_0 ... LPI_MI2S_TX_4:
+-		ret = snd_soc_dai_set_fmt(cpu_dai, SND_SOC_DAIFMT_BP_FP);
++		ret = snd_soc_dai_set_fmt(cpu_dai, cpu_fmt);
+ 		if (ret && ret != -ENOTSUPP)
+ 			return ret;
+ 
+-		if (data->priv->codec_dai_fmt) {
++		if (!rtd->dai_link->dai_fmt && data->priv->codec_dai_fmt) {
+ 			ret = snd_soc_dai_set_fmt(codec_dai,
+ 						  data->priv->codec_dai_fmt);
+ 			if (ret && ret != -ENOTSUPP)

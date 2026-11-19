@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "linux-sm8750-erhai-patchset",
-  "release": "p5",
+  "release": "p21",
   "series": "7.3",
   "minimum_version": "7.3.4",
   "upstream": {
@@ -12,210 +12,525 @@
     "sha256": "b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f"
   },
   "branch": "patchset-7.3",
-  "head": "4a4041f5921c6cbe29946bf36a1035b601ff3400",
+  "head": "4457d3dd09a76c04b50dda388ade03f82eeba182",
   "patches": [
     {
       "file": "patches/0001-erhai-port-bindings-and-documentation-to-Linux-7.3.patch",
-      "commit": "5faf1dbecc2f83a67b875358dc4286d2e9bf72c7",
-      "sha256": "e3c843719f6ce4850eca5d3c786de217bee89a26d9851860b57682a491b15837",
+      "commit": "974c97ed314362d2c35a85e4b07c5893c89ba252",
+      "sha256": "95e329c9062e4aea54f51c27d2a053daa6aee7712f69f1cb6a879ff7d709937f",
       "depends_on": [],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0002-erhai-port-platform-dependencies-to-Linux-7.3.patch",
-      "commit": "3bf8b72db4395cca113fc89698111b98ad793095",
-      "sha256": "f3d620021e344d80a7258158be6954cccb5aebfeff266c55384d7ae90e6a414a",
+      "commit": "70b757607eae894d9ff262f2d1959f4f9c970879",
+      "sha256": "30ed4723defe6997bb5fc8b41385cb67551ce11ec174216bc59a3d2591e6f819",
       "depends_on": [
-        "5faf1dbecc2f83a67b875358dc4286d2e9bf72c7"
+        "974c97ed314362d2c35a85e4b07c5893c89ba252"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0003-erhai-port-backlight-and-thermal-to-Linux-7.3.patch",
-      "commit": "64eb7a5d84525bef4c5eeb5364e244a5a782ef32",
-      "sha256": "c50ddbbacade1a05fd81aec8316915e47aa6932810a1ca54d7e5744854f86ae5",
+      "commit": "79c26750fd533929a1775b15b9bcb4df571db197",
+      "sha256": "c0dbe4a733144e724f0e56973076bd53de8240090fad74ce62c64683de2fd108",
       "depends_on": [
-        "3bf8b72db4395cca113fc89698111b98ad793095"
+        "70b757607eae894d9ff262f2d1959f4f9c970879"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0004-erhai-port-display-and-gpu-to-Linux-7.3.patch",
-      "commit": "41b9c7c45ed80beeb122491602a3f16faddd4ab5",
-      "sha256": "78671e995b7832684af0d5f78f69ef0f41830d4170d6bf07721898655159253d",
+      "commit": "e96535987d412e0c06721fe4f33283d3e5a2dd83",
+      "sha256": "12bb59e7d1d1abcdfac85fdaa9dc85c66e41d9eb3a9647cc534c8f1e08e654e4",
       "depends_on": [
-        "64eb7a5d84525bef4c5eeb5364e244a5a782ef32"
+        "79c26750fd533929a1775b15b9bcb4df571db197"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0005-erhai-port-input-to-Linux-7.3.patch",
-      "commit": "78d9b1303b781bdbb98c8beab4e2ec38e2abc883",
-      "sha256": "91b47d4f86e49bc79b4d6a8400a6f74d0765533f37f49d0f47f36251637c0425",
+      "commit": "19f71fc8e0983ca1c1869a9f6084320fec08fa2d",
+      "sha256": "6b91de3c6186380c0d7166a17f946f237672dcb60ac4504a34257c5c7c4b10a1",
       "depends_on": [
-        "41b9c7c45ed80beeb122491602a3f16faddd4ab5"
+        "e96535987d412e0c06721fe4f33283d3e5a2dd83"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0006-erhai-port-power-supply-to-Linux-7.3.patch",
-      "commit": "753cbf840cb47182a3c7dc1b06e206445c1b4642",
-      "sha256": "fdf7612c0c88725867c0dea59a427d3ce6eb0cc606fc1133b8cdd651761c397c",
+      "commit": "7ea1c3f02851003be45bafca34f93d9e99d01be7",
+      "sha256": "5098c354b97a90ebd129923e269b009dd85790c82c1633caba5f0199a5e461a4",
       "depends_on": [
-        "78d9b1303b781bdbb98c8beab4e2ec38e2abc883"
+        "19f71fc8e0983ca1c1869a9f6084320fec08fa2d"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0007-erhai-port-audio-to-Linux-7.3.patch",
-      "commit": "770d10b2bf5470d25381b0a7052d41dc3ab5300a",
-      "sha256": "90bff4b9b23095a38f0fee2bef697335ff6eb0dd358734fec1a8bf86fd3551d2",
+      "commit": "7fd86d902f0e1b004cb35683c5a54d95f2ee75f1",
+      "sha256": "7bb3353301d99a08fbf44281c824094bf982a0134ba088cc4bbc8ea8a7a5f6d4",
       "depends_on": [
-        "753cbf840cb47182a3c7dc1b06e206445c1b4642"
+        "7ea1c3f02851003be45bafca34f93d9e99d01be7"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0008-erhai-port-wifi-to-Linux-7.3.patch",
-      "commit": "58b8070b16bd0e6032158c0a76fd87ee2d0653dc",
-      "sha256": "b2f40981826ce3b1947001829521e4bb78cc8d584ce9b6be75f5c3d2673f2040",
+      "commit": "e9b7c8b641c5556762266ec578e0162640d8d5e3",
+      "sha256": "9c330f07548908863b0232fc446659f08504f2969d4da2879f1a9a8dc81f36c7",
       "depends_on": [
-        "770d10b2bf5470d25381b0a7052d41dc3ab5300a"
+        "7fd86d902f0e1b004cb35683c5a54d95f2ee75f1"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0009-erhai-port-bluetooth-to-Linux-7.3.patch",
-      "commit": "3d7e7d26192c726c088ca72e28ed594269ecbc71",
-      "sha256": "22b2fc6a1ad44ebad717203b4cdf3d68c2b55909b3403ceb8d41aa5e9adcef42",
+      "commit": "c84956cad6c9eddfad189fbd963210b081217587",
+      "sha256": "7fa2d692e6aae8e64a2f5e982ae1b9e7869c7904c8a478143b6629562e6be18c",
       "depends_on": [
-        "58b8070b16bd0e6032158c0a76fd87ee2d0653dc"
+        "e9b7c8b641c5556762266ec578e0162640d8d5e3"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0010-erhai-port-usb-and-uart-to-Linux-7.3.patch",
-      "commit": "ac9329880dae74ae6dd4399b2160dd9572db1f30",
-      "sha256": "ed9ed66695fa1a933fa5291176b0cea796d846218dc09ffa58169256bf6b71c1",
+      "commit": "60daa04c52af0677e3932519862639b13be3b2ee",
+      "sha256": "6ce67fcc40ec8ae9c7f1bd7555a87a0583d491ed105b9094a0700a7742597336",
       "depends_on": [
-        "3d7e7d26192c726c088ca72e28ed594269ecbc71"
+        "c84956cad6c9eddfad189fbd963210b081217587"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0011-erhai-port-camera-and-video-to-Linux-7.3.patch",
-      "commit": "fd5231089bf41fa2ed7f6893fa8fea19fa1de4b8",
-      "sha256": "c99a325c6615fa25f693315094ebd0cc108b8703dfbc522078524656ee3b8abe",
+      "commit": "589b3749d4271a8ed98801d3e0a61d7af08c40c0",
+      "sha256": "0b3ce4d7ca94aec7985bc0d31156417b79438e94567e9f281eaf4c6a83bd6480",
       "depends_on": [
-        "ac9329880dae74ae6dd4399b2160dd9572db1f30"
+        "60daa04c52af0677e3932519862639b13be3b2ee"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0012-erhai-port-gunyah-to-Linux-7.3.patch",
-      "commit": "1688d0bd94c910f39959f941dbd1365c848460f9",
-      "sha256": "b9e5f62a7d1def6d3aad301d59f989e37d38082f1479bcf45412c978865a536b",
+      "commit": "1a6931bc00f7bbf1b4d1162907384573d74a1416",
+      "sha256": "8abf52fe5588c1a795e99c95881d72e9c3abe9626c52a20904a13ca48d04f93e",
       "depends_on": [
-        "fd5231089bf41fa2ed7f6893fa8fea19fa1de4b8"
+        "589b3749d4271a8ed98801d3e0a61d7af08c40c0"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0013-erhai-port-device-tree-to-Linux-7.3.patch",
-      "commit": "f98215cf4873db15cdb0668cce5c4e050835824e",
-      "sha256": "039a84a9055b0e77e449d13caeb9925bf5d3a2b9c21227a91176ef3795d93afb",
+      "commit": "d14155eb886d75d52a752076de22638d7eb69bfa",
+      "sha256": "a750ef3bb885b2fcf93a567ed0a537aaefbdf4e4504c85913674233500cb228c",
       "depends_on": [
-        "1688d0bd94c910f39959f941dbd1365c848460f9"
+        "1a6931bc00f7bbf1b4d1162907384573d74a1416"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0014-erhai-port-hardware-config-to-Linux-7.3.patch",
-      "commit": "54ca8fcdca22c7dc0843df0fb91dfdebe628a584",
-      "sha256": "db13f6734fc1fe60edf53af9508b003ed42e6b18baea788dc6617448ff1704e3",
+      "commit": "ab94f1ddd466f9d4858ac1507de543a0332f9348",
+      "sha256": "d67a6af797b84a716f68792523c0c1fe5f020cf626fcf38d20afeca880f195c9",
       "depends_on": [
-        "f98215cf4873db15cdb0668cce5c4e050835824e"
+        "d14155eb886d75d52a752076de22638d7eb69bfa"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0015-arm64-erhai-keep-rfkill-built-in-with-the-Bluetooth-stack.patch",
-      "commit": "9a8a4ab32c023cf2fc4c6df2f113f0e23f7f9165",
-      "sha256": "0bc319cd83fe0f28e4d40e895e87ba06210ee62d43404e685bc716bbcc718118",
+      "commit": "954491471232ae3a5774089667ffba3d9029d68c",
+      "sha256": "8aedf4f9ee5c2724c419635e7ed748649ecc639bb4528a72e8a9579ed17dd58e",
       "depends_on": [
-        "54ca8fcdca22c7dc0843df0fb91dfdebe628a584"
+        "ab94f1ddd466f9d4858ac1507de543a0332f9348"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0016-ASoC-lpass-rx-close-runtime-PM-error-unwind-after-the-forward-port.patch",
-      "commit": "42c66f49899d3a0db4e2bb7dd7897ba74238b781",
-      "sha256": "f342684046234af5772c49689310c901b4d20694929a1b46c54388dc2c1951f6",
+      "commit": "b5c79637222f16266087a402bc00891f4a544133",
+      "sha256": "68384ecee7216cc7c9427eac31ce7a76dba0716443e159293fd67d90c943e925",
       "depends_on": [
-        "9a8a4ab32c023cf2fc4c6df2f113f0e23f7f9165"
+        "954491471232ae3a5774089667ffba3d9029d68c"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0017-ASoC-qcom-merge-the-upstream-and-Erhai-TDM-slot-configuration.patch",
-      "commit": "021332dc18a6df653521d132f344dfded5291d11",
-      "sha256": "9901af9f212a752f61e74a66354424188b3d7602150a22e57a0e64dafadda873",
+      "commit": "89a8da96366707f5ee2d27ee894126759214f8fc",
+      "sha256": "0ab1864ef74a5cf5ed59f41ffcef0580c07cdf0c9b7ae9add4b3970be4b0047a",
       "depends_on": [
-        "42c66f49899d3a0db4e2bb7dd7897ba74238b781"
+        "b5c79637222f16266087a402bc00891f4a544133"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0018-ASoC-qcom-retain-the-upstream-machine-driver-with-Erhai-DAI-formats.patch",
-      "commit": "adc175d99163bcfd25cbc856ba58c7fa31a73c46",
-      "sha256": "212ebb8727fc706f45a5e5c2ba1a08faa89630c8fb9a892d4d69bc78b9971aeb",
+      "commit": "acd44ded43cd859070d8e7beb01116882eac2fde",
+      "sha256": "660df290a626356b03fa85999474c810777c6032b722ee9f73292f8153cc2b5c",
       "depends_on": [
-        "021332dc18a6df653521d132f344dfded5291d11"
+        "89a8da96366707f5ee2d27ee894126759214f8fc"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0019-dt-bindings-gunyah-repair-CMA-memory-schema-and-example.patch",
-      "commit": "bfc760b9caa7d621afe907d592bda39187186411",
-      "sha256": "740f3da6249423ff8e4f2fc251cc12d39c8599c1b50f413029a7c1d1d1916b74",
+      "commit": "a27f590b9f9a2f80cef78f23d54a006142f0dc3b",
+      "sha256": "af9b90fe27a41351da40f987c7eed36369d48ae2da8a69c15c6ce04fb8adcfe1",
       "depends_on": [
-        "adc175d99163bcfd25cbc856ba58c7fa31a73c46"
+        "acd44ded43cd859070d8e7beb01116882eac2fde"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0020-irqchip-qcom-pdc-read-IRQ_PARAM-only-for-secondary-GPIO-handling.patch",
-      "commit": "21a8aa69b8c68e995f41d7307d70d023171bdf3d",
-      "sha256": "601c57eec1f3a771d7e804cba907de7af4588fedcdb6b87c9283ed6cc4098b46",
+      "commit": "3426cafdf049728720989bf25ec4ccf1125d8c64",
+      "sha256": "004d377581b9ff107282562c61a86f58ea9d2cd3d52a9365adc0b1295b251809",
       "depends_on": [
-        "bfc760b9caa7d621afe907d592bda39187186411"
+        "a27f590b9f9a2f80cef78f23d54a006142f0dc3b"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0021-arm64-dts-qcom-erhai-pin-panel-VDDIO-to-1.896-V.patch",
-      "commit": "d31d13f5d0b1117160e2930da43996219933f14d",
-      "sha256": "f47ade3baf41dfa6ad94a7b5714abc3fbf22b3b03f280b4c32f2a412e8c3c462",
+      "commit": "eaad4b4a0b6f832620cc0dc4a5f917293991f6d5",
+      "sha256": "81e12d9d2663973f87efc9696c658e53d27b1fb2f24e4006e03b5ada714af782",
       "depends_on": [
-        "21a8aa69b8c68e995f41d7307d70d023171bdf3d"
+        "3426cafdf049728720989bf25ec4ccf1125d8c64"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0022-serial-qcom-geni-balance-IRQ-masking-across-port-reopen.patch",
-      "commit": "bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb",
-      "sha256": "aa0d7c18221160519690b8ab54cb89b98c3156af573d77f625f74d5b435c5b4c",
+      "commit": "ccfbc6ccf514560d226ae283b8af5d0058910ac6",
+      "sha256": "70b506a1ce6617eee65fdce5515e0f692457c11aab922275e95b780053f91381",
       "depends_on": [
-        "d31d13f5d0b1117160e2930da43996219933f14d"
+        "eaad4b4a0b6f832620cc0dc4a5f917293991f6d5"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     },
     {
       "file": "patches/0023-arm64-dts-qcom-sm8750-reserve-ADSP-heap-outside-reusable-CMA.patch",
-      "commit": "4a4041f5921c6cbe29946bf36a1035b601ff3400",
-      "sha256": "4a0c3505267468709b6f4f3d045f7720b7cf8a44f66a141a2efc2e22082d5538",
+      "commit": "43d3a6f001054224349ff18f23b4eba8421d19ee",
+      "sha256": "13d898829b984210a1b653dcb427aa2d7372d99daeced04128ab449ed4a159f4",
       "depends_on": [
-        "bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb"
+        "ccfbc6ccf514560d226ae283b8af5d0058910ac6"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0024-dt-bindings-iio-adc-Add-support-for-QCOM-PMIC5-Gen4-ADC.patch",
+      "commit": "e7218e8a7ec34592dde6ff52c06ed2c1c84e53dc",
+      "sha256": "91a47e40c923a268ac5e57afb4800195edffaa16b40f1d9a6f0957c4e5dcd271",
+      "depends_on": [
+        "43d3a6f001054224349ff18f23b4eba8421d19ee"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0025-iio-adc-qcom-spmi-adc5-gen3-Add-support-for-QCOM-PMIC5-Gen4-ADC.patch",
+      "commit": "564df05b19e8d8810b52e22ec36dbcc5d12a3aba",
+      "sha256": "efa043d57fe2eee1e8369cedbc10c48e1b9225f51083544487745efb8eb90d08",
+      "depends_on": [
+        "e7218e8a7ec34592dde6ff52c06ed2c1c84e53dc"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0026-iio-adc-qcom-spmi-adc5-gen3-tidy-Gen4-channel-helpers.patch",
+      "commit": "39b22ea045d75ab9e8d52fcd5cbdbaf2bc6d58c0",
+      "sha256": "0c0f27b8ec539a393f5e332cd4560ceb1e1c07e41880cb93eccc0646032a8084",
+      "depends_on": [
+        "564df05b19e8d8810b52e22ec36dbcc5d12a3aba"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0027-soc-qcom-pmic_glink-Hold-back-notifications-over-system-sleep.patch",
+      "commit": "e603ffdb3cb3c7f5169ea725a183834b57d4193a",
+      "sha256": "9a5700e517cce6d183ea861da43a37b2d4490c849db26335347202c11ea0664f",
+      "depends_on": [
+        "39b22ea045d75ab9e8d52fcd5cbdbaf2bc6d58c0"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0028-soc-qcom-pmic_glink-Report-wakeup-events-on-behalf-of-clients.patch",
+      "commit": "5b88eb67418937fc2fd3f28312c5f6f935db04d6",
+      "sha256": "f48a8e2462eda50213b883d93b5c1e4c8308db166896210177bcb02f6f163a80",
+      "depends_on": [
+        "e603ffdb3cb3c7f5169ea725a183834b57d4193a"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0029-soc-qcom-preserve-ordered-charger-events-across-sleep-and-PDR.patch",
+      "commit": "5e48bf64a76b75a655e3f973764d5d6f6e8572de",
+      "sha256": "f831e4bab2da92a191c26eff6fbad53ebbb73416784389d123e98caf11d83e24",
+      "depends_on": [
+        "5b88eb67418937fc2fd3f28312c5f6f935db04d6"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0030-hack-soc-qcom-pmic_glink-Avoid-platform-rpmsg-probe-race-condition.patch",
+      "commit": "4e2992f58b0a2e379b7298216006f19fff603587",
+      "sha256": "f56643c9ad3e736af86d14eb3b601da8a7ac31575c0d1fa18cd6478752184366",
+      "depends_on": [
+        "5e48bf64a76b75a655e3f973764d5d6f6e8572de"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0031-thermal-qcom-share-Gen4-channel-encoding-with-immediate-ADC-conversions.patch",
+      "commit": "36b99b9f8d16000cad87443fef68719f3475da26",
+      "sha256": "aef3ef214353bf738e1fe942b99fa6612077374ab1b3e59e771a987bd76eb712",
+      "depends_on": [
+        "4e2992f58b0a2e379b7298216006f19fff603587"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0032-power-supply-port-Erhai-0.10.2-charging-control-to-Linux-7.3.patch",
+      "commit": "9b519649fc7a717ac8fa51f128639116b60557bd",
+      "sha256": "22a55c71c2ac3ed85fb9bd63ad89a0e1c6815e60f1ddb2672d079a24bb92a7bd",
+      "depends_on": [
+        "36b99b9f8d16000cad87443fef68719f3475da26"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0033-Input-nt36536-enable-scanning-on-pen-capable-boards-by-default.patch",
+      "commit": "35d1b4458d7a3e33069aa4cbb656d4a139c45beb",
+      "sha256": "ed4da70816bb698564e561c3a3fe1f6fd985b4304766ab3979964eb8e7b8aac1",
+      "depends_on": [
+        "9b519649fc7a717ac8fa51f128639116b60557bd"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0034-power-supply-cps8601-expose-the-verified-address-of-the-docked-pen.patch",
+      "commit": "ab567f6a1e00f79c3ad564fe903b6951caca1e68",
+      "sha256": "abe63b58d3257283d5adb87527052ec2fa3fde3fc9fab16e94bcbe785900fbac",
+      "depends_on": [
+        "35d1b4458d7a3e33069aa4cbb656d4a139c45beb"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0035-arm64-configs-support-USB-optical-drives-on-Erhai.patch",
+      "commit": "6701611e8e15ac7e9866be646fd5e4b31e13b791",
+      "sha256": "44b16d9225fb094ff4552b8bddb6d866f07b85ce705657a1937c2fd5ca93a194",
+      "depends_on": [
+        "ab567f6a1e00f79c3ad564fe903b6951caca1e68"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0036-arm64-dts-qcom-describe-the-paired-rear-flash-LEDs-on-Erhai.patch",
+      "commit": "5da3d3993ee95fe0ed1dfa160be5c4df4142bedf",
+      "sha256": "a8f8babcda262a2038d7b6d271345b0717702b1efe83b43b2d12566c7ff263a4",
+      "depends_on": [
+        "6701611e8e15ac7e9866be646fd5e4b31e13b791"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0037-power-supply-expose-persistent-policy-charge-inhibition-on-Erhai.patch",
+      "commit": "5b49cde232f03d6df8b3ba40eda505c175de2801",
+      "sha256": "e7a78074416867269b99488eb27c2e432e9d069b7c0f6f1e649689cd5bc04d8c",
+      "depends_on": [
+        "5da3d3993ee95fe0ed1dfa160be5c4df4142bedf"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0038-erhai-fix-display-handoff-and-backlight-boot-logs.patch",
+      "commit": "bb0730a5db332e0b5cbe4731d445fef97a1ce450",
+      "sha256": "93719177f2676166b2723dddc816ac34799c05035a50eff33fdd9e788ad0e154",
+      "depends_on": [
+        "5b49cde232f03d6df8b3ba40eda505c175de2801"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0039-iommu-arm-smmu-prepare-erhai-display-before-attach.patch",
+      "commit": "6da7826d8977fcef4dcbbbb27822fd358fc23219",
+      "sha256": "ece3f958b9494d224391ff2bdbbdfb017285e7f987bdefdabb26280376d7be02",
+      "depends_on": [
+        "bb0730a5db332e0b5cbe4731d445fef97a1ce450"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0040-drm-msm-dsi-release-the-PHY-device-reference-once-on-deferred-probe.patch",
+      "commit": "3ffa2748141c45cd43cc9bb86a9ceb3ec0b16098",
+      "sha256": "da50bcbc8c9137d372026b6781e5cc9523c9a438e011f03245554f3828f25dcc",
+      "depends_on": [
+        "6da7826d8977fcef4dcbbbb27822fd358fc23219"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0041-driver-core-distinguish-skipped-sync-state-only-links.patch",
+      "commit": "4e73b35745805c313de8a890dee4c1923b42b062",
+      "sha256": "d612cdd99d143e40f4ab1bbd88c3ec37676ff2a18f3564c1c516dbd0f298a3a9",
+      "depends_on": [
+        "3ffa2748141c45cd43cc9bb86a9ceb3ec0b16098"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0042-arm64-dts-qcom-erhai-set-CCI0-core-clock.patch",
+      "commit": "2fd0236a2a7cee5da39d74075b8fca7b1e5938db",
+      "sha256": "e0e14038b1ec6e39a3d5093a34ed81907a08565540a497251431ca7d61012ef0",
+      "depends_on": [
+        "4e73b35745805c313de8a890dee4c1923b42b062"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0043-power-supply-cps8601-name-the-program-regmap.patch",
+      "commit": "92d1a7a4957a116fe1c08016bc4c581691dd990b",
+      "sha256": "8d3f0319018c2459fc4731b9d80dc0655e85e5c3a91b8ca10dbd2bcbb9d1b374",
+      "depends_on": [
+        "2fd0236a2a7cee5da39d74075b8fca7b1e5938db"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0044-i2c-qcom-cci-autosuspend-erhai-camera-controller-when-idle.patch",
+      "commit": "56d84aea298db825f5993fc478c45e080c07382d",
+      "sha256": "c68770a33f1c1046c9502dfb787a3c62aea63b1b489bedb1880f712da48010c6",
+      "depends_on": [
+        "92d1a7a4957a116fe1c08016bc4c581691dd990b"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0045-ASoC-wcd-mbhc-use-millivolts-for-default-button-thresholds.patch",
+      "commit": "e7065c8efe0de1b5f1933f8bf1a75bc27dd3222c",
+      "sha256": "7ecba9a2ecb7993ee121990edb15703d1754f7436817bb581cb30d1bc1070140",
+      "depends_on": [
+        "56d84aea298db825f5993fc478c45e080c07382d"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0046-ASoC-lpass-va-accept-the-default-DMIC-divider.patch",
+      "commit": "00e60bf155827a4250109abf458d5b2dcf16ce0e",
+      "sha256": "b513edf440e4e47eeffe42e5662829d8b2ef0e12cad6a68ed6c244a012a8cde9",
+      "depends_on": [
+        "e7065c8efe0de1b5f1933f8bf1a75bc27dd3222c"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0047-power-supply-ufcs-mark-the-policy-thread-idle-between-sessions.patch",
+      "commit": "6d21888f2b846df1fecfc1a5e15fc52241c243e4",
+      "sha256": "d3d789c154d672f4b957a410b7285060436722fd21daf90ff91553a5fef9e833",
+      "depends_on": [
+        "00e60bf155827a4250109abf458d5b2dcf16ce0e"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0048-power-supply-qcom_battmgr-publish-uevents-before-ADSP-is-ready.patch",
+      "commit": "b786f71cbad01573e0e44294bf05989534775693",
+      "sha256": "40a92dab677467fd28e97a75ac6407f414de2368f0647a9b43fa33672d5f863f",
+      "depends_on": [
+        "6d21888f2b846df1fecfc1a5e15fc52241c243e4"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0049-media-qcom-camss-describe-test-sources-and-handle-deferred-PHY-probe.patch",
+      "commit": "bffebda32638453dbc01cc165a13cc2aac1bc18b",
+      "sha256": "de2aeb90ce7feb55c418af879b5392c85941f9c35df60662000c9b1cb16ec3ce",
+      "depends_on": [
+        "b786f71cbad01573e0e44294bf05989534775693"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0050-arm64-dts-qcom-sm8750-encode-both-PCIe-IOMMU-specifier-cells.patch",
+      "commit": "24e8a6f521d243a410727f1ae0d9356944d44d72",
+      "sha256": "527674d9eccdcbea1a363fdbf235f4ccc4ff575c7274b8e010cf96ea35dee3c3",
+      "depends_on": [
+        "bffebda32638453dbc01cc165a13cc2aac1bc18b"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0051-ASoC-codecs-lpass-rx-wsa-macro-sort-reg_defaults-before-regmap-init.patch",
+      "commit": "e312f91c1ab978e1cc875383bdc442298fd4a083",
+      "sha256": "5558c524a89632fe3757fb09a3923cfbf223afd0eb51749d608d7e8ca8a0f0f4",
+      "depends_on": [
+        "24e8a6f521d243a410727f1ae0d9356944d44d72"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0052-Input-nt36536-distinguish-lifecycle-events-from-touch-failures.patch",
+      "commit": "7ed8d7a2fa4034f7354ee18db467dcb3db624f09",
+      "sha256": "84a56708dec7db58b0bc0cfa2823452585ad76b8155abf7b9dab1ad7030329a8",
+      "depends_on": [
+        "e312f91c1ab978e1cc875383bdc442298fd4a083"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0053-misc-fastrpc-set-the-coherent-DMA-mask-before-attaching-the-pool.patch",
+      "commit": "15782178af6198bf13b3d8a0adb5279ac36a2951",
+      "sha256": "d09b91aadaa5f6a5c63f5f637cd645dda18ffd2aafc5af2cfc0854907de82619",
+      "depends_on": [
+        "7ed8d7a2fa4034f7354ee18db467dcb3db624f09"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0054-power-supply-cps8601-report-identification-failures-accurately.patch",
+      "commit": "0c04f57f8c9d5d01609a4206536645788268bcd4",
+      "sha256": "676701c8143e46b062865632607d9f5ded4c3e63bb3431606ea0232ae8652d5a",
+      "depends_on": [
+        "15782178af6198bf13b3d8a0adb5279ac36a2951"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0055-PCI-qcom-Honor-IOMMU-provider-s-iommu-cells-in-qcom_pcie_config_sid_1_9_0.patch",
+      "commit": "d48d2e4687c6775fb36a266209144f94d797b874",
+      "sha256": "46c355cfbbbdf852e893c051832f53f2de7efe022e344a0f7cb6474836522b15",
+      "depends_on": [
+        "0c04f57f8c9d5d01609a4206536645788268bcd4"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0056-power-supply-cps8601-restore-Erhai-pen-charger-wake-and-IRQ-delivery.patch",
+      "commit": "25e439e1e4939b2adf0ed16c68da43df9f44138b",
+      "sha256": "46e8e8d7ced0ee2c5467f8858570e00253876a025d5a6691883384fe860343d9",
+      "depends_on": [
+        "d48d2e4687c6775fb36a266209144f94d797b874"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0057-power-supply-cps8601-use-the-Erhai-charger-supply-pulse.patch",
+      "commit": "a6a36c0addc8ea8b2d7987ece8e84a13243f5624",
+      "sha256": "6d92ff9e231ca58f9c9ca694f88e3f597eef24433ce3bdd413fe86ed43ae3153",
+      "depends_on": [
+        "25e439e1e4939b2adf0ed16c68da43df9f44138b"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0058-power-supply-cps8601-stop-charging-a-full-pen.patch",
+      "commit": "4457d3dd09a76c04b50dda388ade03f82eeba182",
+      "sha256": "222708e5f6a85e302d81ad00d6bc9d27f91482be919ac4f78f7162093a28ae81",
+      "depends_on": [
+        "a6a36c0addc8ea8b2d7987ece8e84a13243f5624"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
     }
@@ -229,11 +544,11 @@
     {
       "file": "configs/erhai-firstboot.config",
       "source": "arch/arm64/configs/erhai-firstboot.config",
-      "sha256": "65ff027cdc1fc389f2eab6e5bc1482da488d01e56091fa226f7e9828fc69169d"
+      "sha256": "4a3dfc4699b8041d30716362f6532895ca7afc7ad1a5c775883fbb9fb35694a9"
     }
   ],
   "result_files_sha256": {
-    "Documentation/ABI/testing/sysfs-driver-input-nt36536": "be575b0041937682c5d4096807bcce6ff399a3cbe5cacd165a1d85c37bc623bd",
+    "Documentation/ABI/testing/sysfs-driver-input-nt36536": "d637f32d4b0387d093ee751fe9775adbc95b9b5a15ccf94cb8c40719deaa4807",
     "Documentation/arch/arm64/erhai.rst": "5f714761a421c7c84b779b5f8c3a4852b81be3233359fb5c424cc19ff31d01d7",
     "Documentation/arch/arm64/index.rst": "3ffcbc2a5b79e417ca74b85a02bc09acd88013697d679ef35cfd6a7fcba4d01f",
     "Documentation/devicetree/bindings/arm/qcom.yaml": "775a3883dd140092b71fe3c317711d6ac6fa480683c608ff6335b963b11e743c",
@@ -243,6 +558,7 @@
     "Documentation/devicetree/bindings/display/panel/novatek,nt36536.yaml": "078072afcbfe44945fd10d284b3ac5e8ede659ea12c317d30d05a9f01085614f",
     "Documentation/devicetree/bindings/firmware/gunyah-cma-mem.yaml": "d03ececd6574815950d32ef0ff1d50cceede9fab256dbe17f61b3f7b95e5df6e",
     "Documentation/devicetree/bindings/firmware/gunyah-hypervisor.yaml": "fd77ac32a33ed4d9271b86f5fbc52a2708e47f756b9afd8603713ba8beb95a11",
+    "Documentation/devicetree/bindings/iio/adc/qcom,spmi-adc5-gen3.yaml": "08fd68c287f9aaf1afd11732979a265cecce6862d0ef48fdcba54f07125dbabd",
     "Documentation/devicetree/bindings/input/oneplus,pad2pro-pogo-keyboard.yaml": "56987de796256117bc3cebcdb8e4ce022e3d32ffa052fd622566f49cff8ea3ed",
     "Documentation/devicetree/bindings/input/touchscreen/novatek,nt36536-ts.yaml": "146a67c69d3398ffa69206b70bdb757cd40f0751e383a9597934dc05fba49ec2",
     "Documentation/devicetree/bindings/leds/backlight/kinetic,ktz8866.yaml": "5c23421dc278fe4c2ed607fe23bc23be469653448cafe0eaa8b4cc736e98f840",
@@ -255,7 +571,7 @@
     "Documentation/devicetree/bindings/net/wireless/qcom,ath12k.yaml": "4c3a261e0023996c3278addc2586530a7ea6f5ebfec7d11966f6bf4fe26e8ac0",
     "Documentation/devicetree/bindings/phy/qcom,x1e80100-csi2-phy.yaml": "ee8380adc03b0892040d64e343bcb203866d59c0af3ec4c4ab05bf4c58ff6adf",
     "Documentation/devicetree/bindings/power/supply/oplus,wls-charger-cps8601.yaml": "796175572c6fbf8add093d1aecb5eeaddedc35a7678fd667d70412fc070a4854",
-    "Documentation/devicetree/bindings/power/supply/southchip,sc8547a.yaml": "56a390cac61afd23bdb0b79239c6c55bcfda017cc0907c38ffbe19abb70ecc80",
+    "Documentation/devicetree/bindings/power/supply/southchip,sc8547a.yaml": "b417ec4fe9d1c6e4704679b3719b1f3079ebaf5e5aacc1d2e3f792bc7cc76bdd",
     "Documentation/devicetree/bindings/regulator/qcom,qca6390-pmu.yaml": "2112b6de538aa8a1b1ab4e446452ef286706a6f224062087668d5fd1583e45ef",
     "Documentation/devicetree/bindings/serial/serial.yaml": "869f3d0022d8a785a02c25eb1b549f6ab58ce7b47faa5f04c37e2c5d040c90d2",
     "Documentation/devicetree/bindings/soc/qcom/qcom,pmic-glink.yaml": "030f29f20dde0d8dfea8184bf78aec627c87455ba3ef17a3d761ed1a02ce57f0",
@@ -266,9 +582,9 @@
     "MAINTAINERS": "648c7c2ad68da3124917f8c4a39b879161c6f6a5ae3124cdb0ff542044dce804",
     "arch/arm64/Kbuild": "abaf6ca053e2163a56df1d2cf9710dae7638c75aa722c22fc311b12191b4b7f3",
     "arch/arm64/boot/dts/qcom/Makefile": "31161edfb391d9259bc4fb8e76cdf3236fce432b0642be570064f1ee81de3684",
-    "arch/arm64/boot/dts/qcom/sm8750-erhai.dts": "9d59a1fa5cf6191faa61ee33fe57ea5b1dba7f8c8ed8b8e085f90074e9af9b57",
-    "arch/arm64/boot/dts/qcom/sm8750.dtsi": "cf1609ea7b9faf18d3e62a482f255db60f84216188f754266a0c7f6204b9275f",
-    "arch/arm64/configs/erhai-firstboot.config": "65ff027cdc1fc389f2eab6e5bc1482da488d01e56091fa226f7e9828fc69169d",
+    "arch/arm64/boot/dts/qcom/sm8750-erhai.dts": "1cb0eecfe2bd70a92bc27f3747a52f82c5c24de9a210a2b52d9f050595705ca7",
+    "arch/arm64/boot/dts/qcom/sm8750.dtsi": "723e83eba6a445dbdd96405f98c4327bf4b885dc5ace0beb529c8e6bc04a3313",
+    "arch/arm64/configs/erhai-firstboot.config": "4a3dfc4699b8041d30716362f6532895ca7afc7ad1a5c775883fbb9fb35694a9",
     "arch/arm64/configs/sm8750-netfilter.config": "72fa09bfe639d145842604aace8405492f4588369b469cadcd323dc81bcd5b6e",
     "arch/arm64/configs/sm8750-peripherals.config": "e0643b5620c9dbc842ffb7703c858447d93c6fe3bee9a0d3e3c07a42b3c360b2",
     "arch/arm64/configs/sm8750-snap.config": "050337bdad9a0cc8c5725d5decbb7600e5e7c3142b5036862ecb339bdcca2df7",
@@ -279,7 +595,7 @@
     "arch/arm64/gunyah/timer.c": "3591fadbc91a932a4b78a7b686d3910e605f8054cd624ff0cf961c6e3f09bfaa",
     "arch/arm64/include/asm/gunyah.h": "e81aecda2cf5bd2160a786fb195329f10d97e8ac4bff50165b805527818a90bc",
     "arch/arm64/mm/fault.c": "110ea9b3b49c47eb1201e23ec0ebd99185a20eb6bb4ccae98aeb1b6aad114094",
-    "drivers/base/core.c": "ab57379f0372d42fbeb5e4555b2a6076c390e9b1a661f2856b0f105ef4a99251",
+    "drivers/base/core.c": "93378c331eae775ee0d6c8d6cb123ed47477ab746560e797d19e3ce5d1930811",
     "drivers/bluetooth/brahma_peripheral.h": "fe99a2e2842bc33264a0497eef04c4cdbab04b70d33f3a9aed47adfff5b6ea9d",
     "drivers/bluetooth/btqca.c": "32ec9e787cad897e7ea56bf666cf96d2febd8ac7a0bd3f968d112f6c61d22962",
     "drivers/bluetooth/btqca.h": "9dad962e3f0b848d882903d6b6ce45deabb7141428d3db04e4b69c4cb4750995",
@@ -316,6 +632,7 @@
     "drivers/gpu/drm/msm/dp/dp_ctrl.c": "253f0395e97363ffe27a5ac9809692ada1027d218a28fbf72123d365828a5e79",
     "drivers/gpu/drm/msm/dp/dp_display.c": "da78604c4c85d92a071668a47b66dce38e008f15a31baa723babc4cb6f652c45",
     "drivers/gpu/drm/msm/dp/dp_panel.c": "132edd0b7a02133e09a8223e352cf9126bcdd3ad734a4b837b2e473412ff91e4",
+    "drivers/gpu/drm/msm/dsi/dsi.c": "f71760885b8082778d79ba3ef3333c7ce1130d56d5c4b33a3a682af4959c1d4a",
     "drivers/gpu/drm/msm/dsi/dsi_host.c": "2ec919c037f3ef540ca26fef8a0df5433556172b06da6553c631e48f5ac10855",
     "drivers/gpu/drm/msm/dsi/phy/dsi_phy_7nm.c": "78e42d709c2b1268b95686aaaea40ac72d3459caccb1be60470900f1cfdabf74",
     "drivers/gpu/drm/msm/msm_drv.c": "0d5694b2ad61cdd281ac024311d7a2dfacd83646b381ed69a4f5a1db66d4d09e",
@@ -325,6 +642,9 @@
     "drivers/gpu/drm/panel/Kconfig": "5cdcae1747c067ae61bf44ec25723d3333593f4771b629f083d26ce8d20f4dbf",
     "drivers/gpu/drm/panel/Makefile": "08f935f365481c1d3171fcbba4c677ce9d3c1ecd8e538f953d00f70eb01a81b4",
     "drivers/gpu/drm/panel/panel-novatek-nt36536-erhai.c": "3c86c7d38fa951d46e5aa576288940e4f8f0d019b4b36de2ad8cb8349aea5bb6",
+    "drivers/i2c/busses/i2c-qcom-cci.c": "d3ae330587220bb25b4302439b44da9030c5ea198224f4eaaca2dbe086031322",
+    "drivers/iio/adc/qcom-spmi-adc5-gen3.c": "66dac7272a0a9cd0212ef9a2b9bbb7962f473e6eea08a33c81d015121d88c100",
+    "drivers/iio/adc/qcom-vadc-common.c": "a196dd0eb63dfee153284b60c4ea56ab4cf8ef64755f93b76b5149f6b53d4613",
     "drivers/input/keyboard/Kconfig": "2a19e7601acb75f351e2925d7da0b0a9502efdc304539f6ab3d016ae8d052961",
     "drivers/input/keyboard/Makefile": "c9d0b47b68bbc903f4d83c706af3aeff6f66bac8139f82fea002b4b843695bfb",
     "drivers/input/keyboard/gpio_keys.c": "96bd2d17ed30f3f62ee1467afae6f2cdd2d090e9cfc9f713511d19d1fd1fc12d",
@@ -333,10 +653,11 @@
     "drivers/input/touchscreen/Makefile": "45eaeb41b3f8f5cc0518c60eddd957e6a84c4d6aa356e6b8622ddc58752f94cd",
     "drivers/input/touchscreen/nt36536/Kconfig": "a2a38b1438446bb0e7a4ad4ccef4b07b7206d87e32e9057e5405d4082959f52b",
     "drivers/input/touchscreen/nt36536/Makefile": "bc58faebdd3d7cdd6ca3378b91b9d33c66e9ed5dd8cd79e4c7b1eac7ef96d06f",
-    "drivers/input/touchscreen/nt36536/nt36536.c": "70b1b98735a4f097ff5a2a9e01fc66bd885e59c6ce968da4648d96fb3388d9c7",
-    "drivers/input/touchscreen/nt36536/nt36536.h": "ccc93cc9c45212eba370204e8f1a255022f24dbc830efe47dae8631f8edb25a1",
+    "drivers/input/touchscreen/nt36536/nt36536.c": "4e8f557c245feda7e5d5e550b9fb1ddd3f77bd02407cd2ddb3750f5585c37342",
+    "drivers/input/touchscreen/nt36536/nt36536.h": "cdf54bac40bcabe40873b63180c8e4de639b37f62789bb421f5b5c3fe08bf8bd",
     "drivers/input/touchscreen/nt36536/nt36536_fw_update.c": "a282f39b10f21bb068d30dfdaf8db904d4124214a1ab3d05d9913b6996e42968",
     "drivers/input/touchscreen/nt36536/nt36536_mem_map.h": "eb186e70d60d38654318f2892a66b0921ffbf37477d4a24aafa2d1d85682a5fd",
+    "drivers/iommu/arm/arm-smmu/arm-smmu.c": "e14030337e1f60997c980f966462c6fe0085675d83ba55b426cdca3cda869595",
     "drivers/irqchip/qcom-pdc.c": "3c33847c7b16a51ba90c5430b5e023ee21cbe02c8636d019765d51bc6b2d4925",
     "drivers/media/i2c/Kconfig": "5706221ef6f05202fac94699e90051f3a9e8ed8be892d2349d83748f6cbd61a2",
     "drivers/media/i2c/Makefile": "d36efd66911892541855300dc95ca6414f380d060e82648586e4a85b23b12c41",
@@ -352,10 +673,11 @@
     "drivers/media/platform/qcom/camss/camss-csiphy.c": "eff81b16b9595c7ef6da0bd045f8fcc668abf548deab99f8e5bb58470c386c47",
     "drivers/media/platform/qcom/camss/camss-csiphy.h": "1e88d857aef2f0b804705ebc117af849ecdf53eef910ba1aa02a1daed51f330b",
     "drivers/media/platform/qcom/camss/camss-tpg-gen1.c": "82903dbe776f18811e9074643ee3cb2fdd0d6d520afdec4083f702755233d134",
+    "drivers/media/platform/qcom/camss/camss-tpg.c": "653b5767b130d947245cbee6799b148fa5d0b8d9114288d2f70ca855b9542b14",
     "drivers/media/platform/qcom/camss/camss-vfe-gen4.c": "3d3c643ba6771c9085395a79047615db65a156ea2cf77bc55bfd6008f2b73717",
     "drivers/media/platform/qcom/camss/camss-vfe.c": "7cb411fa90c2973e089009f12679bdcba8ab26787110474a603be53776d28493",
     "drivers/media/platform/qcom/camss/camss-vfe.h": "e32ff0f991b57ad451f534449b6b4591813e966bef441c7225f367ec190a0219",
-    "drivers/media/platform/qcom/camss/camss.c": "29487d2c7ff3db0de42613d3dc3dae5456c3d87e27bccb534586d3483c561090",
+    "drivers/media/platform/qcom/camss/camss.c": "d8d6ae30d6544d7a4b5b77b50bd73d3b0dafc8fa822f097cd6fbb24e76b3e9e6",
     "drivers/media/platform/qcom/camss/camss.h": "577357c73da26dc746b205e6d402e2a51540f09a3dd715d51f861be4ea33bfb3",
     "drivers/media/platform/qcom/iris/iris_buffer.c": "b302d87e71c9c0645145acaf4f49dfd9ae8050f5a44b2b00e57d2f6052bfc6a1",
     "drivers/media/platform/qcom/iris/iris_core.c": "7289f6fd6da8354b92092ba759aa023cf6a33d8f29eb9303a86b3808788067e7",
@@ -372,6 +694,7 @@
     "drivers/media/platform/qcom/iris/iris_resources.h": "eeeedb610626aa4390faa3d1c855018ff4c16bfae23625caf74909bb8b3d30a5",
     "drivers/media/platform/qcom/iris/iris_vidc.c": "ed05d7b94aa333cf87c51c7e0e5bc3a4d1ebf39edaacca4982b421faf73401aa",
     "drivers/media/platform/qcom/iris/iris_vpu_common.c": "bc219e339f596b298ec86d5013655bc82bfb0ca2a928237ca7c781cea71f5d77",
+    "drivers/misc/fastrpc.c": "d140fb08cea3d706cd26eedfab480a2b47dc58d1442b4e8de06cd73e95d6b9f2",
     "drivers/net/wireless/ath/ath12k/core.c": "4da5863e801a3fa75f1dea198b304df62adcbefc81f4ffbad0f48cb6a7ecdbf2",
     "drivers/net/wireless/ath/ath12k/core.h": "ba335003240209ed4a77855d783ec2fe5b4f29d6c2d9ca094bab56ae7a2bbf82",
     "drivers/net/wireless/ath/ath12k/hw.h": "ea501853b282d4dec5f41730de9fe515de780c760713cd0c27deb84b04c5f4d9",
@@ -384,7 +707,7 @@
     "drivers/net/wireless/ath/ath12k/wifi7/hw.c": "23448b190765244303b1796beefaebb4566fa641214f797d3a24e030706bc3b7",
     "drivers/net/wireless/ath/ath12k/wifi7/pci.c": "fa25a7056bd6c8d28b2fef4052832efb306583e987ab374cbb4a9f75a796fbaa",
     "drivers/net/wireless/ath/ath12k/wmi.c": "11164508d90b12e226b037df4261c128d97fe8d103921b58d6ff5252b850a3a8",
-    "drivers/pci/controller/dwc/pcie-qcom.c": "f2139b803dfcb9e576e8c34bffe84dbbad6346a1d5d698a9e3584c4658fab0ff",
+    "drivers/pci/controller/dwc/pcie-qcom.c": "35c4d1fa1c6bd542d78a0f2c2fc6a20f4c19a6b50dfff0e0d69a0fe1556a7a1b",
     "drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c": "eb74dc33446869759ef53967646bceff1430d3a1d4a9c578fd1be6421a411e46",
     "drivers/phy/phy-core.c": "391d9788ff9da26bbbd7bb6ee6dca0cabf38304def43d2b5cb4c7edbc8a38115",
     "drivers/phy/qualcomm/Kconfig": "d4237a40290b397c84139790fe82a95acc653b5da0ee30651ae17f13ddd65c03",
@@ -397,16 +720,49 @@
     "drivers/pinctrl/qcom/pinctrl-sm8650-lpass-lpi.c": "79901678af4cc1172520d7b0b295cf3796b69aac007a3f6338fc4ed4a14d6a81",
     "drivers/pmdomain/core.c": "c29842a0eb68815bab36e3d23d06b1ac79e4078485c380ee0d7befe292caea46",
     "drivers/power/sequencing/pwrseq-qcom-wcn.c": "d09b804e655125e7aa0abda7f862a3ccceb2a016c6e6e6de56f23739a857b441",
-    "drivers/power/supply/Kconfig": "0837b5989eb812c1bbfd6d0cba3fbb3eccf1d7bafb0cab7a30f301af8b516657",
-    "drivers/power/supply/Makefile": "871b628e6c2405415ca8acf3db64d168d4c59a462aff7028822c5ccaae008cc3",
-    "drivers/power/supply/cps8601.c": "30368aed1857bda14f48e75202a3a0f66975f0a8e2281e5aba1ff9606a811b96",
+    "drivers/power/supply/Kconfig": "a071e66b7626b3c4a8db845add41ddf8b7835786c8fca7a81fb744a2aa739295",
+    "drivers/power/supply/Makefile": "29a8764e2bcd557b0f77b7094c7576bec641bb05bbe3dfcac5814cb15bedba27",
+    "drivers/power/supply/cps8601.c": "6f04e4a3a3e7327a0822301137138cb31de761f3fd46e989a0c9321d2f081539",
     "drivers/power/supply/cps8601_bl.h": "90d4050f5bb2d14b113af96b7b1e9243b00c492c67a03707a8ba79d225679fba",
-    "drivers/power/supply/erhai_otg_glink.h": "e001d13c2cdcf2f0c2ee2285fe837876a7843146cd5c07c563deb7841370eca5",
-    "drivers/power/supply/erhai_pps.c": "a662a7a63b356bf2dc81237358d963ca23b679f2c71f8173b421b923f8572b40",
+    "drivers/power/supply/erhai_buck.h": "812058e11d192e36eccd9ae5db23f014686bbdb92382b922b0c6726127f240fc",
+    "drivers/power/supply/erhai_cell_envelope.h": "6cf6b60d285881bf3a1bf9cd85020701915716fd94de0c5e8015e66df82cc97e",
+    "drivers/power/supply/erhai_charge_curve.h": "b4a1ef73816d670c04798c3f50856384c5d33d22dc85126f723c431f54a57480",
+    "drivers/power/supply/erhai_otg_glink.h": "f05ea00b2a79c069f85ed485d41d7b8e403b88c79662779cd29bec934a887d6a",
+    "drivers/power/supply/erhai_pps.c": "20d779d8d179fbcc756f75301be54bef91c96a0be7d31a3a564e1b86552c1e3e",
     "drivers/power/supply/erhai_pps_trace.h": "299577707a2825b7ecaf4a192675fa53a8e22988542ad4b2847bd98952b77f33",
-    "drivers/power/supply/qcom_battmgr.c": "94c840f433422ebd3a22d7eb3d0b7cc14896ba06b164b1dddc4ad27cb23fb554",
-    "drivers/power/supply/sc8547a.c": "5ae208d3c732454aa6fbe0b26335370feec4673452fce68535f8575bb3a74808",
-    "drivers/power/supply/sc8547a.h": "5fd2ff38425ccee50652253efbb652e0be248db3fe0868b2ae1af199c06899b4",
+    "drivers/power/supply/erhai_svooc_lcf.h": "e272483232f4a671b1d81d0c4c9f7949222e798f3baf6f2a2c025868c493eaf1",
+    "drivers/power/supply/qcom_battmgr.c": "abc0ae8121bd8bc18b8117fe4ef21bcb2a13c0a98589cc58d7930f3884dcefc3",
+    "drivers/power/supply/sc8547a.c": "5ac2e3b74b27fb95fd322850766458f6e6ac4d1578b93c217f472e4be6c39e15",
+    "drivers/power/supply/sc8547a.h": "298ba94048233ac6c9e62ade31828c9f0614ff650fb8870e49c8a1c261fdd653",
+    "drivers/power/supply/ufcs/Kconfig": "fba617188b816a64ebea00c80aa24c3c129841e06a78e655f6639aa47bfa2ccb",
+    "drivers/power/supply/ufcs/Makefile": "4c9bed29d332091cd834c8c9dae6c96d65a8d55cb15c23faee55921d4cd4123f",
+    "drivers/power/supply/ufcs/include/internal/ufcs_core.h": "cee4c8d4306f03d8fa085b3fe025637c4dd3593bc4f237b8780b1f0630c1890e",
+    "drivers/power/supply/ufcs/include/internal/ufcs_debug.h": "1dbfdb280a075611d2555d88fa8c294b1d7dcbd55685896ce312174e87d02e29",
+    "drivers/power/supply/ufcs/include/internal/ufcs_event.h": "93d90223254881a685ec05165e44dbdbd57fbfb6f6ea9169c2de141144a1fea9",
+    "drivers/power/supply/ufcs/include/internal/ufcs_intf.h": "15ed51966abca1857c376c146ca9aea21b72f45f2eb12b81cab14b93c5dd34e8",
+    "drivers/power/supply/ufcs/include/internal/ufcs_msg.h": "d8ae8146e8d35cc392529600fc3f126695999b4a0a86a6a8a9ca991ac918a77a",
+    "drivers/power/supply/ufcs/include/internal/ufcs_notify.h": "4f4c7af70f0e7c1f3f3724623e27de8e987affa52b12c1e54f5a288dd9de18e6",
+    "drivers/power/supply/ufcs/include/internal/ufcs_policy_engine.h": "96b84d200633e3c8648a26d52169ff5a99be56950a2551e2b327859b74ad9d0b",
+    "drivers/power/supply/ufcs/include/internal/ufcs_sha256.h": "7276e71f785f58125cc8d5c6c00a6640e607944105d60ac6324392e21a90ba4e",
+    "drivers/power/supply/ufcs/include/internal/ufcs_timer.h": "f53069844eead276bdade9ef483a727966ee6c41d80c843c41d91c6f2799bb47",
+    "drivers/power/supply/ufcs/include/ufcs_class.h": "eafe62e15e4a9126ec432e610f641fedeceede55112ecd28d19c8b24e2ca7a91",
+    "drivers/power/supply/ufcs/sc8547a_ufcs.c": "bc5dcd2e091bdc1efa05225b424ea323f7da3936a7ba06e46175f7ec10a45007",
+    "drivers/power/supply/ufcs/sc8547a_ufcs.h": "8dce196d1e3d0a889e02d40389974eab73cb50129f9468167e4c87e6027ee6f7",
+    "drivers/power/supply/ufcs/ufcs_core.c": "b322a151f94ced91f6f2dcc0988a56843776369ee911000933b6117781a2900c",
+    "drivers/power/supply/ufcs/ufcs_debug.c": "1355074e8be0d27e9adea2f70911462ae066240c1a2501b87c92e35a371d1c4d",
+    "drivers/power/supply/ufcs/ufcs_event.c": "c94ce1c7f6e8465f63f4e981f6ccc4cb70cfffb2cbbee9785c7d8d50d1f07ab5",
+    "drivers/power/supply/ufcs/ufcs_event_ctrl.c": "998973aec143da7fa61201a28b933a32209f7cfff4a053c4566af109cbc75e6e",
+    "drivers/power/supply/ufcs/ufcs_event_data.c": "4abfe32415967a413abf8d5b7793f7793b4bb55853bbca46a72bc2410414b807",
+    "drivers/power/supply/ufcs/ufcs_event_vendor.c": "8bbe2c3838f01e6931c6ec05d5a9aeecdaf4f0e6bf74a9d474c2c53b82cf444e",
+    "drivers/power/supply/ufcs/ufcs_intf.c": "747d6d32f44325d4266b89c055e138313e20d195c7fd3a49c0ba56d3523c3590",
+    "drivers/power/supply/ufcs/ufcs_notify.c": "d13f9eff8eea0dd87390b84c43b5ea5798448645890aba03c7e972690b1044c1",
+    "drivers/power/supply/ufcs/ufcs_pe_cable.c": "19421457e7dbc2b04ae8bc38ef28bff70437a5a6a696c17bd5b0af7dfbf53fca",
+    "drivers/power/supply/ufcs/ufcs_pe_test.c": "75b0b8d5513c1939c20fbcf293ae676f0b4872a253f3b724e2c7a0f4a3b8af69",
+    "drivers/power/supply/ufcs/ufcs_pe_vendor.c": "9b5fc6b93ccbc127a31043ec79cdb8e85c33c6fc647f658c78df7725df0976e4",
+    "drivers/power/supply/ufcs/ufcs_policy_engine.c": "26e42665cfb0f098b267d95c60a651bded5a676d86941d654e281885a9e0342c",
+    "drivers/power/supply/ufcs/ufcs_sha256.c": "4c187f8cab7846e7332617eb9fae35222e407325eac2ea7d357253ec157ef8e4",
+    "drivers/power/supply/ufcs/ufcs_test.c": "139c2d084e1ef7193574adf6f070673bec9da93695d8283c77035557d0cdee6e",
+    "drivers/power/supply/ufcs/ufcs_timer.c": "cda002ab00fc3fc3650db558f80ff527e9641ad1206fb548caa4092fad357c4d",
     "drivers/remoteproc/qcom_q6v5_pas.c": "d89feeca7924a62043996c9a6ecfb0b7dc29d6508631b90c410cf54355e979fb",
     "drivers/rpmsg/qcom_glink_native.c": "a3532b952fac1b24081d5e59cdacf31117779bc829309c0943a9d6c8f2ee5511",
     "drivers/soc/qcom/Kconfig": "812b698531b21b956625d53c30b1b67e98f024fd804c7022bbcf24424f16d485",
@@ -415,13 +771,14 @@
     "drivers/soc/qcom/abl_root_identity_test.c": "4fcc72a3a6064f7e0820002ee1cdb9fcf4e1abdb27116494838022caa7fdfb2f",
     "drivers/soc/qcom/apr.c": "01489862d78ab48339dd1d29389f9fb63820802fecb84be98372d5385e5a4312",
     "drivers/soc/qcom/llcc-qcom.c": "d35f2cc65fd0e3b3effe350d751f386e06a055c0e68e4fdb3094a1724adf2702",
-    "drivers/soc/qcom/pmic_glink.c": "e7f0cc7f3e95647db6d9031b0c976d4662b61e16664deb51d04e6c94f5029a25",
+    "drivers/soc/qcom/pmic_glink.c": "6cbaf6fa7a3bbb707e82fc52bcbc0e7a181ff693afa4875ce6c05d27a4ba8f17",
     "drivers/soc/qcom/pmic_glink_altmode.c": "097153f9419d6dbc092c4df9eef8740a4331aadf3cc49c9d4c30de1234757e01",
     "drivers/soc/qcom/pmic_glink_altmode_test.c": "685e418dd696b8764c54929ed0cd2f5fa2e918e269e42fd98be717d7d0540636",
     "drivers/soc/qcom/qcom_pd_mapper.c": "b7aeb004a310f2faaf6decb7f1e94617d8f0ed66c0230c17a67c54ec70982769",
     "drivers/soc/qcom/ubwc_config.c": "793fd6017fc900173752bda9a4472ed9c5229949694759e71783ba744c5a9c6c",
     "drivers/soundwire/qcom.c": "f4652d688838ce0b923807a849d3eb0d26d16d2518bb84d325f073f38f6f2537",
     "drivers/spi/spi-geni-qcom.c": "8a7f261f54ed411f2d2a309e1385116505b16bc7a1bc89a183b6e584b38d663b",
+    "drivers/thermal/qcom/qcom-spmi-adc-tm5-gen3.c": "32cd7c231b168c15f28fc59bc8027bc01026cc1d9667c35efd30b6b1808c9916",
     "drivers/thermal/qcom/tsens.c": "25a6b2d7789a721c9a8d4c76e35ef9679fb59ecdaf385fe6f12407a4c3d04c39",
     "drivers/tty/serial/qcom_geni_serial.c": "e4aad5f362deeaf2686a93704f4f2565b2a1a9e4f8c764fad58296de3dabc0d0",
     "drivers/ufs/host/ufs-qcom.c": "726285b3ceb4678e29797e0c8992f6b5e8876c692da65221a040ffa1bc7e92f1",
@@ -434,7 +791,7 @@
     "drivers/usb/typec/ucsi/ucsi_glink.c": "e2a9e83fc28fe1c646f4e343b53bb425cdad6a36d6f41f7014ebd1b31d4cce49",
     "drivers/usb/typec/ucsi/ucsi_glink_test.c": "64359e5d7a265ade3127eff1bb657114e5b69502ce4aa7f5fcd2920bebee8c5e",
     "drivers/video/backlight/Kconfig": "dbe46900cb1eefc611f508a6f0c6625ace41af4379a1aac5594f1954bfdd8891",
-    "drivers/video/backlight/ktz8866.c": "21c011aa619d25b33d801fd882c02cb12eaacc330e37dfbcf86a744530381afe",
+    "drivers/video/backlight/ktz8866.c": "5ada2d0d2b9325d3d132c748a8f68e71b38411941a45db97dbebacc1d5b1efb9",
     "drivers/virt/Kconfig": "037448987500d9f5b9711eb924c3535904cdeb7590f2b9e0734817f7c644e261",
     "drivers/virt/Makefile": "453d44d74ff9e32b0cbb621b669b2d890a9563bac96399bfe51a424cd0590e52",
     "drivers/virt/gunyah/Kconfig": "f0f5b3078f4a2a6f28fbffe9b2cba223f0b4b6c06969e0fa3822667e466e8275",
@@ -457,16 +814,19 @@
     "drivers/virt/gunyah/vm_mgr_mem.c": "9a5672ed45757cc4973dccbc45042cee4b435665dc512128faf99675c6b5d7da",
     "include/linux/gunyah.h": "c9eafc2fb22e13ac363d8c7f02b67678a12c86c7a0060a01b75406ba9e0bc279",
     "include/linux/gunyah_qtvm.h": "dda3786113c730cbf0fd01088b8ffd450471efc11c33a61807b5b6ac2b6df9ec",
+    "include/linux/iio/adc/qcom-adc5-gen3-common.h": "80b9b1e0423843886e44235125ef4b579f1a174fed196d626341d648a8fd52c9",
+    "include/linux/iio/adc/qcom-vadc-common.h": "c024936be586bdf8fe7f82ced63327fbb031a41cd39892fcf56a74424105e723",
     "include/linux/phy/phy.h": "76107865067aa7c8221ca31ba603d41fcd46f7daa970aebf94ca308b124c5358",
-    "include/linux/soc/qcom/pmic_glink.h": "00c261c0e756320f24a18b9a8497de8b858f2877205fc15a4af3fba867ea4942",
+    "include/linux/soc/qcom/pmic_glink.h": "9f96b41e98f9a16e36d607479073dbf47392d581da9b56095d61072e13d1ce61",
     "include/linux/usb/wcd939x-usbss.h": "5d528b628504dd701b810ad713bacd1b9d38dedd847a589091e4bd4e48eb55f6",
     "include/uapi/linux/gunyah.h": "58e76eef91f6a5afc507293970c01f41f7ad2aea52562be6bd735dd6b0c3656c",
     "sound/soc/codecs/aw88261.c": "3c90bcb31cf788d4762acb0177099f101cd469c33690e03641bb5428e416cf95",
-    "sound/soc/codecs/lpass-rx-macro.c": "ab0fed0c0a2e2eb1812c8eca3aec8844ceeb7048a96f3b39aaf78c465752cc3c",
+    "sound/soc/codecs/lpass-rx-macro.c": "7e5d6beaa4ff7f6c31a98cd5b7b9c9a68bdd0cfcf1fd5c98dab496cab933aa1b",
     "sound/soc/codecs/lpass-tx-macro.c": "3acf619fa81e02ee1f7406fe06b767efa2e4f5bc10aad018541d47d140ccc750",
-    "sound/soc/codecs/lpass-va-macro.c": "2c65eed32fec466414c4d62821669876ecc53c6b65b4d39a3aa2f319e37aa975",
-    "sound/soc/codecs/lpass-wsa-macro.c": "aafb2a55858d8a4a044349b128aacba75b8bc406a30ede59fbff2988350c4f4f",
+    "sound/soc/codecs/lpass-va-macro.c": "318eb513a2774e6164948774e2cb87d120c6806cd56b323bdb071cc1b1e76813",
+    "sound/soc/codecs/lpass-wsa-macro.c": "5be4602b8ee1b1dc38ad33e1f559c3db67490bfe66781d72c5fd9bfd001f158b",
     "sound/soc/codecs/wcd-common.c": "e848276b0af7dd32691289736fbbf6cd32c2a16a762718d2e68409b992b64937",
+    "sound/soc/codecs/wcd-mbhc-v2.c": "1edbefdb986f73d979b528c974cd54f3f5e850aafae0a72df37a72aaa779b7c1",
     "sound/soc/codecs/wcd939x.c": "ff0db1d51389d6b926b9ef92733da913ff230e59ae671af06d62c52e0365d119",
     "sound/soc/codecs/wcd939x.h": "6e05b5908a9770bbc92260121f8fb4d744a570b35d0c9a9cdaba192a447b1033",
     "sound/soc/qcom/Kconfig": "23fe3ca4bc96b22a39ad8908f57ae50c8bab627e187fe4b388eb23feeeac0a58",
@@ -490,8 +850,7 @@
     "tools/testing/selftests/tty/qcom-geni-lifecycle-test.py": "ce33924ca9916a4b0dc2ba018dc93c32bda127472461d72f891fe9ec6b96da00"
   },
   "validation": {
-    "full_build": "passed; provenance/full-native-system-p5-validation.json",
-    "hardware": "passed; provenance/native-p5-device-acceptance.json",
-    "installation": "passed; provenance/daily-p5-installation.json"
+    "hardware": "pending",
+    "full_build": "pending"
   }
 }

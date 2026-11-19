@@ -2,6 +2,28 @@
 
 # OPD2413 原厂蓝牙方案
 
+## BLE 鼠标发现兼容（2026-11-15）
+
+`modules/bluetooth.nix` 默认声明
+`hardware.bluetooth.settings.General.FilterDiscoverable = lib.mkDefault false`，
+让 BlueZ 在普通扫描时也枚举缺少 GAP General/Limited Discoverable 标志的 BLE 设备。
+此配置适用于 ATK X1 SE 等可能省略标志的鼠标；配对和信任仍由用户在 GNOME
+蓝牙页面确认，不将设备地址或配对密钥写入公共配置。
+
+已在 BlueZ 5.87 的平板上完成完整系统构建、`nixos-rebuild switch` 和蓝牙服务重启。
+`/etc/bluetooth/main.conf` 读回 `FilterDiscoverable=false`；蓝牙服务 active，
+配置解析无报错，既有蓝牙键盘重新连接，系统失败服务为 0。仓库 flake 检查通过。
+用户将鼠标切入蓝牙配对模式后，普通双模扫描已发现 `ATK X1 SE Nearlink`，
+识别为 `input-mouse`，提供 HID over GATT 服务（UUID 0x1812）。
+实际 `AdvertisingFlags` 为 `0x04`，仅声明 BR/EDR Not Supported，确实缺少
+General/Limited Discoverable 位，确认了该过滤兼容设置的适用原因。
+发现已验证；未执行命令行配对，用户从 GNOME 蓝牙页面确认配对。
+
+蓝牙模块默认不随 `nixos-rebuild switch` 自动重启。首次修改发现策略后执行
+`run0 systemctl restart bluetooth`，或重启系统，使守护进程读取新配置。
+
+## 历史原厂固件移植
+
 本次将 ArmadaOS successful29 的 Brahma 2.0 初始化与本机原厂固件移植到
 Linux 7.2.15，并沿用 NixOS 的工厂地址自动读取服务。候选配置为
 `pad2pro-brahma`，内核后缀为 `brahma1`；已完成原厂加载、连接与播放验收，

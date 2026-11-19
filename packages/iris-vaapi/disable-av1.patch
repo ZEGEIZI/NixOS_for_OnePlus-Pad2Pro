@@ -1,0 +1,18 @@
+Subject: [PATCH] Keep AV1 on software until the SM8750 path is qualified
+
+The Firefox SVT-AV1 sample produced CAPTURE errors and a VA surface-sync
+timeout on SM8750. Do not advertise this codec or its import path; clients
+can select their software decoder without first stalling in the driver.
+
+--- a/src/va/driver.cc
++++ b/src/va/driver.cc
+@@ -146,6 +146,9 @@
+     if (caps.output_formats.count(V4L2_PIX_FMT_AV1) && caps.nv12)
+         caps.import_formats.insert(V4L2_PIX_FMT_AV1);
+     // import-qualified-end
++    // The SM8750 AV1 path has not passed the browser playback gate.
++    caps.profiles.erase(VAProfileAV1Profile0);
++    caps.import_formats.erase(V4L2_PIX_FMT_AV1);
+     // VP9 is absent from default qualification: the session-side blocker is
+     // gone — lending one picture one buffer per completion ran clean on the
+     // target (FFmpeg 515/515, misplaced=0, framemd5 equal to the software

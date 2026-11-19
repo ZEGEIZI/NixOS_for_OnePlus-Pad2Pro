@@ -11,7 +11,7 @@ import tempfile
 source, harness = map(Path, sys.argv[1:])
 text = source.read_text()
 start = text.index("static void cps8601_fw_update_check(")
-end = text.index("\nstatic void cps8601_handle_rx_frame", start)
+end = text.index("\n}", start) + len("\n}")
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
     (root / "fw-check.inc").write_text(text[start:end])

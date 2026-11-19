@@ -1,0 +1,211 @@
+From 25e439e1e4939b2adf0ed16c68da43df9f44138b Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 12:31:42 +0800
+Subject: [PATCH] power: supply: cps8601: restore Erhai pen charger wake and
+ IRQ delivery
+
+Assert wake before the MCU supply to expose its I2C register window. Match the stock GPIO172 pull-up for the falling-edge IRQ and drain any event latched before the IRQ was registered.
+
+Transfer 16-bit register values in one I2C operation and read both bytes of the end-power-transfer reason. Preserve the factory firmware and charge protection settings.
+---
+ arch/arm64/boot/dts/qcom/sm8750-erhai.dts | 11 ++++
+ drivers/power/supply/cps8601.c            | 80 +++++++++--------------
+ 2 files changed, 42 insertions(+), 49 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+index e8d0364ac..48de06eb2 100644
+--- a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
++++ b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+@@ -1641,6 +1641,9 @@ cps8601: pen-charger@41 {
+ 		compatible = "oplus,wls-charger-cps8601";
+ 		reg = <0x41>;
+ 
++		pinctrl-0 = <&pen_charger_irq_default>;
++		pinctrl-names = "default";
++
+ 		int-gpios = <&tlmm 172 GPIO_ACTIVE_HIGH>;
+ 		sleep-gpios = <&tlmm 106 GPIO_ACTIVE_HIGH>;
+ 		scan-gpios = <&tlmm 56 GPIO_ACTIVE_HIGH>;
+@@ -2131,6 +2134,14 @@ &tlmm {
+ 	/* reserved for secure world */
+ 	gpio-reserved-ranges = <36 4>, <74 1>;
+ 
++	pen_charger_irq_default: pen-charger-irq-state {
++		pins = "gpio172";
++		function = "gpio";
++		drive-strength = <2>;
++		bias-pull-up;
++		input-enable;
++	};
++
+ 	pps_cp_irq_default: pps-cp-irq-default-state {
+ 		pins = "gpio163";
+ 		function = "gpio";
+diff --git a/drivers/power/supply/cps8601.c b/drivers/power/supply/cps8601.c
+index 672526e89..dd9b2ed73 100644
+--- a/drivers/power/supply/cps8601.c
++++ b/drivers/power/supply/cps8601.c
+@@ -41,7 +41,7 @@
+ 
+ #define CPS8601_REG_CHIP_ID		0x00	/* 2B, expect 0x8601 */
+ #define CPS8601_REG_FW_VER		0x02	/* 2B */
+-#define CPS8601_REG_IRQ_CLEAR		0x05	/* 2B, write 0xffff */
++#define CPS8601_REG_IRQ_ENABLE		0x05	/* 2B, write 0xffff */
+ #define CPS8601_REG_IRQ_STATUS		0x07	/* 2B */
+ #define CPS8601_REG_IRQ_ACK		0x09	/* 2B, write back status */
+ #define CPS8601_REG_CTRL			0x0b	/* 1B, RMW command bits */
+@@ -53,7 +53,7 @@
+ #define CPS8601_REG_FOD_TH			0x2f	/* 2B W, DT fod */
+ #define CPS8601_REG_TX_VOLTAGE		0x34	/* 2B R */
+ #define CPS8601_REG_TX_CURRENT		0x38	/* 2B R */
+-#define CPS8601_REG_CHG_STATUS		0x3e	/* 1B R */
++#define CPS8601_REG_CHG_STATUS		0x3e	/* 2B R, EPT reasons */
+ #define CPS8601_REG_Q_CALI_RES		0x13	/* 1B R, 1 = calibrated ok */
+ #define CPS8601_REG_Q_CALI_MODE		0x15	/* 1B W, 0xAA enter / 0xFF exit */
+ #define CPS8601_CALI_ENTER		0xAA
+@@ -278,15 +278,13 @@ static int cps8601_hboost_req(struct cps8601 *chip, u8 code)
+ static void cps8601_power_on(struct cps8601 *chip)
+ {
+ 	/*
+-	 * Vendor order (init_work_func +0x264): raise the boost rail and
+-	 * the scan line first, then sw_en, settle 2.5 s for the MCU. The
+-	 * stock DT calls this line "off_state" but the vendor drives it
+-	 * high for the whole session: it is the boost enable that powers
+-	 * the MCU, not an off request.
++	 * Keep charging inhibited during setup. Assert wake before enabling
++	 * the MCU supply so the firmware exposes its I2C register window.
+ 	 */
+ 	gpiod_set_value(chip->off_state_gpiod, 1);
+ 	gpiod_set_value(chip->scan_gpiod, 1);
+-	gpiod_set_value(chip->sleep_gpiod, 0);
++	gpiod_set_value(chip->sleep_gpiod, 1);
++	msleep(20);
+ 	gpiod_set_value(chip->sw_en_gpiod, 1);
+ 	msleep(2500);
+ }
+@@ -353,7 +351,7 @@ static int cps8601_q_cali(struct cps8601 *chip)
+ 		return ret;
+ 	msleep(50);
+ 	/* vendor writes INT_EN = 0xffff in every irq pass */
+-	cps8601_write16(chip, CPS8601_REG_IRQ_CLEAR, 0xffff);
++	cps8601_write16(chip, CPS8601_REG_IRQ_ENABLE, 0xffff);
+ 	cps8601_write16(chip, 0x05, 0xffff);
+ 
+ 	ret = regmap_write(chip->regmap, CPS8601_REG_Q_CALI_MODE,
+@@ -397,31 +395,20 @@ static int cps8601_q_cali(struct cps8601 *chip)
+ 
+ static int cps8601_read16(struct cps8601 *chip, u16 reg, u16 *val)
+ {
+-	unsigned int v;
++	__le16 raw;
+ 	int ret;
+ 
+-	/* multi-byte values are little-endian: the first register carries
+-	 * the low byte (chip id bytes read back 01,86 -> 0x8601) */
+-	ret = regmap_read(chip->regmap, reg, &v);
+-	if (ret)
+-		return ret;
+-	*val = v;
+-	ret = regmap_read(chip->regmap, reg + 1, &v);
+-	if (ret)
+-		return ret;
+-	*val |= v << 8;
+-	return 0;
++	ret = regmap_bulk_read(chip->regmap, reg, &raw, sizeof(raw));
++	if (!ret)
++		*val = le16_to_cpu(raw);
++	return ret;
+ }
+ 
+ static int cps8601_write16(struct cps8601 *chip, u16 reg, u16 val)
+ {
+-	int ret;
++	__le16 raw = cpu_to_le16(val);
+ 
+-	/* little-endian like the reads */
+-	ret = regmap_write(chip->regmap, reg, val & 0xff);
+-	if (ret)
+-		return ret;
+-	return regmap_write(chip->regmap, reg + 1, val >> 8);
++	return regmap_bulk_write(chip->regmap, reg, &raw, sizeof(raw));
+ }
+ 
+ /* ---- firmware SRAM update (vendor fw_update_work_func) ---- */
+@@ -862,15 +849,13 @@ static irqreturn_t cps8601_irq(int irq, void *data)
+ 	u16 active;
+ 
+ 
+-	/* vendor order: clear pending first, then read status, then ack by
+-	 * writing the status back (cps_comm_reg e3/e4/e5) */
+-	cps8601_write16(chip, CPS8601_REG_IRQ_CLEAR, 0xffff);
+-	if (cps8601_read16(chip, CPS8601_REG_IRQ_STATUS, &status)) {
+-
++	/* The vendor enables the sources, snapshots the flags and clears them. */
++	if (cps8601_write16(chip, CPS8601_REG_IRQ_ENABLE, 0xffff) ||
++	    cps8601_read16(chip, CPS8601_REG_IRQ_STATUS, &status))
+ 		return IRQ_HANDLED;
+-	}
+ 	active = status;
+-	cps8601_write16(chip, CPS8601_REG_IRQ_ACK, status);
++	if (status && cps8601_write16(chip, CPS8601_REG_IRQ_ACK, status))
++		return IRQ_HANDLED;
+ 
+ 	if (active & CPS8601_IRQ_RX_ATTACH) {
+ 		u16 width = 0;
+@@ -890,13 +875,11 @@ static irqreturn_t cps8601_irq(int irq, void *data)
+ 	if (active & CPS8601_IRQ_RX_FRAME)
+ 		cps8601_handle_rx_frame(chip);
+ 	if (active & CPS8601_IRQ_CHG_STATE) {
+-		unsigned int chg = 0;
++		u16 chg;
+ 
+-		regmap_read(chip->regmap, CPS8601_REG_CHG_STATUS, &chg);
+-		if (chg & CPS8601_CHG_ERR_MASK)
+-			dev_warn(chip->dev, "charge anomaly, status %#x\n", chg);
+-		else
+-			dev_dbg(chip->dev, "charge status %#x\n", chg);
++		if (!cps8601_read16(chip, CPS8601_REG_CHG_STATUS, &chg) &&
++		    (chg & CPS8601_CHG_ERR_MASK))
++			dev_warn_ratelimited(chip->dev, "charge anomaly, status %#x\n", chg);
+ 	}
+ 	if (active & CPS8601_IRQ_PING_OK)
+ 		dev_dbg(chip->dev, "ping detected\n");
+@@ -971,9 +954,6 @@ static void cps8601_init_work(struct work_struct *work)
+ 	if (ret)
+ 		goto out_nopm;
+ 
+-	/* vendor raises the sleep line only after the thresholds are set */
+-	gpiod_set_value(chip->sleep_gpiod, 1);
+-
+ 	chip->ready = true;
+ 	dev_info(chip->dev, "CPS8601 ready, fw 0x%04x\n", chip->fw_version);
+ 
+@@ -995,11 +975,8 @@ static void cps8601_init_work(struct work_struct *work)
+ 		goto out_nopm;
+ 
+ 	/*
+-	 * Vendor post-ready sequence (init_work_func +0x5a4..): drop the
+-	 * boost line, then after 1.25 s release sw_en and pulse scan 0->1
+-	 * with a 50 ms gap. Holding sw_en/boost high (as the bring-up v1
+-	 * did) leaves the MCU in its setup state; only this handoff lets it
+-	 * enter ping/TX mode.
++	 * Allow charging, then re-arm scanning after the MCU settles.
++	 * Keep sw_en asserted to maintain the MCU supply.
+ 	 */
+ 	gpiod_set_value(chip->off_state_gpiod, 0);
+ 	schedule_delayed_work(&chip->ready_work, msecs_to_jiffies(1250));
+@@ -1034,8 +1011,13 @@ static void cps8601_ready_work(struct work_struct *work)
+ 	gpiod_set_value(chip->scan_gpiod, 0);
+ 	msleep(50);
+ 	gpiod_set_value(chip->scan_gpiod, 1);
++	/* A pending event can predate registration of the falling-edge IRQ. */
++	if (chip->irq_armed && gpiod_get_raw_value(chip->int_gpiod) == 0) {
++		disable_irq(chip->irq);
++		cps8601_irq(chip->irq, chip);
++		enable_irq(chip->irq);
++	}
+ 	dev_info(chip->dev, "scan armed (vendor post-ready state)\n");
+-
+ }
+ 
+ static ssize_t present_show(struct device *dev,

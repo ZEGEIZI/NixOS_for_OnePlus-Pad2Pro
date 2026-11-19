@@ -1,0 +1,52 @@
+From 21a8aa69b8c68e995f41d7307d70d023171bdf3d Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Sat, 14 Nov 2026 00:47:25 +0800
+Subject: [PATCH] irqchip/qcom-pdc: read IRQ_PARAM only for secondary GPIO
+ handling
+
+Only secondary mode uses the SPI/GPIO boundary. Avoid the additional MMIO access for pass-through controllers and short-circuit the secondary-mode test before consulting that boundary. Retain the new upstream descriptor and secondary-mode support.
+---
+ drivers/irqchip/qcom-pdc.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/irqchip/qcom-pdc.c b/drivers/irqchip/qcom-pdc.c
+index ce6d80c7f..6475f735a 100644
+--- a/drivers/irqchip/qcom-pdc.c
++++ b/drivers/irqchip/qcom-pdc.c
+@@ -641,8 +641,8 @@ static int pdc_setup_pin_mapping(struct device *dev)
+ 			return ret;
+ 
+ 		for (int i = 0; i < pdc->region[n].cnt; i++) {
+-			if (pdc_pin_is_gpio(i + pdc->region[n].pin_base) &&
+-			    pdc->mode == PDC_SECONDARY_MODE)
++			if (pdc->mode == PDC_SECONDARY_MODE &&
++			    pdc_pin_is_gpio(i + pdc->region[n].pin_base))
+ 				pdc->clear_gpio(i + pdc->region[n].pin_base);
+ 
+ 			pdc->enable_intr(i + pdc->region[n].pin_base, false);
+@@ -659,7 +659,6 @@ static int qcom_pdc_probe(struct platform_device *pdev, struct device_node *pare
+ 	struct device *dev = &pdev->dev;
+ 	resource_size_t res_size;
+ 	struct resource res;
+-	u32 irq_param;
+ 	int ret;
+ 
+ 	/* compat with old sm8150 DT which had very small region for PDC */
+@@ -727,8 +726,15 @@ static int qcom_pdc_probe(struct platform_device *pdev, struct device_node *pare
+ 		}
+ 	}
+ 
+-	irq_param = pdc_reg_read(pdc->regs->irq_param_reg, 0);
+-	pdc->num_spis = FIELD_GET(GENMASK(7, 0), irq_param);
++	/* Only secondary mode needs to distinguish direct SPIs from GPIOs.
++	 * Leave the otherwise unused IRQ_PARAM register untouched when firmware
++	 * provides pass-through routing.
++	 */
++	if (pdc->mode == PDC_SECONDARY_MODE) {
++		u32 irq_param = pdc_reg_read(pdc->regs->irq_param_reg, 0);
++
++		pdc->num_spis = FIELD_GET(GENMASK(7, 0), irq_param);
++	}
+ 
+ 	parent_domain = irq_find_host(parent);
+ 	if (!parent_domain) {

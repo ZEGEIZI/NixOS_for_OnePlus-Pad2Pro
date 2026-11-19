@@ -1,4 +1,4 @@
-From f98215cf4873db15cdb0668cce5c4e050835824e Mon Sep 17 00:00:00 2001
+From d14155eb886d75d52a752076de22638d7eb69bfa Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:35 +0800
 Subject: [PATCH] erhai: port device-tree to Linux 7.3

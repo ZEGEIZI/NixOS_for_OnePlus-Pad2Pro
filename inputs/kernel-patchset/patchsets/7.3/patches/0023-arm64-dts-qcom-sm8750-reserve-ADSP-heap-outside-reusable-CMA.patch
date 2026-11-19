@@ -1,4 +1,4 @@
-From 4a4041f5921c6cbe29946bf36a1035b601ff3400 Mon Sep 17 00:00:00 2001
+From 43d3a6f001054224349ff18f23b4eba8421d19ee Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Sat, 14 Nov 2026 06:13:12 +0800
 Subject: [PATCH] arm64: dts: qcom: sm8750: reserve ADSP heap outside reusable

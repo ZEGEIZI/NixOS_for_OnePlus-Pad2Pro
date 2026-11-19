@@ -2,6 +2,7 @@
 {
   nixpkgs.overlays = [
     (_final: prev: {
+      # Only change the launcher flags; keep nixpkgs' prebuilt browser intact.
       chromium = prev.chromium.override {
         # PQ client preference in Mutter keeps SDR white correctly scaled;
         # retain native Wayland color management and the HDR Canvas APIs.
@@ -14,6 +15,7 @@
             "CanvasToneMapping"
             "CanvasGlobalHDRHeadroom"
             "CSSVideoDynamicRangeMediaQueries"
+            "AcceleratedVideoDecoder"
           ])
         ];
       };

@@ -1,4 +1,4 @@
-From 9a8a4ab32c023cf2fc4c6df2f113f0e23f7f9165 Mon Sep 17 00:00:00 2001
+From 954491471232ae3a5774089667ffba3d9029d68c Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:47:41 +0800
 Subject: [PATCH] arm64: erhai: keep rfkill built in with the Bluetooth stack

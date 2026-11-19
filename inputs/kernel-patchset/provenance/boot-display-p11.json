@@ -1,0 +1,13 @@
+{
+  "base_release": "p10",
+  "patch_origin": "Uncommitted diff against the strictly replayed p10 sources",
+  "affected_client": "qcom,sm8750-mdss on oneplus,opd2413 with a framebuffer memory-region",
+  "cause": "The first direct-map attempt precedes ARM SMMU context initialization",
+  "change": "Initialize the display context and page tables before IOMMU core installs its direct mappings and attaches the device",
+  "p10_hardware_observation": {
+    "boot": "2026-11-19 normal reboot",
+    "requested_direct_mapping_warnings": 1,
+    "display_sid_0x800_context_faults": 0,
+    "dsifb_initialized": true
+  }
+}

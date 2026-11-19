@@ -1,4 +1,4 @@
-From 1688d0bd94c910f39959f941dbd1365c848460f9 Mon Sep 17 00:00:00 2001
+From 1a6931bc00f7bbf1b4d1162907384573d74a1416 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:35 +0800
 Subject: [PATCH] erhai: port gunyah to Linux 7.3

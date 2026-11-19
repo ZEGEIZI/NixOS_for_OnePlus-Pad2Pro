@@ -1,0 +1,128 @@
+From 7ed8d7a2fa4034f7354ee18db467dcb3db624f09 Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:32:46 +0800
+Subject: [PATCH] Input: nt36536: distinguish lifecycle events from touch
+ failures
+
+Use informational priority for normal firmware load and panel events.
+A panel unprepare cancels pending follower resume and keeps IRQ and
+ESD checking off. The next prepare can restart it. Report cancellation
+as such while keeping failed device operations at error priority.
+---
+ drivers/input/touchscreen/nt36536/nt36536.c | 27 ++++++++++++---------
+ drivers/input/touchscreen/nt36536/nt36536.h |  5 ----
+ 2 files changed, 15 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/input/touchscreen/nt36536/nt36536.c b/drivers/input/touchscreen/nt36536/nt36536.c
+index aec5437bc..1f81ee93f 100644
+--- a/drivers/input/touchscreen/nt36536/nt36536.c
++++ b/drivers/input/touchscreen/nt36536/nt36536.c
+@@ -2008,7 +2008,7 @@ static int32_t nvt_ts_resume(struct device *dev)
+ 	}
+ 	if (ts->is_panel_follower && !nvt_panel_resume_allowed(ts)) {
+ 		NVT_LOG("panel is not ready for touch resume\n");
+-		return -EHOSTDOWN;
++		return 0;
+ 	}
+ 
+ 	/* Keep every failure path quiescent before taking the SPI mutex. */
+@@ -2026,8 +2026,8 @@ static int32_t nvt_ts_resume(struct device *dev)
+ 
+ 	mutex_lock(&ts->lock);
+ 	if (ts->is_panel_follower && !nvt_panel_is_on(ts)) {
+-		ret = -EHOSTDOWN;
+-		goto resume_fail;
++		ret = 0;
++		goto resume_inactive;
+ 	}
+ 
+ 	ts->resume_count++;
+@@ -2052,7 +2052,7 @@ static int32_t nvt_ts_resume(struct device *dev)
+ 		if (ret) {
+ 			NVT_ERR("chip is not identified: %d\n", ret);
+ 			ret = -ENODEV;
+-			goto resume_fail;
++			goto resume_inactive;
+ 		}
+ 		ts->chip_identified = true;
+ 	}
+@@ -2068,7 +2068,7 @@ static int32_t nvt_ts_resume(struct device *dev)
+ 		ret = nvt_update_firmware(ts->fw_name);
+ 	if (ret) {
+ 		NVT_ERR("download firmware failed: %d\n", ret);
+-		goto resume_fail;
++		goto resume_inactive;
+ 	}
+ 
+ 	/*
+@@ -2079,22 +2079,22 @@ static int32_t nvt_ts_resume(struct device *dev)
+ 	 */
+ 
+ 	if (ts->is_panel_follower && !nvt_panel_is_on(ts)) {
+-		ret = -EHOSTDOWN;
+-		goto resume_fail;
++		ret = 0;
++		goto resume_inactive;
+ 	}
+ 
+ 	ret = __nvt_set_pen_state(false);
+ 	if (ret) {
+ 		NVT_ERR("failed to enable pen mailbox: %d\n", ret);
+-		goto resume_fail;
++		goto resume_inactive;
+ 	}
+ 
+ 	/* a pen scan failure is logged and does not stop touch */
+ 	nvt_restore_pen_scan();
+ 
+ 	if (ts->is_panel_follower && !nvt_commit_follower_awake(ts)) {
+-		ret = -EHOSTDOWN;
+-		goto resume_fail;
++		ret = 0;
++		goto resume_inactive;
+ 	}
+ 	if (!ts->is_panel_follower)
+ 		nvt_set_touch_awake_state(ts, true);
+@@ -2126,13 +2126,16 @@ static int32_t nvt_ts_resume(struct device *dev)
+ 
+ 	return 0;
+ 
+-resume_fail:
++resume_inactive:
+ 	nvt_set_touch_awake_state(ts, false);
+ 	ts->ic_state = NVT_IC_SUSPEND_OUT;
+ 	mutex_unlock(&ts->lock);
+ 	if (hold_wake)
+ 		pm_relax(dev);
+-	NVT_ERR("resume failed closed: %d (IRQ off, ESD off)\n", ret);
++	if (ret)
++		NVT_ERR("resume failed closed: %d (IRQ off, ESD off)\n", ret);
++	else
++		NVT_LOG("resume canceled when panel was unprepared\n");
+ 	return ret;
+ }
+ 
+diff --git a/drivers/input/touchscreen/nt36536/nt36536.h b/drivers/input/touchscreen/nt36536/nt36536.h
+index 404a0a175..56f73f28a 100644
+--- a/drivers/input/touchscreen/nt36536/nt36536.h
++++ b/drivers/input/touchscreen/nt36536/nt36536.h
+@@ -30,7 +30,6 @@
+ 
+ #include "nt36536_mem_map.h"
+ 
+-#define NVT_DEBUG 1
+ 
+ //---INT trigger mode, used when the DT irq specifier carries no type---
+ #define INT_TRIGGER_TYPE IRQ_TYPE_EDGE_FALLING
+@@ -39,11 +38,7 @@
+ //---SPI driver info.---
+ #define NVT_SPI_NAME "nt36536"
+ 
+-#if NVT_DEBUG
+-#define NVT_LOG(fmt, args...)    pr_err("[%s] %s %d: " fmt, NVT_SPI_NAME, __func__, __LINE__, ##args)
+-#else
+ #define NVT_LOG(fmt, args...)    pr_info("[%s] %s %d: " fmt, NVT_SPI_NAME, __func__, __LINE__, ##args)
+-#endif
+ #define NVT_ERR(fmt, args...)    pr_err("[%s] %s %d: " fmt, NVT_SPI_NAME, __func__, __LINE__, ##args)
+ #define NVT_ERR_ONCE(fmt, args...) \
+ 	pr_err_once("[%s] %s %d: " fmt, NVT_SPI_NAME, \

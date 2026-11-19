@@ -2,14 +2,20 @@
 
 OnePlus Pad 2 Pro（OPD2413 / Erhai / SM8750）的发行版无关内核补丁集。
 只维护向前升级的正式内核系列，不提供旧版本兼容分支。当前迁移目标为 Linux 7.3，
-当前官方源码为 7.3.4（从 7.3.3 前移）；构建、实机验收和默认切换状态见 `provenance/STATUS.md`。
+当前官方源码为 7.3.4（从 7.3.3 前移）。p7 移植笔扫描默认启用，
+来源与验证边界见 `provenance/pen-scan-p7-port.json`；p6 集成充电功能，移植参考项目 0.10.2 的
+SUPERVOOC／UFCS／PPS、固定 PD／QC 和接电唤醒策略；构建与实机验收状态见
+`provenance/charging-0.10.2-port.json`。p6 完整交叉内核与原生 ARM64 用户空间构建、
+VCBAOBCH 分项实测见 `provenance/charging-p6-device-acceptance.json`，该记录明确未测试协议。p5 的历史日常验收见 `provenance/STATUS.md`。
 
 ## 来源与维护入口
 
 - 原设备树：`ZEGEIZI/linux-sm8750-erhai` 的 `efc39b9d972665c270adc4e4ec2c46685792ffda`。
 - 7.2.15 仅用于差异提取，完整重建的 Git tree 相等证明见 `provenance/extraction.json`。
 - 当前修改的唯一维护来源是 Git 分支 `patchset-7.3`；本机工作树位于
-  `/zpool/storage_01/build/LinuxForOneplus/kernel-patchset-work/linux-7.3`。
+  `/zpool/storage_01/build/LinuxForOneplus/kernel-patchset-work/linux-7.3-charging-source`。
+  原链接工作树的 Git 元数据失效后已从官方 tag 和已校验 p5 补丁重建；原始补丁和
+  提交映射见 `provenance/source-reconstruction-20261116.json`。
   不重写原 `erhai-personal` 或已发布历史；未推送本次分支。
 - `patchsets/7.3/patches` 与 `configs/` 均由该分支导出，禁止手工修改。
   初始提交按子系统聚合，保留源码版权／许可证；迁移自动提交不冒充原作者。
@@ -54,7 +60,7 @@ while IFS= read -r patch; do git am "$PATCHSET/patchsets/7.3/$patch" || break; d
 
 ```sh
 python3 tools/export.py --repo /path/kernel --base v7.3.4 \
-  --tarball /path/linux-7.3.4.tar.xz --version 7.3.4 --release p5
+  --tarball /path/linux-7.3.4.tar.xz --version 7.3.4 --release p6
 python3 tools/verify.py --tarball /path/linux-7.3.4.tar.xz --destination /new/replay
 ```
 

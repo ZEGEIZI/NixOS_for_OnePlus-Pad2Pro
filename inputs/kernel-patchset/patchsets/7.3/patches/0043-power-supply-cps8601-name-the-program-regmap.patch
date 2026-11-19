@@ -1,0 +1,21 @@
+From 92d1a7a4957a116fe1c08016bc4c581691dd990b Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:25:22 +0800
+Subject: [PATCH] power supply cps8601 name the program regmap
+
+---
+ drivers/power/supply/cps8601.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/power/supply/cps8601.c b/drivers/power/supply/cps8601.c
+index b57e7d85c..6ca304ffc 100644
+--- a/drivers/power/supply/cps8601.c
++++ b/drivers/power/supply/cps8601.c
+@@ -1200,6 +1200,7 @@ static const struct regmap_config cps8601_regmap_cfg = {
+ 
+ /* program-mode space (fw update): 32-bit register addresses on the wire */
+ static const struct regmap_config cps8601_progmap_cfg = {
++	.name		= "program",
+ 	.reg_bits	= 32,
+ 	.val_bits	= 8,
+ 	.max_register	= 0xffffffff,

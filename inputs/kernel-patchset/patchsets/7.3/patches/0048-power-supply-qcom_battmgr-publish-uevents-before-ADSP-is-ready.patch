@@ -1,0 +1,91 @@
+From b786f71cbad01573e0e44294bf05989534775693 Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:27:14 +0800
+Subject: [PATCH] power: supply: qcom_battmgr: publish uevents before ADSP is
+ ready
+
+During coldplug the firmware-backed power supply properties have no
+data yet. Report ENODATA so the power_supply core can omit them and
+still send the uevent. Send a refresh after service-up. Keep the
+errors from actual firmware requests.
+---
+ drivers/power/supply/qcom_battmgr.c | 29 +++++++++++++++++++----------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/power/supply/qcom_battmgr.c b/drivers/power/supply/qcom_battmgr.c
+index d39eebd1d..2b6100722 100644
+--- a/drivers/power/supply/qcom_battmgr.c
++++ b/drivers/power/supply/qcom_battmgr.c
+@@ -905,8 +905,8 @@ static int qcom_battmgr_bat_get_property(struct power_supply *psy,
+ 		return 0;
+ 	}
+ 
+-	if (!battmgr->service_up)
+-		return -EAGAIN;
++	if (!READ_ONCE(battmgr->service_up))
++		return -ENODATA;
+ 
+ 	if (qcom_battmgr_charge_ctrl_local(battmgr, psp))
+ 		ret = 0;
+@@ -3152,8 +3152,8 @@ static int qcom_battmgr_ac_get_property(struct power_supply *psy,
+ 	struct qcom_battmgr *battmgr = power_supply_get_drvdata(psy);
+ 	int ret;
+ 
+-	if (!battmgr->service_up)
+-		return -EAGAIN;
++	if (!READ_ONCE(battmgr->service_up))
++		return -ENODATA;
+ 
+ 	ret = qcom_battmgr_bat_sc8280xp_update(battmgr, psp);
+ 	if (ret)
+@@ -3220,8 +3220,8 @@ static int qcom_battmgr_usb_get_property(struct power_supply *psy,
+ 	struct qcom_battmgr *battmgr = power_supply_get_drvdata(psy);
+ 	int ret;
+ 
+-	if (!battmgr->service_up)
+-		return -EAGAIN;
++	if (!READ_ONCE(battmgr->service_up))
++		return -ENODATA;
+ 
+ 	if (battmgr->variant == QCOM_BATTMGR_SC8280XP ||
+ 	    battmgr->variant == QCOM_BATTMGR_X1E80100)
+@@ -3343,8 +3343,8 @@ static int qcom_battmgr_wls_get_property(struct power_supply *psy,
+ 	struct qcom_battmgr *battmgr = power_supply_get_drvdata(psy);
+ 	int ret;
+ 
+-	if (!battmgr->service_up)
+-		return -EAGAIN;
++	if (!READ_ONCE(battmgr->service_up))
++		return -ENODATA;
+ 
+ 	if (battmgr->variant == QCOM_BATTMGR_SC8280XP ||
+ 	    battmgr->variant == QCOM_BATTMGR_X1E80100)
+@@ -4097,6 +4097,15 @@ static void qcom_battmgr_enable_worker(struct work_struct *work)
+ 	if (battmgr->quirks & QCOM_BATTMGR_QUIRK_OTG_VBUS)
+ 		qcom_battmgr_otg_init(battmgr);
+ 
++	/* Refresh properties omitted from uevents before ADSP was ready. */
++	if (READ_ONCE(battmgr->service_up)) {
++		power_supply_changed(battmgr->bat_psy);
++		if (battmgr->ac_psy)
++			power_supply_changed(battmgr->ac_psy);
++		power_supply_changed(battmgr->usb_psy);
++		power_supply_changed(battmgr->wls_psy);
++	}
++
+ 	qcom_battmgr_charge_kick(battmgr);
+ }
+ 
+@@ -4109,10 +4118,10 @@ static void qcom_battmgr_pdr_notify(void *priv, int state)
+ 		return;
+ 
+ 	if (state == SERVREG_SERVICE_STATE_UP) {
+-		battmgr->service_up = true;
++		WRITE_ONCE(battmgr->service_up, true);
+ 		schedule_work(&battmgr->enable_work);
+ 	} else {
+-		battmgr->service_up = false;
++		WRITE_ONCE(battmgr->service_up, false);
+ 		battmgr->buck_online = false;
+ 		qcom_battmgr_charge_wake_locked(battmgr, false);
+ 		/* A restarted firmware charges again by default */

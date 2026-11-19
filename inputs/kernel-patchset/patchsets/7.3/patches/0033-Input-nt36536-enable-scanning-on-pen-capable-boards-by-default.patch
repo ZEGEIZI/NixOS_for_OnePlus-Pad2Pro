@@ -1,0 +1,56 @@
+From 35d1b4458d7a3e33069aa4cbb656d4a139c45beb Mon Sep 17 00:00:00 2001
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 01:30:00 +0800
+Subject: [PATCH] Input: nt36536 - enable scanning on pen-capable boards by
+ default
+
+Co-Authored-By: gpt-6-astra <noreply@openai.com>
+---
+ Documentation/ABI/testing/sysfs-driver-input-nt36536 |  5 ++---
+ drivers/input/touchscreen/nt36536/nt36536.c          | 10 +++-------
+ 2 files changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-driver-input-nt36536 b/Documentation/ABI/testing/sysfs-driver-input-nt36536
+index 0fab09a51..ddf4048b9 100644
+--- a/Documentation/ABI/testing/sysfs-driver-input-nt36536
++++ b/Documentation/ABI/testing/sysfs-driver-input-nt36536
+@@ -5,9 +5,8 @@ Contact:	linux-input@vger.kernel.org
+ Description:
+ 		Reading returns whether the NT36536 touchscreen controller
+ 		has been asked to scan for an active pen, 0 or 1.  Writing a
+-		boolean turns pen scanning on or off.  The default is off:
+-		scanning costs power and the controller does not report the
+-		pen without it.  The setting survives the firmware reload
++		boolean turns pen scanning on or off.  Scanning is enabled
++		by default.  The setting survives the firmware reload
+ 		that follows every panel power up.
+ 
+ 		The attribute only exists when the devicetree declares
+diff --git a/drivers/input/touchscreen/nt36536/nt36536.c b/drivers/input/touchscreen/nt36536/nt36536.c
+index 93fc42a88..aec5437bc 100644
+--- a/drivers/input/touchscreen/nt36536/nt36536.c
++++ b/drivers/input/touchscreen/nt36536/nt36536.c
+@@ -724,6 +724,7 @@ static int32_t nvt_parse_dt(struct device *dev)
+ 	ts->int_trigger_type = INT_TRIGGER_TYPE;
+ 
+ 	ts->pen_support = device_property_read_bool(dev, "novatek,pen-support");
++	ts->pen_scan = ts->pen_support;
+ 	NVT_LOG("novatek,pen-support=%d\n", ts->pen_support);
+ 
+ 	SWRST_N8_ADDR = trim_id_table[0].hwinfo->hw_regs->swrst_sif_addr;
+@@ -1289,13 +1290,8 @@ static int nvt_ext_cmd(u8 sub_cmd)
+ }
+ 
+ /*
+- * The vendor stack sends the pen scan command only once a pen has connected
+- * over Bluetooth, and turns it off again when the pen goes away, so the
+- * firmware is not expected to report a pen before it.  Here the decision is
+- * left to userspace through the pen_scan attribute, off by default so the
+- * sensor does not spend power on a pen that is not there.  A downloaded
+- * firmware starts with scanning off, so the setting is restored after each
+- * download.  Called with ts->lock held.
++ * Downloaded firmware starts with scanning off. Restore the requested
++ * setting after every firmware download. Called with ts->lock held.
+  */
+ static int nvt_set_pen_scan(bool enable)
+ {

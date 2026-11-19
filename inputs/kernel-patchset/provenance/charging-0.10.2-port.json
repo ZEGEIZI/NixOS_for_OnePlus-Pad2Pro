@@ -1,0 +1,496 @@
+{
+  "date": "2026-11-16",
+  "repository": "https://github.com/yzddmr6/linux-sm8750-erhai",
+  "revision": "dc8c28c12761bcc3a9b320931d6d12476ae91192",
+  "integration_repository": "https://github.com/yzddmr6/onepluspad-2pro-mainline",
+  "integration_revision": "b2b06a3aa082d76645f199f7c0f76591f6d9b5cc",
+  "port_head": "9b519649fc7a717ac8fa51f128639116b60557bd",
+  "hardware_validation": "pending",
+  "full_build": "pending",
+  "scope": "Charging only; retain Linux 7.3, current nixpkgs toolchain, XN242 VDDIO and unrelated devices. No reference repository is a build/runtime dependency.",
+  "adaptations": [
+    "Use devm_kzalloc on 7.3 instead of the 7.4 devm_kzalloc_obj macro.",
+    "Use the existing pmk8550_adc node for SID 7 connector NTC channels.",
+    "Carry only Erhai charging additions to Kconfig/Makefile and the hardware fragment.",
+    "Import the Gen4 ADC and PMIC GLINK sleep/wakeup prerequisite patches with their original authors and trailers; adapt context around the existing client-neuter API.",
+    "Do not import Xiaomi MCA or unrelated board changes.",
+    "UFCS auth firmware is optional; an absent key keeps the reference unverified 4 A ceiling without copying device identity."
+  ],
+  "files": [
+    {
+      "path": "Documentation/devicetree/bindings/power/supply/southchip,sc8547a.yaml",
+      "imported_sha256": "b417ec4fe9d1c6e4704679b3719b1f3079ebaf5e5aacc1d2e3f792bc7cc76bdd",
+      "port_sha256": "b417ec4fe9d1c6e4704679b3719b1f3079ebaf5e5aacc1d2e3f792bc7cc76bdd",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "28e1afe32918d2cc78b0ad340e7be560b7370e8a\t2026-11-14T13:02:43+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: guard the Erhai charge pumps with both connector thermistors",
+        "45dc8ded85d5672e350060a7e7f166cad8d8972b\t2026-10-31T01:15:22+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tdt-bindings: power: supply: describe Southchip SC8547A charge pumps"
+      ]
+    },
+    {
+      "path": "arch/arm64/boot/dts/qcom/sm8750-erhai.dts",
+      "imported_sha256": "5e20373c6f27ec54b20e94fb9e4747556ab888470531e38da1755f4983c79cc0",
+      "port_sha256": "5f7b398e2beb1999e5dcb9e759d77bd12d4ab6f10b20ed98fd443c9b22219729",
+      "identical_to_reference": false,
+      "reference_recent_history": [
+        "70daa8b2a102565335e522fe082b8108f22aac44\t2026-11-14T13:03:20+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: requalify Erhai connector temperatures after detach and sleep",
+        "28e1afe32918d2cc78b0ad340e7be560b7370e8a\t2026-11-14T13:02:43+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: guard the Erhai charge pumps with both connector thermistors",
+        "344b773079ae62c0144e3cca000c7fff8e63126a\t2026-11-13T18:04:39+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tarm64: dts: qcom: describe the paired rear flash LEDs on Erhai",
+        "354650b9da9e34233b25492cb082d047c9c999a2\t2026-11-12T15:44:16+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tarm64: dts: qcom: enable CDSP on Piano and Erhai",
+        "cb389cf1f13dcbf969e84a2c357c725a1217b122\t2026-11-09T17:50:13+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tsoc: qcom: restore the OnePlus board identity after ABL overlays",
+        "44bb81e03b7c6ee886d0d5804e6bd9410134bf1c\t2026-11-09T17:39:07+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tarm64: dts: qcom: erhai: match the stock Gunyah memory reservation",
+        "30ab14d7c24d9309129b5467ffb4b81242af22e9\t2026-11-06T23:56:54+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tarm64: dts: qcom: sm8750-erhai: describe PCIe WAKE# as active low",
+        "4dc9119798dc62bf883ddd9a5f0bec5863f20116\t2026-11-06T19:12:48+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tarm64: qcom: reconcile product descriptions with 7.4 bindings"
+      ]
+    },
+    {
+      "path": "arch/arm64/configs/erhai-firstboot.config",
+      "imported_sha256": "d9a0dc3cad5c873919a192e2251faf4d114143198bb90cdf8497dcbb23b78a53",
+      "port_sha256": "dc97c2d537fddf39e5eac4148c5693037cd3d0a0738838a7410adca41089c66f",
+      "identical_to_reference": false,
+      "reference_recent_history": [
+        "344b773079ae62c0144e3cca000c7fff8e63126a\t2026-11-13T18:04:39+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tarm64: dts: qcom: describe the paired rear flash LEDs on Erhai",
+        "46c2e704dff214238bfb09b917326641429473de\t2026-11-11T22:55:49+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tarm64: configs: share UDMABUF across SM8750 virtualization hosts",
+        "cb389cf1f13dcbf969e84a2c357c725a1217b122\t2026-11-09T17:50:13+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tsoc: qcom: restore the OnePlus board identity after ABL overlays",
+        "f1d5e5e39640609624fa56ebdc347bb0a07cf7b9\t2026-11-06T18:54:25+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tarm64: dts: qcom: assemble piano and erhai products on the shared SM8750 tree"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/Kconfig",
+      "imported_sha256": "d0d2fce3e354845236bccbe0ec7781c00d1b8c70246104935477b1a3d36b4134",
+      "port_sha256": "a071e66b7626b3c4a8db845add41ddf8b7835786c8fca7a81fb744a2aa739295",
+      "identical_to_reference": false,
+      "reference_recent_history": [
+        "28e1afe32918d2cc78b0ad340e7be560b7370e8a\t2026-11-14T13:02:43+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: guard the Erhai charge pumps with both connector thermistors",
+        "f48f952a201e5263fe9d710a32c62638ee4bbebe\t2026-11-14T01:37:49+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: negotiate standard UFCS power without an Oplus credential",
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "0afafa864937a0e591eae598f181689a591a372a\t2026-11-13T18:03:19+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: select the serial SUPERVOOC engine for dedicated chargers",
+        "8b875373a556aeea4f4b684868043aff23439a7d\t2026-11-07T22:47:53+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: sc96231: integrate dock and supply lifecycle fixes",
+        "fce0baec9cb5e5c23cdf50fe09acddea0ea986fb\t2026-10-28T16:30:14+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: xiaomi_mca: add a consumer-controlled pen boost regulator",
+        "f112d0c079cfc2c6d43c7c5ded08e6799c252589\t2026-10-20T06:04:00+08:00\tslwyts <slwyts@foxmail.com>\tpower: supply: add SC96231 pen transmitter",
+        "ac6eab6e5e694a2f06df7fd89894301ab32e22cb\t2026-10-28T14:11:38Z\tslwyts <slwyts@foxmail.com>\tpower: supply: xiaomi_mca: authenticate Xiaomi chargers before PPS"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/Makefile",
+      "imported_sha256": "34ee6607699ad5b2e6e1d7d17d6212493ecc40fd059113476200679ef3ad3358",
+      "port_sha256": "29a8764e2bcd557b0f77b7094c7576bec641bb05bbe3dfcac5814cb15bedba27",
+      "identical_to_reference": false,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "f112d0c079cfc2c6d43c7c5ded08e6799c252589\t2026-10-20T06:04:00+08:00\tslwyts <slwyts@foxmail.com>\tpower: supply: add SC96231 pen transmitter",
+        "4500106cd71b669240eacd4c234e9ff7540e90dd\t2026-11-03T19:25:04+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: serialize Erhai PPS with the battery manager and suspend",
+        "6beda88e07ac2c07e719a892a0717072d989bc50\t2026-10-31T01:17:53+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: add protected SC8547A charge pump control",
+        "c3ef14381c8066f6e8b426c427af69b439661840\t2026-10-12T07:25:51+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: xiaomi_mca: port the community charging policy as one client",
+        "76126855aeb84025bbfb8c3b32059df9421a8428\t2026-10-09T17:55:57+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: add a read-only driver for the Xiaomi MCA charger firmware",
+        "5584ad5706e594c7648655171785aa4fffdd3db5\t2026-07-28T15:38:30-05:00\tChris Morgan <macromorgan@hotmail.com>\tpower: supply: sgm41542: Add SG Micro sgm41542 charger",
+        "81a10126cb33d553e9b08a5c09b0cb9835cab2d7\t2026-06-29T00:01:19+02:00\tWaqar Hameed <waqar.hameed@axis.com>\tpower: supply: Add driver for TI BQ25630 charger"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/erhai_buck.h",
+      "imported_sha256": "812058e11d192e36eccd9ae5db23f014686bbdb92382b922b0c6726127f240fc",
+      "port_sha256": "812058e11d192e36eccd9ae5db23f014686bbdb92382b922b0c6726127f240fc",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "d7e3b286643ad6c8acb4f85ad637f14e03f46f65\t2026-11-15T02:32:40+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: use the stock 10 mV Erhai warm float-voltage margin",
+        "eec9c91b56aabe4d048dc8972001461c6c0b5820\t2026-11-15T00:55:24+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: erhai: supervise stock buck FFC and full/recharge tail"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/erhai_cell_envelope.h",
+      "imported_sha256": "6cf6b60d285881bf3a1bf9cd85020701915716fd94de0c5e8015e66df82cc97e",
+      "port_sha256": "6cf6b60d285881bf3a1bf9cd85020701915716fd94de0c5e8015e66df82cc97e",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "acefe8da8aa6a8c7593eaee30d343fabd70f1dcf\t2026-11-14T01:04:55+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: share the domestic 67 W cell envelope across converters"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/erhai_charge_curve.h",
+      "imported_sha256": "b4a1ef73816d670c04798c3f50856384c5d33d22dc85126f723c431f54a57480",
+      "port_sha256": "b4a1ef73816d670c04798c3f50856384c5d33d22dc85126f723c431f54a57480",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "9b4ff982ed5d14e23e448e64cadbeb8ef371d79b\t2026-11-14T03:46:37+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: carry taper progress across Erhai cell-curve boundaries",
+        "d06ad57305cf292ed22948fa785cee7737a2f095\t2026-11-14T00:49:54+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: use the 24926 seven-region SUPERVOOC cell curves"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/erhai_otg_glink.h",
+      "imported_sha256": "f05ea00b2a79c069f85ed485d41d7b8e403b88c79662779cd29bec934a887d6a",
+      "port_sha256": "f05ea00b2a79c069f85ed485d41d7b8e403b88c79662779cd29bec934a887d6a",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "42a4b42450acfb5b9926ea4f0c1e1ca06cee6ace\t2026-11-14T22:20:38+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: suspend the Erhai buck before allowing SUPERVOOC voltage negotiation",
+        "068d53331b1c9027f8b1bd4d268239a690dbc4f8\t2026-11-14T15:50:45+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: release the Erhai buck input to the SUPERVOOC pumps",
+        "70daa8b2a102565335e522fe082b8108f22aac44\t2026-11-14T13:03:20+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: requalify Erhai connector temperatures after detach and sleep",
+        "28e1afe32918d2cc78b0ad340e7be560b7370e8a\t2026-11-14T13:02:43+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: guard the Erhai charge pumps with both connector thermistors",
+        "a6642a2a56425258c891107538c8ba2ddae118fa\t2026-11-14T04:47:53+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: give a timed-out initial UFCS handshake one fixed-9 V retry",
+        "21408272ddb7f0f6459c2371f9b20cbc40cdcacd\t2026-11-14T04:46:02+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: restore proven Erhai charge routes independently of discovery quotas",
+        "e2103e4cb48795418411de21a80c334212c6e70b\t2026-11-14T04:28:32+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: reserve PPS retries for a ready converter and release failed ADC holds",
+        "84b7681022a210f6c7da1f33a18b967ea7032d7c\t2026-11-14T04:27:34+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: restore an interrupted healthy APDO when an upward probe declines"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/erhai_pps.c",
+      "imported_sha256": "20d779d8d179fbcc756f75301be54bef91c96a0be7d31a3a564e1b86552c1e3e",
+      "port_sha256": "20d779d8d179fbcc756f75301be54bef91c96a0be7d31a3a564e1b86552c1e3e",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dc8c28c12761bcc3a9b320931d6d12476ae91192\t2026-11-16T10:05:22+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: erhai_pps: keep the entry SOC row for the whole session",
+        "5396a2e2c5d5cf0208235c128c9c24c0bafae456\t2026-11-15T08:12:26+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: clear PPS failure budgets on measured delivery",
+        "857ccb7d3bb570e2f8c2fa92426116acb58f8001\t2026-11-15T08:10:59+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: remove redundant PPS handoff and startup grace delays",
+        "fdc980ae165c915bdf79f4e98354d2546fc85a78\t2026-11-15T08:08:28+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: use stock five-second watchdog for PPS and UFCS pumps",
+        "af491f4b3691e340a113f9243049f7edc935ff4e\t2026-11-15T08:05:37+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: align PPS startup and current updates with the stock controller",
+        "42a4b42450acfb5b9926ea4f0c1e1ca06cee6ace\t2026-11-14T22:20:38+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: suspend the Erhai buck before allowing SUPERVOOC voltage negotiation",
+        "001d56671547569d92a734ddbcb3828b49950fdd\t2026-11-14T11:35:04+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: report the serial contract and charge-pump measurements on erhai",
+        "21408272ddb7f0f6459c2371f9b20cbc40cdcacd\t2026-11-14T04:46:02+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: restore proven Erhai charge routes independently of discovery quotas"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/erhai_svooc_lcf.h",
+      "imported_sha256": "e272483232f4a671b1d81d0c4c9f7949222e798f3baf6f2a2c025868c493eaf1",
+      "port_sha256": "e272483232f4a671b1d81d0c4c9f7949222e798f3baf6f2a2c025868c493eaf1",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "087660ab2af7313ed454c9f671a3823b1da5bf4f\t2026-11-15T06:39:38+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: retain SUPERVOOC handshake curves and stock tail checks"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/qcom_battmgr.c",
+      "imported_sha256": "af929c874c6575c62a116e79e0fd6a9958419640ac4e6ab247a765b185e798cf",
+      "port_sha256": "7beebe215c5ce802b30a0017395fd6b7ae80bffcb83d45a3e318ce873bbc9e5f",
+      "identical_to_reference": false,
+      "reference_recent_history": [
+        "b228a00ffbd0006d2bff8610f76402e2e50dbfae\t2026-11-15T04:48:27+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: recover SUPERVOOC current after transient warm derating",
+        "d7e3b286643ad6c8acb4f85ad637f14e03f46f65\t2026-11-15T02:32:40+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: use the stock 10 mV Erhai warm float-voltage margin",
+        "bb22bf6157aac051deaed5383e185de44c82ad9a\t2026-11-15T02:26:28+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: preserve Erhai AP full status while wired power is online",
+        "eb9c54b4c9feeb13217385dadfca54f525e59041\t2026-11-15T00:57:18+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: serialize buck tail votes with UFCS and PPS arbitration",
+        "eec9c91b56aabe4d048dc8972001461c6c0b5820\t2026-11-15T00:55:24+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: erhai: supervise stock buck FFC and full/recharge tail",
+        "a1adee63ebef1f9aafadb236cf783085b2c5d67e\t2026-11-15T00:42:51+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: avoid the task-current macro in the Erhai status sample",
+        "1ae59e3690e19ffcbd16bf09c38256bd4a6ed72c\t2026-11-15T00:29:43+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: report Erhai discharge from a fresh signed battery current",
+        "42a4b42450acfb5b9926ea4f0c1e1ca06cee6ace\t2026-11-14T22:20:38+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: suspend the Erhai buck before allowing SUPERVOOC voltage negotiation"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/sc8547a.c",
+      "imported_sha256": "5ac2e3b74b27fb95fd322850766458f6e6ac4d1578b93c217f472e4be6c39e15",
+      "port_sha256": "5ac2e3b74b27fb95fd322850766458f6e6ac4d1578b93c217f472e4be6c39e15",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "707b75619dcc9baf79182ee35770072068ff4f3b\t2026-11-15T14:30:03+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: sc8547a: end SVOOC on the CP Vbat, keep only the stock battery OVP on the gauge",
+        "46d9c092edda347422c5fc335ac547684834892b\t2026-11-15T11:19:56+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tRevert 58cc9ab29015 for SUPERVOOC startup regression isolation",
+        "fdc980ae165c915bdf79f4e98354d2546fc85a78\t2026-11-15T08:08:28+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: use stock five-second watchdog for PPS and UFCS pumps",
+        "d9be09667699121694a34e39760de5b36a4847fa\t2026-11-15T08:05:37+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: use stock secondary-pump sampling and threshold boundaries",
+        "58cc9ab29015feadfd68db40486bce7b2b52d823\t2026-11-15T08:00:08+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: align SUPERVOOC recovery with the stock switch ladder",
+        "aace7c03a55d8e31cb0d48d3983fec47f0d2584c\t2026-11-15T06:45:22+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: retain gauge validity checks alongside the CP curve ADC",
+        "e8f07a0a83c66fbb7fb8873d273757a881c4ffc0\t2026-11-15T06:41:31+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: record SUPERVOOC voltage references at tail handoff",
+        "087660ab2af7313ed454c9f671a3823b1da5bf4f\t2026-11-15T06:39:38+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: retain SUPERVOOC handshake curves and stock tail checks"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/sc8547a.h",
+      "imported_sha256": "298ba94048233ac6c9e62ade31828c9f0614ff650fb8870e49c8a1c261fdd653",
+      "port_sha256": "298ba94048233ac6c9e62ade31828c9f0614ff650fb8870e49c8a1c261fdd653",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "fdc980ae165c915bdf79f4e98354d2546fc85a78\t2026-11-15T08:08:28+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: use stock five-second watchdog for PPS and UFCS pumps",
+        "42a4b42450acfb5b9926ea4f0c1e1ca06cee6ace\t2026-11-14T22:20:38+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: suspend the Erhai buck before allowing SUPERVOOC voltage negotiation",
+        "001d56671547569d92a734ddbcb3828b49950fdd\t2026-11-14T11:35:04+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: report the serial contract and charge-pump measurements on erhai",
+        "2fb4fc6fb199ad82766e728922ee8584d6de8a66\t2026-11-14T04:19:25+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: budget evidence-backed upgrades on each Erhai attachment",
+        "c99cb57786f82311c88c4198071391af1927ca9c\t2026-11-14T03:48:12+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: invalidate Erhai attachment state on Type-C partner removal",
+        "521c742177da71a2baea0cc972e6b39f8dcf03f1\t2026-11-14T03:43:07+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: act on Erhai pump fault flags and regulate voltage overshoot first",
+        "09ee141d079aa110804e6caeca385a2ff131acdf\t2026-11-14T01:17:18+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: arbitrate the SC8547A UFCS PHY and reuse the Erhai pump servo",
+        "40f94b31180fb8a9f2ecce72bd8c8d530a1468ca\t2026-11-14T00:52:54+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: budget PPS against measured parallel SC8547A currents"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/Kconfig",
+      "imported_sha256": "fba617188b816a64ebea00c80aa24c3c129841e06a78e655f6639aa47bfa2ccb",
+      "port_sha256": "fba617188b816a64ebea00c80aa24c3c129841e06a78e655f6639aa47bfa2ccb",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "e5c2b85a9dd93ece67a149a30b806c73841d1d5c\t2026-11-14T01:18:31+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: exercise the UFCS sink against a simulated source",
+        "4ce82e6ca64d348888d75cfe7724b7d9f26bb8f4\t2026-11-14T01:18:30+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: add the SC8547A master UFCS register backend",
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/Makefile",
+      "imported_sha256": "4c9bed29d332091cd834c8c9dae6c96d65a8d55cb15c23faee55921d4cd4123f",
+      "port_sha256": "4c9bed29d332091cd834c8c9dae6c96d65a8d55cb15c23faee55921d4cd4123f",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "e5c2b85a9dd93ece67a149a30b806c73841d1d5c\t2026-11-14T01:18:31+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: exercise the UFCS sink against a simulated source",
+        "4ce82e6ca64d348888d75cfe7724b7d9f26bb8f4\t2026-11-14T01:18:30+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: add the SC8547A master UFCS register backend",
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/internal/ufcs_core.h",
+      "imported_sha256": "cee4c8d4306f03d8fa085b3fe025637c4dd3593bc4f237b8780b1f0630c1890e",
+      "port_sha256": "cee4c8d4306f03d8fa085b3fe025637c4dd3593bc4f237b8780b1f0630c1890e",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/internal/ufcs_debug.h",
+      "imported_sha256": "1dbfdb280a075611d2555d88fa8c294b1d7dcbd55685896ce312174e87d02e29",
+      "port_sha256": "1dbfdb280a075611d2555d88fa8c294b1d7dcbd55685896ce312174e87d02e29",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/internal/ufcs_event.h",
+      "imported_sha256": "93d90223254881a685ec05165e44dbdbd57fbfb6f6ea9169c2de141144a1fea9",
+      "port_sha256": "93d90223254881a685ec05165e44dbdbd57fbfb6f6ea9169c2de141144a1fea9",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/internal/ufcs_intf.h",
+      "imported_sha256": "15ed51966abca1857c376c146ca9aea21b72f45f2eb12b81cab14b93c5dd34e8",
+      "port_sha256": "15ed51966abca1857c376c146ca9aea21b72f45f2eb12b81cab14b93c5dd34e8",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/internal/ufcs_msg.h",
+      "imported_sha256": "d8ae8146e8d35cc392529600fc3f126695999b4a0a86a6a8a9ca991ac918a77a",
+      "port_sha256": "d8ae8146e8d35cc392529600fc3f126695999b4a0a86a6a8a9ca991ac918a77a",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/internal/ufcs_notify.h",
+      "imported_sha256": "4f4c7af70f0e7c1f3f3724623e27de8e987affa52b12c1e54f5a288dd9de18e6",
+      "port_sha256": "4f4c7af70f0e7c1f3f3724623e27de8e987affa52b12c1e54f5a288dd9de18e6",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/internal/ufcs_policy_engine.h",
+      "imported_sha256": "96b84d200633e3c8648a26d52169ff5a99be56950a2551e2b327859b74ad9d0b",
+      "port_sha256": "96b84d200633e3c8648a26d52169ff5a99be56950a2551e2b327859b74ad9d0b",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/internal/ufcs_sha256.h",
+      "imported_sha256": "7276e71f785f58125cc8d5c6c00a6640e607944105d60ac6324392e21a90ba4e",
+      "port_sha256": "7276e71f785f58125cc8d5c6c00a6640e607944105d60ac6324392e21a90ba4e",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/internal/ufcs_timer.h",
+      "imported_sha256": "f53069844eead276bdade9ef483a727966ee6c41d80c843c41d91c6f2799bb47",
+      "port_sha256": "f53069844eead276bdade9ef483a727966ee6c41d80c843c41d91c6f2799bb47",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/include/ufcs_class.h",
+      "imported_sha256": "eafe62e15e4a9126ec432e610f641fedeceede55112ecd28d19c8b24e2ca7a91",
+      "port_sha256": "eafe62e15e4a9126ec432e610f641fedeceede55112ecd28d19c8b24e2ca7a91",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "a6642a2a56425258c891107538c8ba2ddae118fa\t2026-11-14T04:47:53+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: give a timed-out initial UFCS handshake one fixed-9 V retry",
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/sc8547a_ufcs.c",
+      "imported_sha256": "bc5dcd2e091bdc1efa05225b424ea323f7da3936a7ba06e46175f7ec10a45007",
+      "port_sha256": "bc5dcd2e091bdc1efa05225b424ea323f7da3936a7ba06e46175f7ec10a45007",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "4ce82e6ca64d348888d75cfe7724b7d9f26bb8f4\t2026-11-14T01:18:30+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: add the SC8547A master UFCS register backend"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/sc8547a_ufcs.h",
+      "imported_sha256": "8dce196d1e3d0a889e02d40389974eab73cb50129f9468167e4c87e6027ee6f7",
+      "port_sha256": "8dce196d1e3d0a889e02d40389974eab73cb50129f9468167e4c87e6027ee6f7",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "4ce82e6ca64d348888d75cfe7724b7d9f26bb8f4\t2026-11-14T01:18:30+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: add the SC8547A master UFCS register backend"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_core.c",
+      "imported_sha256": "b322a151f94ced91f6f2dcc0988a56843776369ee911000933b6117781a2900c",
+      "port_sha256": "b322a151f94ced91f6f2dcc0988a56843776369ee911000933b6117781a2900c",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "92b2389f3b90de95e8f8a551863ce1e60ed675c3\t2026-11-14T04:25:14+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: clear peer-requested UFCS test mode at session end",
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_debug.c",
+      "imported_sha256": "1355074e8be0d27e9adea2f70911462ae066240c1a2501b87c92e35a371d1c4d",
+      "port_sha256": "1355074e8be0d27e9adea2f70911462ae066240c1a2501b87c92e35a371d1c4d",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_event.c",
+      "imported_sha256": "c94ce1c7f6e8465f63f4e981f6ccc4cb70cfffb2cbbee9785c7d8d50d1f07ab5",
+      "port_sha256": "c94ce1c7f6e8465f63f4e981f6ccc4cb70cfffb2cbbee9785c7d8d50d1f07ab5",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_event_ctrl.c",
+      "imported_sha256": "998973aec143da7fa61201a28b933a32209f7cfff4a053c4566af109cbc75e6e",
+      "port_sha256": "998973aec143da7fa61201a28b933a32209f7cfff4a053c4566af109cbc75e6e",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_event_data.c",
+      "imported_sha256": "4abfe32415967a413abf8d5b7793f7793b4bb55853bbca46a72bc2410414b807",
+      "port_sha256": "4abfe32415967a413abf8d5b7793f7793b4bb55853bbca46a72bc2410414b807",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_event_vendor.c",
+      "imported_sha256": "8bbe2c3838f01e6931c6ec05d5a9aeecdaf4f0e6bf74a9d474c2c53b82cf444e",
+      "port_sha256": "8bbe2c3838f01e6931c6ec05d5a9aeecdaf4f0e6bf74a9d474c2c53b82cf444e",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_intf.c",
+      "imported_sha256": "612f2cc2f12253050401ce533c902854c07c5005b1b62acadc89dc027c8b9409",
+      "port_sha256": "612f2cc2f12253050401ce533c902854c07c5005b1b62acadc89dc027c8b9409",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "a6642a2a56425258c891107538c8ba2ddae118fa\t2026-11-14T04:47:53+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: give a timed-out initial UFCS handshake one fixed-9 V retry",
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_notify.c",
+      "imported_sha256": "d13f9eff8eea0dd87390b84c43b5ea5798448645890aba03c7e972690b1044c1",
+      "port_sha256": "d13f9eff8eea0dd87390b84c43b5ea5798448645890aba03c7e972690b1044c1",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_pe_cable.c",
+      "imported_sha256": "19421457e7dbc2b04ae8bc38ef28bff70437a5a6a696c17bd5b0af7dfbf53fca",
+      "port_sha256": "19421457e7dbc2b04ae8bc38ef28bff70437a5a6a696c17bd5b0af7dfbf53fca",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_pe_test.c",
+      "imported_sha256": "75b0b8d5513c1939c20fbcf293ae676f0b4872a253f3b724e2c7a0f4a3b8af69",
+      "port_sha256": "75b0b8d5513c1939c20fbcf293ae676f0b4872a253f3b724e2c7a0f4a3b8af69",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "92b2389f3b90de95e8f8a551863ce1e60ed675c3\t2026-11-14T04:25:14+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: clear peer-requested UFCS test mode at session end",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_pe_vendor.c",
+      "imported_sha256": "9b5fc6b93ccbc127a31043ec79cdb8e85c33c6fc647f658c78df7725df0976e4",
+      "port_sha256": "9b5fc6b93ccbc127a31043ec79cdb8e85c33c6fc647f658c78df7725df0976e4",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_policy_engine.c",
+      "imported_sha256": "0e3680717f9f9ab3da9da7ad28ca0ce55adeafe636770b65e5c0901fe818f53c",
+      "port_sha256": "0e3680717f9f9ab3da9da7ad28ca0ce55adeafe636770b65e5c0901fe818f53c",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "a6642a2a56425258c891107538c8ba2ddae118fa\t2026-11-14T04:47:53+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: give a timed-out initial UFCS handshake one fixed-9 V retry",
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_sha256.c",
+      "imported_sha256": "4c187f8cab7846e7332617eb9fae35222e407325eac2ea7d357253ec157ef8e4",
+      "port_sha256": "4c187f8cab7846e7332617eb9fae35222e407325eac2ea7d357253ec157ef8e4",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_test.c",
+      "imported_sha256": "139c2d084e1ef7193574adf6f070673bec9da93695d8283c77035557d0cdee6e",
+      "port_sha256": "139c2d084e1ef7193574adf6f070673bec9da93695d8283c77035557d0cdee6e",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "a6642a2a56425258c891107538c8ba2ddae118fa\t2026-11-14T04:47:53+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: give a timed-out initial UFCS handshake one fixed-9 V retry",
+        "92b2389f3b90de95e8f8a551863ce1e60ed675c3\t2026-11-14T04:25:14+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: clear peer-requested UFCS test mode at session end",
+        "e5c2b85a9dd93ece67a149a30b806c73841d1d5c\t2026-11-14T01:18:31+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: exercise the UFCS sink against a simulated source"
+      ]
+    },
+    {
+      "path": "drivers/power/supply/ufcs/ufcs_timer.c",
+      "imported_sha256": "cda002ab00fc3fc3650db558f80ff527e9641ad1206fb548caa4092fad357c4d",
+      "port_sha256": "cda002ab00fc3fc3650db558f80ff527e9641ad1206fb548caa4092fad357c4d",
+      "identical_to_reference": true,
+      "reference_recent_history": [
+        "20f39324f2b89e04e24ce7ece8d6478489dd7b9f\t2026-11-14T01:18:29+08:00\tyzddmr6 <46088090+yzddmr6@users.noreply.github.com>\tpower: supply: integrate the UFCS sink with bounded negotiation and input limits",
+        "dcb6b4c8149b1568038a629445bc320b0556afba\t2026-11-14T01:04:40+08:00\tpswbuild <pswbuild@oppo.com>\tpower: supply: import Oplus UFCS protocol stack"
+      ]
+    }
+  ]
+}

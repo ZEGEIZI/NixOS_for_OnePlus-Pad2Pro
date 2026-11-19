@@ -1,0 +1,13 @@
+{
+  "base_release": "p11",
+  "dsi_reference": {
+    "ref": "refs/remotes/origin/sm8750/v7.4-dev",
+    "commit": "04181c69d5634c154f089d41bc7043491a748abf",
+    "port": "Same change with Linux 7.3.4 context and original attribution"
+  },
+  "driver_core": {
+    "source": "Downstream change against the strictly replayed p11 sources",
+    "case": "A sync-state-only link is inapplicable after the proxy consumer is bound",
+    "acceptance": "No proxy failure diagnostic and the real Type-C port retains supplier links to USB, combo PHY and WCD939x USBSS"
+  }
+}

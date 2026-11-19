@@ -1,0 +1,17 @@
+{
+  "original_export_manifest_sha256": "00113d8c249a63e9c0c42a692f1b5b1095aa7c48600765752bc880b1998c683b",
+  "validated_manifest_sha256": "6917476e959d0b712e9eeb3f07678a748d4d451dc791759abec0474e36addef5",
+  "changed_fields": [
+    "validation"
+  ],
+  "previous_validation": {
+    "hardware": "pending",
+    "full_build": "pending"
+  },
+  "validation": {
+    "hardware": "partial: pen-specific acceptance passed; provenance/pen-scan-p7-device-acceptance.json",
+    "full_build": "passed: cross kernel and native ARM64 userspace; provenance/pen-scan-p7-build.json"
+  },
+  "patches_configs_result_hashes_unchanged": true,
+  "strict_replay_report": "provenance/replay-7.3.4-p7.json"
+}

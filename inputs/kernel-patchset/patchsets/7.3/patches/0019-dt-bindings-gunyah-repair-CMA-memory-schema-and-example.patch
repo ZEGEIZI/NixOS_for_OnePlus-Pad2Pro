@@ -1,4 +1,4 @@
-From bfc760b9caa7d621afe907d592bda39187186411 Mon Sep 17 00:00:00 2001
+From a27f590b9f9a2f80cef78f23d54a006142f0dc3b Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 23:19:01 +0800
 Subject: [PATCH] dt-bindings: gunyah: repair CMA memory schema and example

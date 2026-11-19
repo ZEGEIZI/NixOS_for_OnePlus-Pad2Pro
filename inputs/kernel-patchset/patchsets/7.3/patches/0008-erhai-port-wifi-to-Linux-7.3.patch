@@ -1,4 +1,4 @@
-From 58b8070b16bd0e6032158c0a76fd87ee2d0653dc Mon Sep 17 00:00:00 2001
+From e9b7c8b641c5556762266ec578e0162640d8d5e3 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:34 +0800
 Subject: [PATCH] erhai: port wifi to Linux 7.3

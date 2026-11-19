@@ -1,0 +1,45 @@
+From 0c04f57f8c9d5d01609a4206536645788268bcd4 Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:32:47 +0800
+Subject: [PATCH] power: supply: cps8601: report identification failures
+ accurately
+
+Distinguish an unreadable ID from a successful ID read and count
+only scheduled retries. Report failure after exhaustion instead of
+promising a fourth retry. Leave the power sequence and retry budget
+unchanged pending hardware evidence for the intermittent NACK.
+---
+ drivers/power/supply/cps8601.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/power/supply/cps8601.c b/drivers/power/supply/cps8601.c
+index 6ca304ffc..672526e89 100644
+--- a/drivers/power/supply/cps8601.c
++++ b/drivers/power/supply/cps8601.c
+@@ -938,16 +938,21 @@ static void cps8601_init_work(struct work_struct *work)
+ 			break;
+ 		msleep(100);
+ 	}
+-	if (id != CPS8601_CHIP_ID) {
+-		dev_warn(chip->dev,
+-			 "chip id mismatch: %#x (ret %d), retry %u/3 in 15 s\n",
+-			 id, ret, chip->init_retries + 1);
+-		if (chip->init_retries++ < 3 && !(READ_ONCE(chip->removing) || READ_ONCE(chip->suspended))) {
++	if (ret || id != CPS8601_CHIP_ID) {
++		if (chip->init_retries < 3 && !READ_ONCE(chip->removing) &&
++		    !READ_ONCE(chip->suspended)) {
++			chip->init_retries++;
++			dev_warn(chip->dev,
++				 "chip identification failed (id %#x, read %d), retry %u/3 in 15 s\n",
++				 id, ret, chip->init_retries);
+ 			gpiod_set_value(chip->sw_en_gpiod, 0);
+ 			gpiod_set_value(chip->scan_gpiod, 0);
+ 			gpiod_set_value(chip->off_state_gpiod, 0);
+ 			schedule_delayed_work(&chip->ready_work,
+ 					      msecs_to_jiffies(15000));
++		} else if (!READ_ONCE(chip->removing) && !READ_ONCE(chip->suspended)) {
++			dev_err(chip->dev, "chip identification failed after %u retries (id %#x, read %d)\n",
++				chip->init_retries, id, ret);
+ 		}
+ 		goto out_nopm;
+ 	}

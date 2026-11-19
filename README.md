@@ -21,6 +21,9 @@ HDR 默认采用 10bit 等效精度，保留可手动选择的 12bit 等效输�
 HDR 播放器。按内容调节全局背光和 SDR 白位补偿已通过实机会话及目视检查。显示精度、
 背光校准状态及 HDR 的适配边界见
 [显示精度与 HDR](docs/DISPLAY-COLOR.md)。
+USB-C 支持 DisplayPort Alt Mode 外屏画面与声音，音频设置见 [USB-C 外屏音频](docs/AUDIO.md#usb-c-外屏音频)。
+mpv 与 Chromium 的 Iris/V4L2 配置、补丁和验证方法见
+[视频硬件解码](docs/VIDEO-DECODING.md)。
 
 基础适配与实机安装已完成：NixOS 26.05 从 Btrfs 启动到文本登录，
 USB NCM、SSH 主机身份、SCMI 调频、基础服务和 zram 已验证。
@@ -30,6 +33,12 @@ kShimC 已固化到 boot_a，Android → NixOS → Android 往返、菜单手选
 目标分区：`KShinC_BOOT`（1 GiB ext4）与 `NixOS_Root`（200 GiB Btrfs）。
 不预置普通用户名。每个人自行创建账户；Shell、桌面、输入法和音频默认设置对所有用户生效。
 Fish 为全局默认 Shell，账户和密码可通过 GNOME 用户管理或标准账户工具管理；USB SSH 继续用于维护。
+
+有线快充、GNOME 电池净功率显示和接电时熄屏保活已集成到 p6，
+VCBAOBCH 的 SUPERVOOC、高电量接入、锁屏持续充电和充满保活已实测，详见 [充电说明](docs/CHARGING.md)。
+
+p7 增加 NT36536 默认笔扫描，重启后书写、实际压感及恢复后扫描已验证；
+首次需连接笔的蓝牙，详见 [手写笔输入](docs/PEN.md)。
 
 Wi-Fi 修复已固化为默认构建基线：采用 OPD2413 专用固件
 路径与整套原厂固件，cfg80211、mac80211、ath12k 明确内建。5 GHz 信道 40 的
@@ -51,7 +60,10 @@ binfmt/QEMU 或 ARM64 builder。`pad2pro` 在平板原生构建内核，供本�
 `linux-sm8750-erhai-patchset`；补丁发布快照随本项目保存在
 `inputs/kernel-patchset`，不依赖旧 fork 工作区或电脑上的绝对路径。
 `pad2pro` 与 `pad2pro-build` 通过 `boot.kernelPatches` 使用同一补丁集和
-`packages/nixos.config`，保留 sched_ext/BTF 支持。当前日常内核为 `7.3.4-erhai-p5`，已完成交叉与平板原生构建、冷启动／普通重启和关键外设验收。
+`packages/nixos.config`，保留 sched_ext/BTF 支持。当前内核为 `7.3.4-erhai-p7`，
+已完成完整系统构建和笔输入分项实机验收；
+p6 已完成交叉内核与原生 ARM64 用户空间构建及充电实测；
+旧 p5 的原生内核构建和关键外设验收作为历史记录保留，设备仍保留 p5 回退项。
 维护与实机记录见 [补丁集迁移](docs/KERNEL-PATCHSET.md)，调度器见 [SCX 使用说明](docs/SCX.md)。
 同系列随 nixpkgs 更新，跨系列前移适配；不降级、不增加旧系列兼容分支。
 所有构建与模块聚合使用当前 nixpkgs 工具链。
@@ -79,6 +91,7 @@ nix build .#nixosConfigurations.pad2pro-probe.config.system.build.diagnosticPayl
 - [蓝牙支持的跨发行版安装](support/README.md)
 - [来源及许可](NOTICE)
 - [项目结构与维护](docs/DEVELOPMENT.md)
+- [参考项目功能对照](docs/MAINLINE-COMPARISON.md)
 - [跨发行版构建与仿真环境](docs/BUILD.md)
 - [随仓库提供的固件](docs/FIRMWARE.md)
 - [原始规划（历史）](docs/history/INITIAL-PLAN.md)

@@ -108,8 +108,13 @@ def mounted_boot(args):
         yield protocol.root(SimpleNamespace(
             staging_root=None, boot_dir=boot, partuuid=args.partuuid, action="publish"))
     finally:
-        os.sync()
-        if readonly:
+        # Always leave the boot filesystem clean and read-only, including
+        # when migrating an installation whose old fstab mounted it rw.
+        # A writable ext4 mount sets needs_recovery even with no pending
+        # writes; kShimC rejects that flag after a forced reset.
+        try:
+            os.sync()
+        finally:
             subprocess.run(["mount", "-o", "remount,ro", str(boot)], check=True)
 
 

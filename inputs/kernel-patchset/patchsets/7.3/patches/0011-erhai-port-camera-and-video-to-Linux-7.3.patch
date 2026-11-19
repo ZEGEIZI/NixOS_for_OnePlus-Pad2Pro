@@ -1,4 +1,4 @@
-From fd5231089bf41fa2ed7f6893fa8fea19fa1de4b8 Mon Sep 17 00:00:00 2001
+From 589b3749d4271a8ed98801d3e0a61d7af08c40c0 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:34 +0800
 Subject: [PATCH] erhai: port camera-and-video to Linux 7.3

@@ -37,7 +37,7 @@ assert lib.assertMsg
       (builtins.hashFile "sha256" "${source}/patchsets/7.3/${entry.file}" == entry.sha256)
       "Erhai patch differs from its generated manifest; export the source commits again.";
     {
-    name = "erhai-${entry.commit}";
+    name = "erhai-${entry.commit or entry.sha256}";
     patch = builtins.path {
       path = "${source}/patchsets/7.3/${entry.file}";
       name = builtins.baseNameOf entry.file;

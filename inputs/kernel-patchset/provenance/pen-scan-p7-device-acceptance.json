@@ -1,0 +1,62 @@
+{
+  "release": "7.3.4-erhai-p7",
+  "system": "/nix/store/ad0nhv0znz72i0arbz0yd6nk5147nzz4-nixos-system-pad2pro-26.11.20261111.d4f25a3",
+  "boot_verified": true,
+  "scan_default_without_sysfs_write": 1,
+  "boot_log_pen_scan_on": true,
+  "pen_bluetooth": {
+    "paired": true,
+    "trusted": true,
+    "connected_after_reboot": true
+  },
+  "user_confirmed_writing_after_reboot": true,
+  "evdev_sample_seconds": 90,
+  "evdev": {
+    "counts": {
+      "3:0": 1197,
+      "3:1": 1212,
+      "3:25": 44,
+      "1:320": 38,
+      "0:0": 1330,
+      "3:27": 82,
+      "3:26": 79,
+      "3:24": 453,
+      "1:330": 22
+    },
+    "pressure_values": 389,
+    "pressure_min": 0,
+    "pressure_max": 16304,
+    "x_range": [
+      17070,
+      33143
+    ],
+    "y_range": [
+      0,
+      13047
+    ]
+  },
+  "suspend_resume": {
+    "command": "rtcwake -m mem -s 10",
+    "mode": "s2idle",
+    "returned_successfully": true,
+    "requested_alarm_seconds": 10,
+    "note": "The 10-second alarm was armed; wake cause and exact sleep duration were not established. Kernel timestamps exclude time spent asleep.",
+    "scan_after_firmware_reload": 1,
+    "firmware_reload_completed": true,
+    "pen_scan_on_logged_again": true,
+    "post_resume_physical_writing": "not separately confirmed"
+  },
+  "failed_services": [],
+  "service_states": {
+    "display-manager": "active",
+    "NetworkManager": "active",
+    "bluetooth": "active",
+    "scx_loader": "active"
+  },
+  "fallback_preserved": true,
+  "scope": "Pen-specific acceptance. This is not a complete device requalification.",
+  "limitations": [
+    "No power-consumption comparison or full 16384-level pressure characterization.",
+    "Kernel error log contains SMMU context-fault messages outside the pen path; their origin was not investigated in this pen-scanning change."
+  ]
+}

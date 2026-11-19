@@ -1,4 +1,4 @@
-From 753cbf840cb47182a3c7dc1b06e206445c1b4642 Mon Sep 17 00:00:00 2001
+From 7ea1c3f02851003be45bafca34f93d9e99d01be7 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:33 +0800
 Subject: [PATCH] erhai: port power-supply to Linux 7.3

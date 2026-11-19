@@ -1,5 +1,7 @@
 { lib, pkgs, ... }:
 {
+  imports = [ ./desktop-support.nix ./sensors.nix ./torch.nix ];
+
   services.desktopManager.gnome.enable = true;
   services.displayManager.gdm = {
     enable = true;
@@ -28,6 +30,16 @@
     pulse.enable = true;
   };
 
+  # GNOME Console can start without WAYLAND_DISPLAY in its environment.
+  # Explicit selection connects to the Wayland socket instead of probing
+  # direct DRM/KMS, which is already owned by the desktop compositor.
+  environment.etc."mpv/mpv.conf".text = ''
+    vo=gpu-next
+    gpu-api=opengl
+    gpu-context=wayland
+    hwdec=v4l2m2m-copy
+  '';
+
   i18n.defaultLocale = "zh_CN.UTF-8";
   i18n.supportedLocales = [ "zh_CN.UTF-8/UTF-8" "en_US.UTF-8/UTF-8" ];
   i18n.inputMethod = {
@@ -45,16 +57,23 @@
         # persists across logins. Keep it off pending color-pipeline validation.
         locks = [ "/org/gnome/settings-daemon/plugins/color/night-light-enabled" ];
         settings = {
+          "org/gnome/shell".enabled-extensions = [
+            "charge-indicator@tablet-linux"
+            "erhai-torch@erhai.local"
+          ];
           "org/gnome/settings-daemon/plugins/color".night-light-enabled = false;
           "org/gnome/desktop/interface".scaling-factor = lib.gvariant.mkUint32 2;
           "org/gnome/desktop/input-sources".sources = [
             (lib.gvariant.mkTuple [ "xkb" "us" ])
             (lib.gvariant.mkTuple [ "ibus" "libpinyin" ])
           ];
-          # Suspend/resume has not been validated for this device yet.
+          # The charging inhibitor permits screen blanking while preventing
+          # suspend on a wired charger; unplugging restores these idle defaults.
           "org/gnome/settings-daemon/plugins/power" = {
-            sleep-inactive-ac-type = "nothing";
-            sleep-inactive-battery-type = "nothing";
+            sleep-inactive-ac-type = "suspend";
+            sleep-inactive-ac-timeout = lib.gvariant.mkInt32 900;
+            sleep-inactive-battery-type = "suspend";
+            sleep-inactive-battery-timeout = lib.gvariant.mkInt32 900;
             power-button-action = "interactive";
           };
         };
@@ -65,8 +84,11 @@
           "org/gnome/settings-daemon/plugins/color".night-light-enabled = false;
           "org/gnome/desktop/interface".scaling-factor = lib.gvariant.mkUint32 2;
           "org/gnome/settings-daemon/plugins/power" = {
-            sleep-inactive-ac-type = "nothing";
-            sleep-inactive-battery-type = "nothing";
+            ambient-enabled = false;
+            sleep-inactive-ac-type = "suspend";
+            sleep-inactive-ac-timeout = lib.gvariant.mkInt32 900;
+            sleep-inactive-battery-type = "suspend";
+            sleep-inactive-battery-timeout = lib.gvariant.mkInt32 900;
           };
         };
       }];
@@ -75,7 +97,7 @@
 
   # The Xwayland accessibility startup script invokes xprop by name.
   environment.systemPackages = with pkgs; [
-    firefox mesa-demos vulkan-tools xprop
+    mesa-demos vulkan-tools xprop
     (callPackage ../packages/hdr-player.nix { })
   ];
 }

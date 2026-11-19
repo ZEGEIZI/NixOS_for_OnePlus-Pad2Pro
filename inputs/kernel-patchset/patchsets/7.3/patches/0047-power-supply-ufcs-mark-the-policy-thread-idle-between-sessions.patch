@@ -1,0 +1,46 @@
+From 6d21888f2b846df1fecfc1a5e15fc52241c243e4 Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:26:17 +0800
+Subject: [PATCH] power: supply: ufcs: mark the policy thread idle between
+ sessions
+
+The policy thread can wait indefinitely for a charger while the
+state machine is idle. Use TASK_IDLE at this wait so the hung-task
+detector leaves it alone. Keep its wakeup and stop conditions and
+leave the waits inside active protocol exchanges alone.
+---
+ drivers/power/supply/ufcs/ufcs_intf.c          | 2 +-
+ drivers/power/supply/ufcs/ufcs_policy_engine.c | 5 +++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/power/supply/ufcs/ufcs_intf.c b/drivers/power/supply/ufcs/ufcs_intf.c
+index a3cf6a18d..a714dbd2b 100644
+--- a/drivers/power/supply/ufcs/ufcs_intf.c
++++ b/drivers/power/supply/ufcs/ufcs_intf.c
+@@ -191,7 +191,7 @@ int ufcs_handshake(struct ufcs_dev *ufcs)
+ 		return rc;
+ 	}
+ 	ufcs_clr_error_flag(ufcs);
+-	class->sm_task_wakeup = true;
++	WRITE_ONCE(class->sm_task_wakeup, true);
+ 	wake_up(&class->sm_wq);
+ 	reinit_completion(&class->request_ack);
+ 	rc = ufcs_push_event(class, event);
+diff --git a/drivers/power/supply/ufcs/ufcs_policy_engine.c b/drivers/power/supply/ufcs/ufcs_policy_engine.c
+index 459f9073a..ea925d346 100644
+--- a/drivers/power/supply/ufcs/ufcs_policy_engine.c
++++ b/drivers/power/supply/ufcs/ufcs_policy_engine.c
+@@ -1365,10 +1365,11 @@ static int ufcs_sm_task(void *arg)
+ #endif
+ 
+ 	while (!kthread_should_stop()) {
+-		wait_event(class->sm_wq, class->sm_task_wakeup || kthread_should_stop());
++		wait_event_idle(class->sm_wq, READ_ONCE(class->sm_task_wakeup) ||
++				kthread_should_stop());
+ 		if (kthread_should_stop())
+ 			break;
+-		class->sm_task_wakeup = false;
++		WRITE_ONCE(class->sm_task_wakeup, false);
+ retry:
+ 		event = ufcs_get_next_event(class);
+ 		if (event == NULL) {

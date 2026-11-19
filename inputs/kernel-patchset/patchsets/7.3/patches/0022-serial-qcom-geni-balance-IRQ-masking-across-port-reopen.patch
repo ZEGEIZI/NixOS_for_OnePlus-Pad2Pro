@@ -1,4 +1,4 @@
-From bb9f4eae8bc1f5fbe7e160f79dd4c80d7cba44bb Mon Sep 17 00:00:00 2001
+From ccfbc6ccf514560d226ae283b8af5d0058910ac6 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Sat, 14 Nov 2026 05:18:40 +0800
 Subject: [PATCH] serial: qcom-geni: balance IRQ masking across port reopen

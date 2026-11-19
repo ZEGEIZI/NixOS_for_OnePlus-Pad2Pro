@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-16",
+  "release": "7.3.4-erhai-p6",
+  "source_head": "9b519649fc7a717ac8fa51f128639116b60557bd",
+  "strict_replay": "passed; replay-7.3.4-p6.json",
+  "charging_objects": {
+    "result": "passed",
+    "count": 21,
+    "architecture": "AArch64 cross",
+    "nix_output": "/nix/store/ckp5y8h2q5sik4y9lvvp7hiqi3dgcnfh-erhai-driver-object-check-aarch64-unknown-linux-gnu-7.3.4",
+    "compiler": "current nixpkgs GCC 16.2.0"
+  },
+  "pure_board_policy_tests": "passed; current exported charging curve, low-current full and buck headers",
+  "dt_schema": {
+    "documents": "passed; ADC Gen4 and SC8547A bindings",
+    "compiled_pump_nodes": "passed; dt-validate SC8547A on the candidate DTB"
+  },
+  "dtb_policy": {
+    "result": "passed",
+    "dual_pumps": true,
+    "connector_channels": [
+      "0x74c battery",
+      "0x747 USB"
+    ],
+    "vddio_microvolts": 1896000,
+    "adsp_heap": "exclusive no-map",
+    "enabled_address_collisions": 0
+  },
+  "checkpatch": {
+    "result": "not clean",
+    "errors": 4,
+    "warnings": 262,
+    "scope": "Imported charging snapshot retains pre-existing style issues. Three style errors and missing Signed-off-by; the agent does not add a human DCO attestation."
+  },
+  "full_kernel_build": "passed; charging-p6-cross-kernel-validation.json",
+  "full_native_system_build": "passed; complete cross kernel with native ARM64 userland and boot tree; duplicate native kernel build canceled, not claimed as passed",
+  "hardware_verified": true,
+  "device_regression": "passed",
+  "hardware_scope": "VCBAOBCH SUPERVOOC, high SOC entry, locked screen-off and QC 9 V/full tail; see charging-p6-device-acceptance.json for limits and pending checks"
+}

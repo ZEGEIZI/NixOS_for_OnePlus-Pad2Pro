@@ -7,15 +7,81 @@ Current device dependencies:
 - kShimC-oneplus-pad2-pro, mirrored in inputs/kshim-protocol/. Its source.json
   pins the upstream revision, local publisher extension and effective hashes.
 
+The separately packaged Iris VA-API userspace driver is fetched directly from
+https://github.com/phxinyang/qualcomm-iris-vaapi revision
+4125b1190c66ff7cf46e54c2b6d4076a01d7d1cd (MIT and LGPL-2.1).
+Upstream authors include Florent Revest, Maxime Ripard, Paul Kocialkowski,
+Max Schettler and phxinyang. Original AUTHORS, CREDITS and license files are
+installed with the driver. packages/iris-vaapi/source.json records the archive
+digest and Nix integration changes. The local capability patch keeps AV1 on
+software after an SM8750 browser test exposed hardware output/sync errors.
+No other distribution's workspace, binaries or kernel patches are used by
+this package, and its upstream client-configuration scripts are not installed.
+
 Locally maintained audio sources in packages/audio/ were imported from
 https://github.com/yzddmr6/onepluspad-2pro-mainline revision
 4cc3570c7c14689d77e58c081d2430170288f72a (BSD-3-Clause). The board topology,
 TDM/MFC helpers and UCM no longer require fetching that project. The bundled
 linux-msm/audioreach-topology archive is revision
 993a17dcb672357998a463a73f120064d6c74f4f; its BSD license and source manifest
-are installed with the package. NixOS uses amplifier level 270 (-22.5 dB).
+are installed with the package. NixOS uses the board UCM amplifier level 350 (-2.5 dB).
 The WirePlumber speaker volume rule was adapted from the same source's
 MIT-licensed 51-erhai-speaker.conf.
+The BSD-3-Clause DisplayPort UCM routing follows that project's change
+2ac734bdd17f13148c4248d3971bef3b3660cba2 by yzddmr6.
+
+The following desktop and device changes originate in
+https://github.com/yzddmr6/onepluspad-2pro-mainline (Copyright 2026 yzddmr6
+unless specified in the file). The keyboard hwdb and Bluetooth clickpad quirk
+are from 4fcf17c0c0b6b213fe530da17f9e788bf833c853 and
+dc4a10b3a3e3c186e95b74f080ebbb86c2cc044a (GPL-2.0-only). The internal UFS
+udisks rule is from 2e7fe27fb8d6f502df799fa8451b6458078de0b3 (MIT).
+The sensor-specific camera tuning data is from
+55dab55aed651415cb9cc69056f9da70ec6eba43 (CC0-1.0). The GDM ambient brightness
+default follows d4d939166ac9de21081cde66e1b49969259ac644.
+Rear Focus Camera is from 343532abb786302ed9e41aa872e2bfb61f6fda5f
+(GPL-2.0-only), based on TheMojoMan's ErhaiCam 02d3561952de and
+CFM880/nabu-camera. The pen connection helper is from
+267a38e91d580248705c6b0f3672545eb110939d (GPL-2.0-only), following the
+OnePlus Pencil docking flow in TheMojoMan's oneplus-erhai-ubuntu 0d66f9765ca7.
+The separately maintained kernel implementation preserves the CPS8601 protocol
+attribution and restricts access to the docked pen address to root.
+
+The SSC userspace stack follows onepluspad-2pro-mainline
+c67a4a81148b2d5faaf92d307dfbcff274c8793f. Upstream sources, patch authors,
+licenses and digests are recorded in packages/sensors/sources.json. The
+unmodified model-wide OnePlus sensor configuration has a separate
+rom-config.json. Unit calibration is read from the tablet's Android persist
+partition and remains on that unit.
+The ambient curve and four-channel speaker routing follow
+bd7797df6af9c1acc9d751a6f6bdc52c43739fb9. The Erhai slot map follows the
+speaker-routing design reported by zczyh0922 in issue 24 of that project.
+The torch uses the board flash wiring from linux-sm8750-erhai
+344b773079ae62c0144e3cca000c7fff8e63126a, based on TheMojoMan's device tree.
+The GNOME charge toggle follows the MIT tablet-charge behaviour integration
+from bd7797df6af9c1acc9d751a6f6bdc52c43739fb9.
+
+Charging desktop helpers and the GNOME power indicator in packages/charging/
+were imported from the MIT-licensed packaging/shared-charge/ directory of
+https://github.com/yzddmr6/onepluspad-2pro-mainline revision
+b2b06a3aa082d76645f199f7c0f76591f6d9b5cc (Copyright 2026 yzddmr6).
+Original source digests are retained in upstream-source.json; Nix packaging
+adapts executable/data paths and GNOME Shell compatibility at build time.
+The local display helper reads aggregate measured pump input during SUPERVOOC
+when the ordinary buck charger is suspended; its digest and change are recorded
+alongside the original source digest.
+The independently maintained kernel patchset ports the charging implementation
+from https://github.com/yzddmr6/linux-sm8750-erhai revision
+dc8c28c12761bcc3a9b320931d6d12476ae91192, preserving Oplus, Qualcomm and port
+authorship, SPDX licenses and prerequisite patch trailers. Its charging source
+and adaptation records are included under inputs/kernel-patchset/provenance/.
+These references are attribution; neither repository is a build dependency.
+
+The independent kernel patchset also imports the NT36536 default pen-scanning
+change from https://github.com/yzddmr6/linux-sm8750-erhai revision
+b6fa42deb71898af5fda6ad955004d1b73529abc, unchanged, preserving the original
+author, date, collaboration trailer and Linux licenses. The port record is
+inputs/kernel-patchset/provenance/pen-scan-p7-port.json.
 
 Firmware provenance is maintained in inputs/firmware/. The original base
 inventory was imported from the same device-source revision; its source and

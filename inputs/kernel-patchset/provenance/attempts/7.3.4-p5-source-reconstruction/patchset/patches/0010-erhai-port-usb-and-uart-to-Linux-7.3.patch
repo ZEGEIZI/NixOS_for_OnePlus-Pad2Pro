@@ -1,0 +1,876 @@
+From ac9329880dae74ae6dd4399b2160dd9572db1f30 Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Fri, 13 Nov 2026 21:41:34 +0800
+Subject: [PATCH] erhai: port usb-and-uart to Linux 7.3
+
+Source: https://github.com/ZEGEIZI/linux-sm8750-erhai/commit/efc39b9d972665c270adc4e4ec2c46685792ffda
+Extraction-group: 96cf5b229964ceb9d678e689b7f62cdcacad217c
+
+Generated subsystem aggregation; original author and license notices are
+preserved in source. See patchset provenance/source-commits.tsv and
+provenance/port-7.3.json for historical sources and upstream equivalents.
+Upstream-status: downstream; hardware acceptance pending
+---
+ drivers/tty/serial/qcom_geni_serial.c    | 104 ++++++++++++-
+ drivers/usb/dwc3/dwc3-qcom.c             |  61 ++++++--
+ drivers/usb/gadget/function/f_ncm.c      |   7 +-
+ drivers/usb/typec/mux/wcd939x-usbss.c    | 178 ++++++++++++++++++++++-
+ drivers/usb/typec/ucsi/Kconfig           |   7 +
+ drivers/usb/typec/ucsi/ucsi.c            |  11 +-
+ drivers/usb/typec/ucsi/ucsi_glink.c      |  11 +-
+ drivers/usb/typec/ucsi/ucsi_glink_test.c | 120 +++++++++++++++
+ include/linux/usb/wcd939x-usbss.h        |  31 ++++
+ 9 files changed, 507 insertions(+), 23 deletions(-)
+ create mode 100644 drivers/usb/typec/ucsi/ucsi_glink_test.c
+ create mode 100644 include/linux/usb/wcd939x-usbss.h
+
+diff --git a/drivers/tty/serial/qcom_geni_serial.c b/drivers/tty/serial/qcom_geni_serial.c
+index a851b8f0e..cf9094ea9 100644
+--- a/drivers/tty/serial/qcom_geni_serial.c
++++ b/drivers/tty/serial/qcom_geni_serial.c
+@@ -80,6 +80,8 @@
+ /* UART S_CMD OP codes */
+ #define UART_START_READ			0x1
+ #define UART_PARAM			0x1
++#define UART_PARAM_SKIP_FRAME_ERR_CHAR	BIT(5)
++#define UART_PARAM_SKIP_BREAK_CHAR	BIT(6)
+ #define UART_PARAM_RFR_OPEN		BIT(7)
+ 
+ #define UART_OVERSAMPLING		32
+@@ -1018,11 +1020,14 @@ static void qcom_geni_serial_stop_rx_dma(struct uart_port *uport)
+ static void qcom_geni_serial_start_rx_dma(struct uart_port *uport)
+ {
+ 	struct qcom_geni_serial_port *port = to_dev_port(uport);
++	bool opd2413 = of_machine_is_compatible("oneplus,opd2413") &&
++		       uport->mapbase == 0x898000 && !uart_console(uport);
+ 
+ 	if (qcom_geni_serial_secondary_active(uport))
+ 		qcom_geni_serial_stop_rx_dma(uport);
+ 
+-	geni_se_setup_s_cmd(&port->se, UART_START_READ, UART_PARAM_RFR_OPEN);
++	if (!opd2413)
++		geni_se_setup_s_cmd(&port->se, UART_START_READ, UART_PARAM_RFR_OPEN);
+ 
+ 	if (!port->rx_dma_addr) {
+ 		dev_err(uport->dev, "RX DMA buffer not mapped\n");
+@@ -1032,6 +1037,18 @@ static void qcom_geni_serial_start_rx_dma(struct uart_port *uport)
+ 	dma_sync_single_for_device(uport->dev->parent, port->rx_dma_addr,
+ 				   DMA_RX_BUF_SIZE, DMA_FROM_DEVICE);
+ 	geni_se_rx_init_dma(&port->se, port->rx_dma_addr, DMA_RX_BUF_SIZE);
++
++	if (opd2413) {
++		/* The OEM arms the DMA buffer before starting RX and skips
++		 * framing-error and break characters during baud transitions.
++		 */
++		geni_se_setup_s_cmd(&port->se, UART_START_READ,
++				    UART_PARAM_RFR_OPEN |
++				    UART_PARAM_SKIP_FRAME_ERR_CHAR |
++				    UART_PARAM_SKIP_BREAK_CHAR);
++		readl(uport->membase + SE_GENI_STATUS);
++	}
++
+ }
+ 
+ static void qcom_geni_serial_handle_rx_dma(struct uart_port *uport, bool drop)
+@@ -1211,9 +1228,7 @@ static irqreturn_t qcom_geni_serial_isr(int isr, void *dev)
+ 	struct tty_port *tport = &uport->state->port;
+ 	struct qcom_geni_serial_port *port = to_dev_port(uport);
+ 
+-	if (uport->suspended)
+-		return IRQ_NONE;
+-
++	/* serial core marks suspended before RX stops; drain live IRQs until shutdown. */
+ 	uart_port_lock(uport);
+ 
+ 	s_irq_status = readl(uport->membase + SE_GENI_S_IRQ_STATUS);
+@@ -1318,7 +1333,6 @@ static int setup_fifos(struct qcom_geni_serial_port *port)
+ 	return 0;
+ }
+ 
+-
+ static void qcom_geni_serial_shutdown(struct uart_port *uport)
+ {
+ 	struct qcom_geni_serial_port *port = to_dev_port(uport);
+@@ -1333,9 +1347,20 @@ static void qcom_geni_serial_shutdown(struct uart_port *uport)
+ 	qcom_geni_serial_stop_rx(uport);
+ 
+ 	qcom_geni_serial_cancel_tx_cmd(uport);
++	/* Drain cancellation status before masking the dedicated IRQ. */
++	writel(readl(uport->membase + SE_GENI_M_IRQ_STATUS),
++	       uport->membase + SE_GENI_M_IRQ_CLEAR);
++	writel(readl(uport->membase + SE_GENI_S_IRQ_STATUS),
++	       uport->membase + SE_GENI_S_IRQ_CLEAR);
++	writel(readl(uport->membase + SE_DMA_TX_IRQ_STAT),
++	       uport->membase + SE_DMA_TX_IRQ_CLR);
++	writel(readl(uport->membase + SE_DMA_RX_IRQ_STAT),
++	       uport->membase + SE_DMA_RX_IRQ_CLR);
++	disable_irq_nosync(uport->irq);
+ 	uart_port_unlock_irq(uport);
+ 
+ 	pm_runtime_put_sync(uport->dev);
++	synchronize_irq(uport->irq);
+ }
+ 
+ static void qcom_geni_serial_flush_buffer_fifo(struct uart_port *uport)
+@@ -1491,8 +1516,13 @@ static int geni_serial_set_rate(struct geni_se *se, unsigned long baud)
+ 
+ 	writel(ser_clk_cfg, uport->membase + GENI_SER_M_CLK_CFG);
+ 	writel(ser_clk_cfg, uport->membase + GENI_SER_S_CLK_CFG);
+-	/* Configure clock selection register with the selected clock index */
+-	writel(clk_idx & CLK_SEL_MSK, uport->membase + SE_GENI_CLK_SEL);
++	/* OPD2413 uses the direct GCC rate table, whose 8 Mbps entry is
++	 * index 15, not a three-bit DFS slot. The OEM UART never writes this
++	 * selector. Preserve its boot setting for this controller only.
++	 */
++	if (!of_machine_is_compatible("oneplus,opd2413") ||
++	    uport->mapbase != 0x898000)
++		writel(clk_idx & CLK_SEL_MSK, uport->membase + SE_GENI_CLK_SEL);
+ 	return 0;
+ }
+ 
+@@ -1503,6 +1533,8 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
+ 	struct qcom_geni_serial_port *port = to_dev_port(uport);
+ 	unsigned int baud;
+ 	unsigned long timeout;
++	unsigned long flags;
++	bool restart_rx = false;
+ 	u32 bits_per_char;
+ 	u32 tx_trans_cfg;
+ 	u32 tx_parity_cfg;
+@@ -1514,9 +1546,31 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
+ 	/* baud rate */
+ 	baud = uart_get_baud_rate(uport, termios, old, 300, 8000000);
+ 
++	/* The OPD2413 OEM driver quiesces RX before programming a new
++	 * rate. Keep IRQ/DMA callbacks out of the stopped RX sequence, but
++	 * release the port lock before the potentially sleeping OPP update.
++	 * Restore only a receiver that was active on entry.
++	 */
++	if (of_machine_is_compatible("oneplus,opd2413") &&
++	    uport->mapbase == 0x898000 && port->setup &&
++	    !uart_console(uport)) {
++		uart_port_lock_irqsave(uport, &flags);
++		restart_rx = qcom_geni_serial_secondary_active(uport);
++		if (restart_rx) {
++			qcom_geni_serial_stop_rx(uport);
++			if (qcom_geni_serial_secondary_active(uport)) {
++				uart_port_unlock_irqrestore(uport, flags);
++				dev_err_ratelimited(uport->dev,
++					"OPD2413_UART_RX_QUIESCE failed; rate unchanged\n");
++				return;
++			}
++		}
++		uart_port_unlock_irqrestore(uport, flags);
++	}
++
+ 	ret = port->dev_data->set_rate(&port->se, baud);
+ 	if (ret)
+-		return;
++		goto restore_rx;
+ 
+ 	/* parity */
+ 	tx_trans_cfg = readl(uport->membase + SE_UART_TX_TRANS_CFG);
+@@ -1570,6 +1624,22 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
+ 		port->manual_flow = true;
+ 	}
+ 
++	/* CTS is gated by the UART itself. Do not let serial_core latch
++	 * hw_stopped from a transient CTS sample: this driver does not
++	 * provide CTS-change interrupts to release such a software stop.
++	 */
++	if (of_machine_is_compatible("oneplus,opd2413") &&
++	    uport->mapbase == 0x898000 && !uart_console(uport)) {
++		unsigned long flags;
++
++		uart_port_lock_irqsave(uport, &flags);
++		if (termios->c_cflag & CRTSCTS)
++			uport->status |= UPSTAT_AUTOCTS;
++		else
++			uport->status &= ~UPSTAT_AUTOCTS;
++		uart_port_unlock_irqrestore(uport, flags);
++	}
++
+ 	if (baud) {
+ 		uart_update_timeout(uport, termios->c_cflag, baud);
+ 
+@@ -1599,6 +1669,24 @@ static void qcom_geni_serial_set_termios(struct uart_port *uport,
+ 	trace_geni_serial_set_termios(uport->dev, baud, bits_per_char,
+ 				      tx_trans_cfg, tx_parity_cfg, rx_trans_cfg,
+ 				      rx_parity_cfg, stop_bit_len);
++
++	/* The OEM restores automatic RFR before restarting RX when hardware
++	 * flow control is selected. Do not leave the restarted receiver
++	 * behind the manual NOT_READY state from the baud transaction.
++	 */
++	if (of_machine_is_compatible("oneplus,opd2413") &&
++	    uport->mapbase == 0x898000 && port->setup &&
++	    !uart_console(uport) && (termios->c_cflag & CRTSCTS)) {
++		writel(0, uport->membase + SE_UART_MANUAL_RFR);
++		readl(uport->membase + SE_UART_MANUAL_RFR);
++	}
++
++restore_rx:
++	if (restart_rx) {
++		uart_port_lock_irqsave(uport, &flags);
++		qcom_geni_serial_start_rx(uport);
++		uart_port_unlock_irqrestore(uport, flags);
++	}
+ }
+ 
+ #ifdef CONFIG_SERIAL_QCOM_GENI_CONSOLE
+diff --git a/drivers/usb/dwc3/dwc3-qcom.c b/drivers/usb/dwc3/dwc3-qcom.c
+index ac68b4218..b22a72e3c 100644
+--- a/drivers/usb/dwc3/dwc3-qcom.c
++++ b/drivers/usb/dwc3/dwc3-qcom.c
+@@ -10,6 +10,7 @@
+ #include <linux/irq.h>
+ #include <linux/of_clk.h>
+ #include <linux/module.h>
++#include <linux/mutex.h>
+ #include <linux/kernel.h>
+ #include <linux/interconnect.h>
+ #include <linux/platform_device.h>
+@@ -85,6 +86,11 @@ struct dwc3_qcom {
+ 	struct icc_path		*icc_path_apps;
+ 
+ 	enum usb_role		current_role;
++
++	/* Serializes the role notifier against system suspend and resume */
++	struct mutex		role_lock;
++	bool			vbus_override_pending;
++	bool			vbus_override;
+ };
+ 
+ #define to_dwc3_qcom(d) container_of((d), struct dwc3_qcom, dwc)
+@@ -561,27 +567,40 @@ static int dwc3_qcom_setup_irq(struct dwc3_qcom *qcom, struct platform_device *p
+ static void dwc3_qcom_set_role_notifier(struct dwc3 *dwc, enum usb_role next_role)
+ {
+ 	struct dwc3_qcom *qcom = to_dwc3_qcom(dwc);
++	bool enable;
++
++	guard(mutex)(&qcom->role_lock);
+ 
+ 	if (qcom->current_role == next_role)
+ 		return;
+ 
++	enable = qcom->current_role != USB_ROLE_DEVICE;
++
++	/*
++	 * Not every caller of usb_role_switch_set_role() is frozen during
++	 * system sleep, e.g. the UCSI connector work can run in the noirq
++	 * resume phase. The glue clocks are off then and runtime PM can't
++	 * turn them on, so leave QSCRATCH alone and let
++	 * dwc3_qcom_pm_resume() apply the update.
++	 */
++	if (qcom->pm_suspended) {
++		qcom->vbus_override_pending = true;
++		qcom->vbus_override = enable;
++		qcom->current_role = next_role;
++		return;
++	}
++
+ 	if (pm_runtime_resume_and_get(qcom->dev)) {
+ 		dev_dbg(qcom->dev, "Failed to resume device\n");
+ 		return;
+ 	}
+ 
+-	if (qcom->current_role == USB_ROLE_DEVICE)
+-		dwc3_qcom_vbus_override_enable(qcom, false);
+-	else if (qcom->current_role != USB_ROLE_DEVICE)
+-		dwc3_qcom_vbus_override_enable(qcom, true);
++	qcom->vbus_override_pending = false;
++	dwc3_qcom_vbus_override_enable(qcom, enable);
+ 
+ 	pm_runtime_mark_last_busy(qcom->dev);
+ 	pm_runtime_put_sync(qcom->dev);
+ 
+-	/*
+-	 * Current role changes via usb_role_switch_set_role callback protected
+-	 * internally by mutex lock.
+-	 */
+ 	qcom->current_role = next_role;
+ }
+ 
+@@ -624,6 +643,10 @@ static int dwc3_qcom_probe(struct platform_device *pdev)
+ 
+ 	qcom->dev = &pdev->dev;
+ 
++	ret = devm_mutex_init(dev, &qcom->role_lock);
++	if (ret)
++		return ret;
++
+ 	qcom->resets = devm_reset_control_array_get_optional_exclusive(dev);
+ 	if (IS_ERR(qcom->resets)) {
+ 		return dev_err_probe(&pdev->dev, PTR_ERR(qcom->resets),
+@@ -752,6 +775,12 @@ static int dwc3_qcom_pm_suspend(struct device *dev)
+ 	bool wakeup = device_may_wakeup(dev);
+ 	int ret;
+ 
++	/*
++	 * A role switch that comes in now waits until the glue is suspended
++	 * and is then deferred, see dwc3_qcom_set_role_notifier().
++	 */
++	guard(mutex)(&qcom->role_lock);
++
+ 	ret = dwc3_pm_suspend(&qcom->dwc);
+ 	if (ret)
+ 		return ret;
+@@ -772,6 +801,8 @@ static int dwc3_qcom_pm_resume(struct device *dev)
+ 	bool wakeup = device_may_wakeup(dev);
+ 	int ret;
+ 
++	guard(mutex)(&qcom->role_lock);
++
+ 	ret = dwc3_qcom_resume(qcom, wakeup);
+ 	if (ret)
+ 		return ret;
+@@ -779,10 +810,18 @@ static int dwc3_qcom_pm_resume(struct device *dev)
+ 	qcom->pm_suspended = false;
+ 
+ 	ret = dwc3_pm_resume(&qcom->dwc);
+-	if (ret)
+-		return ret;
+ 
+-	return 0;
++	/*
++	 * Apply a VBUS override update from a role switch that came in while
++	 * suspended. Do it after the core has resumed, as resuming the gadget
++	 * enables the override and the role switch is the more recent event.
++	 */
++	if (qcom->vbus_override_pending) {
++		dwc3_qcom_vbus_override_enable(qcom, qcom->vbus_override);
++		qcom->vbus_override_pending = false;
++	}
++
++	return ret;
+ }
+ 
+ static void dwc3_qcom_complete(struct device *dev)
+diff --git a/drivers/usb/gadget/function/f_ncm.c b/drivers/usb/gadget/function/f_ncm.c
+index 500c9c19c..ab6da3ef8 100644
+--- a/drivers/usb/gadget/function/f_ncm.c
++++ b/drivers/usb/gadget/function/f_ncm.c
+@@ -1148,6 +1148,7 @@ static enum hrtimer_restart ncm_tx_timeout(struct hrtimer *data)
+ {
+ 	struct f_ncm *ncm = container_of(data, struct f_ncm, task_timer);
+ 	struct net_device *netdev = READ_ONCE(ncm->netdev);
++	netdev_tx_t ret;
+ 
+ 	if (netdev) {
+ 		/* XXX This allowance of a NULL skb argument to ndo_start_xmit
+@@ -1158,7 +1159,11 @@ static enum hrtimer_restart ncm_tx_timeout(struct hrtimer *data)
+ 		 *
+ 		 * This will call directly into u_ether's eth_start_xmit()
+ 		 */
+-		netdev->netdev_ops->ndo_start_xmit(NULL, netdev);
++		ret = netdev->netdev_ops->ndo_start_xmit(NULL, netdev);
++		if (ret == NETDEV_TX_BUSY) {
++			hrtimer_forward_now(data, TX_TIMEOUT_NSECS);
++			return HRTIMER_RESTART;
++		}
+ 	}
+ 	return HRTIMER_NORESTART;
+ }
+diff --git a/drivers/usb/typec/mux/wcd939x-usbss.c b/drivers/usb/typec/mux/wcd939x-usbss.c
+index 73db3aa3c..1bdc99839 100644
+--- a/drivers/usb/typec/mux/wcd939x-usbss.c
++++ b/drivers/usb/typec/mux/wcd939x-usbss.c
+@@ -14,6 +14,7 @@
+ #include <linux/gpio/consumer.h>
+ #include <linux/usb/typec_dp.h>
+ #include <linux/usb/typec_mux.h>
++#include <linux/usb/wcd939x-usbss.h>
+ 
+ #define WCD_USBSS_PMP_OUT1			0x2
+ 
+@@ -197,8 +198,23 @@ struct wcd939x_usbss {
+ 	enum typec_orientation orientation;
+ 	unsigned long mode;
+ 	unsigned int svid;
++
++	/* DP alt-mode is routed through the SBU/MG switches right now */
++	bool dp_active;
++	/* D+/D- currently parked on the charge-pump crossbar (erhai VOOC) */
++	bool fc_routed;
+ };
+ 
++/*
++ * Single USBSS instance reference for the charge-pump fast-charge crossbar
++ * helper. The board has exactly one WCD939x USBSS; the SC8547A VOOC PHY driver
++ * needs to flip its DPDM route but does not own it, so it reaches the switch
++ * through wcd939x_usbss_dpdm_switch_fast_charge() below. Guarded by its own
++ * lock so probe/remove can't race the exported call.
++ */
++static DEFINE_MUTEX(wcd939x_usbss_fc_lock);
++static struct wcd939x_usbss *wcd939x_usbss_fc_dev;
++
+ static const struct regmap_range_cfg wcd939x_usbss_ranges[] = {
+ 	{
+ 		.range_min = 0,
+@@ -274,6 +290,19 @@ static int wcd939x_usbss_set(struct wcd939x_usbss *usbss)
+ 		return -EOPNOTSUPP;
+ 	}
+ 
++	/*
++	 * This reprograms the whole switch block, so whatever the charge-pump
++	 * crossbar did to D+/D- is gone; track DP so the crossbar cannot break
++	 * the AUX routing behind our back (erhai).
++	 */
++	usbss->dp_active = enable_dp;
++	usbss->fc_routed = false;
++
++	dev_info(&usbss->client->dev,
++		 "erhai usbss: set mode=%lu svid=%04x orient=%d -> usb=%d dp=%d audio=%d dp_active=%d\n",
++		 usbss->mode, usbss->svid, usbss->orientation,
++		 enable_usb, enable_dp, enable_audio, usbss->dp_active);
++
+ 	/* Disable all switches */
+ 	ret = regmap_clear_bits(usbss->regmap, WCD_USBSS_SWITCH_SETTINGS_ENABLE,
+ 				WCD_USBSS_SWITCH_SETTINGS_ENABLE_DP_AUXP_TO_MGX_SWITCHES |
+@@ -542,6 +571,9 @@ static int wcd939x_usbss_switch_set(struct typec_switch_dev *sw,
+ 	if (usbss->orientation != orientation) {
+ 		usbss->orientation = orientation;
+ 
++		dev_info(&usbss->client->dev,
++			 "erhai usbss: switch_set orient=%d\n", orientation);
++
+ 		ret = wcd939x_usbss_set(usbss);
+ 	}
+ 
+@@ -562,7 +594,26 @@ static int wcd939x_usbss_mux_set(struct typec_mux_dev *mux,
+ 
+ 	mutex_lock(&usbss->lock);
+ 
+-	if (usbss->mode != state->mode) {
++	/*
++	 * fc_routed means the charge-pump crossbar overwrote the switch block,
++	 * so the cached mode no longer describes the hardware — reprogram even
++	 * when the requested state is unchanged (erhai).
++	 */
++	/*
++	 * Idempotence (erhai): the UCSI poll (erhai_ucsi_poll_ms) calls us
++	 * every 4 s with an UNCHANGED state. Reprogramming the crossbar then
++	 * steals D+/D- from the charge-pump path and kills SVOOC delivery
++	 * (2026-08-28: CHG_EN self-clear at CP enable, margin < 150 mV).
++	 * Only reprogram when the requested mode actually changed, or when
++	 * the charge path owns the crossbar AND DisplayPort is really coming
++	 * up: we then have to take the crossbar back for AUX routing.
++	 * TYPEC_STATE_MODAL is only 2 and is shared by USB2/USB3/audio, so a
++	 * mode>=MODAL test would steal the crossbar from the charge path on
++	 * every plain USB re-poll; the DP SVID is the actual signal.
++	 */
++	if (usbss->mode != state->mode ||
++	    (usbss->fc_routed && state->alt &&
++	     state->alt->svid == USB_TYPEC_DP_SID)) {
+ 		usbss->mode = state->mode;
+ 
+ 		if (state->alt)
+@@ -573,6 +624,21 @@ static int wcd939x_usbss_mux_set(struct typec_mux_dev *mux,
+ 		ret = wcd939x_usbss_set(usbss);
+ 	}
+ 
++	/*
++	 * The block above is the only other place dp_active is written, and it
++	 * runs only on a mode change. A DP sink that withdraws alt-mode while
++	 * the cable stays put leaves the mode identical and the alt list empty,
++	 * so dp_active would latch at 1 forever and every later fast-charge
++	 * request gets -EBUSY. No alt mode means the mux state no longer claims
++	 * DP, so drop the flag — clearing only, never setting, keeps this from
++	 * ever granting the crossbar while DisplayPort is really up.
++	 */
++	if (!state->alt && usbss->dp_active) {
++		usbss->dp_active = false;
++		dev_info(&usbss->client->dev,
++			 "erhai usbss: alt-mode gone, dp_active released\n");
++	}
++
+ 	mutex_unlock(&usbss->lock);
+ 
+ 	if (ret)
+@@ -582,6 +648,107 @@ static int wcd939x_usbss_mux_set(struct typec_mux_dev *mux,
+ 	return typec_mux_set(usbss->codec, state);
+ }
+ 
++/*
++ * Route connector D+/D- to the SC8547A charge-pump crossbar (enable=true) or
++ * back to the normal USB path (enable=false). Register sequence captured from
++ * the vendor stack on erhai; the crossbar select and USB_SS_CNTL values match
++ * the live Android i2c trace byte-for-byte.
++ */
++int wcd939x_usbss_dpdm_switch_fast_charge(bool enable)
++{
++	struct wcd939x_usbss *usbss;
++	int ret;
++
++	mutex_lock(&wcd939x_usbss_fc_lock);
++	usbss = wcd939x_usbss_fc_dev;
++	if (!usbss) {
++		mutex_unlock(&wcd939x_usbss_fc_lock);
++		return -ENODEV;
++	}
++
++	mutex_lock(&usbss->lock);
++
++	/*
++	 * DP alt-mode owns the SBU/MG switches while a DisplayPort sink is
++	 * attached. The register writes below rewrite SWITCH_SETTINGS_ENABLE /
++	 * SELECT0 wholesale, which clears the DP_AUXP/AUXM_TO_MGX switches and
++	 * kills AUX (every DPCD read then times out -110 and the connector goes
++	 * disconnected). A DP sink is never a VOOC adapter, so refuse the
++	 * crossbar while DP is up, and restore the mux-programmed routing when
++	 * the charge path asks for the normal USB route back.
++	 */
++	if (usbss->dp_active) {
++		if (enable) {
++			ret = -EBUSY;
++				dev_info(&usbss->client->dev,
++					 "erhai usbss: fc DENIED while DP active\n");
++		} else if (usbss->fc_routed) {
++			ret = wcd939x_usbss_set(usbss);
++			if (!ret)
++				usbss->fc_routed = false;
++		} else {
++			ret = 0;
++		}
++		mutex_unlock(&usbss->lock);
++		mutex_unlock(&wcd939x_usbss_fc_lock);
++		return ret;
++	}
++
++	/* Pre-state: device enabled, DNL/DPR switches off. */
++	ret = regmap_write(usbss->regmap, WCD_USBSS_SWITCH_SETTINGS_ENABLE,
++			   WCD_USBSS_SWITCH_SETTINGS_ENABLE_DEVICE_ENABLE);
++	if (ret)
++		goto out;
++
++	/*
++	 * Crossbar select: fast charge routes DNL->DN2, DPR->DR2 (0x28);
++	 * normal USB routes DNL->DN, DPR->DP (0x14).
++	 */
++	ret = regmap_write(usbss->regmap, WCD_USBSS_SWITCH_SELECT0,
++			   enable ?
++			   (FIELD_PREP(WCD_USBSS_SWITCH_SELECT0_DNL_SWITCHES,
++				       WCD_USBSS_SWITCH_SELECT0_DNL_SWITCH_DN2) |
++			    FIELD_PREP(WCD_USBSS_SWITCH_SELECT0_DPR_SWITCHES,
++				       WCD_USBSS_SWITCH_SELECT0_DPR_SWITCH_DR2)) :
++			   (FIELD_PREP(WCD_USBSS_SWITCH_SELECT0_DNL_SWITCHES,
++				       WCD_USBSS_SWITCH_SELECT0_DNL_SWITCH_DN) |
++			    FIELD_PREP(WCD_USBSS_SWITCH_SELECT0_DPR_SWITCHES,
++				       WCD_USBSS_SWITCH_SELECT0_DPR_SWITCH_DP)));
++	if (ret)
++		goto out;
++
++	/* Enable DNL + DPR switches (0x98). */
++	ret = regmap_write(usbss->regmap, WCD_USBSS_SWITCH_SETTINGS_ENABLE,
++			   WCD_USBSS_SWITCH_SETTINGS_ENABLE_DEVICE_ENABLE |
++			   WCD_USBSS_SWITCH_SETTINGS_ENABLE_DNL_SWITCHES |
++			   WCD_USBSS_SWITCH_SETTINGS_ENABLE_DPR_SWITCHES);
++	if (ret)
++		goto out;
++
++	/*
++	 * USB_SS_CNTL: RCO_EN + USB mode, never STANDBY_STATE. The old
++	 * behaviour set STANDBY for the "normal USB route" (matching a
++	 * misread vendor trace) which standby-ed the whole SS block at
++	 * every detach (fc-restore) and deafened the HS path for all
++	 * subsequent attaches (register diff A/B: 0x419 0d -> 1d).
++	 */
++	ret = regmap_write(usbss->regmap, WCD_USBSS_USB_SS_CNTL,
++			   WCD_USBSS_USB_SS_CNTL_RCO_EN |
++			   FIELD_PREP(WCD_USBSS_USB_SS_CNTL_USB_SS_MODE,
++				      WCD_USBSS_USB_SS_CNTL_USB_SS_MODE_USB));
++	if (!ret)
++		usbss->fc_routed = enable;
++out:
++	mutex_unlock(&usbss->lock);
++	if (ret)
++		dev_err(&usbss->client->dev,
++			"fast-charge DPDM switch %s failed: %d\n",
++			enable ? "on" : "off", ret);
++	mutex_unlock(&wcd939x_usbss_fc_lock);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(wcd939x_usbss_dpdm_switch_fast_charge);
++
+ static int wcd939x_usbss_probe(struct i2c_client *client)
+ {
+ 	struct device *dev = &client->dev;
+@@ -722,6 +889,10 @@ static int wcd939x_usbss_probe(struct i2c_client *client)
+ 
+ 	i2c_set_clientdata(client, usbss);
+ 
++	mutex_lock(&wcd939x_usbss_fc_lock);
++	wcd939x_usbss_fc_dev = usbss;
++	mutex_unlock(&wcd939x_usbss_fc_lock);
++
+ 	return 0;
+ 
+ err_switch_unregister:
+@@ -743,6 +914,11 @@ static void wcd939x_usbss_remove(struct i2c_client *client)
+ {
+ 	struct wcd939x_usbss *usbss = i2c_get_clientdata(client);
+ 
++	mutex_lock(&wcd939x_usbss_fc_lock);
++	if (wcd939x_usbss_fc_dev == usbss)
++		wcd939x_usbss_fc_dev = NULL;
++	mutex_unlock(&wcd939x_usbss_fc_lock);
++
+ 	typec_mux_unregister(usbss->mux);
+ 	typec_switch_unregister(usbss->sw);
+ 
+diff --git a/drivers/usb/typec/ucsi/Kconfig b/drivers/usb/typec/ucsi/Kconfig
+index 87dd992a4..4ee83d06c 100644
+--- a/drivers/usb/typec/ucsi/Kconfig
++++ b/drivers/usb/typec/ucsi/Kconfig
+@@ -69,6 +69,13 @@ config UCSI_PMIC_GLINK
+ 	  To compile the driver as a module, choose M here: the module will be
+ 	  called ucsi_glink.
+ 
++config UCSI_PMIC_GLINK_KUNIT_TEST
++	bool "KUnit tests for PMIC GLINK UCSI registration" if !KUNIT_ALL_TESTS
++	depends on KUNIT=y && UCSI_PMIC_GLINK=y
++	default KUNIT_ALL_TESTS
++	help
++	  Test synchronous registration failure and service-down bookkeeping.
++
+ config CROS_EC_UCSI
+ 	tristate "UCSI Driver for ChromeOS EC"
+ 	depends on MFD_CROS_EC_DEV
+diff --git a/drivers/usb/typec/ucsi/ucsi.c b/drivers/usb/typec/ucsi/ucsi.c
+index 264338fd5..ac0b90df3 100644
+--- a/drivers/usb/typec/ucsi/ucsi.c
++++ b/drivers/usb/typec/ucsi/ucsi.c
+@@ -2134,6 +2134,14 @@ static int ucsi_init(struct ucsi *ucsi)
+ 			goto err_unregister;
+ 	}
+ 
++	/*
++	 * Set ucsi->connector before enabling notifications. A connector
++	 * change event can be handled as soon as the notifications are
++	 * enabled below, and ucsi_connector_change() indexes into
++	 * ucsi->connector, so it must not be NULL at that point.
++	 */
++	ucsi->connector = connector;
++
+ 	/* Enable all supported notifications */
+ 	ntfy = ucsi_get_supported_notifications(ucsi);
+ 	command = UCSI_SET_NOTIFICATION_ENABLE | ntfy;
+@@ -2141,7 +2149,6 @@ static int ucsi_init(struct ucsi *ucsi)
+ 	if (ret < 0)
+ 		goto err_unregister;
+ 
+-	ucsi->connector = connector;
+ 	ucsi->ntfy = ntfy;
+ 
+ 	mutex_lock(&ucsi->ppm_lock);
+@@ -2155,6 +2162,7 @@ static int ucsi_init(struct ucsi *ucsi)
+ 	return 0;
+ 
+ err_unregister:
++	ucsi->connector = NULL;
+ 	for (con = connector; con->port; con++)
+ 		ucsi_unregister_port(con);
+ 	for (i = 0; i < ucsi->cap.num_connectors; i++)
+@@ -2394,6 +2402,7 @@ void ucsi_unregister(struct ucsi *ucsi)
+ 	}
+ 
+ 	kfree(ucsi->connector);
++	ucsi->connector = NULL;
+ }
+ EXPORT_SYMBOL_GPL(ucsi_unregister);
+ 
+diff --git a/drivers/usb/typec/ucsi/ucsi_glink.c b/drivers/usb/typec/ucsi/ucsi_glink.c
+index 1db0c88d8..2bdbca2d2 100644
+--- a/drivers/usb/typec/ucsi/ucsi_glink.c
++++ b/drivers/usb/typec/ucsi/ucsi_glink.c
+@@ -315,13 +315,18 @@ static void pmic_glink_ucsi_register(struct work_struct *work)
+ 	struct pmic_glink_ucsi *ucsi = container_of(work, struct pmic_glink_ucsi, register_work);
+ 	unsigned long flags;
+ 	bool pd_running;
++	int ret;
+ 
+ 	spin_lock_irqsave(&ucsi->state_lock, flags);
+ 	pd_running = ucsi->pd_running;
+ 	spin_unlock_irqrestore(&ucsi->state_lock, flags);
+ 
+ 	if (!ucsi->ucsi_registered && pd_running) {
+-		ucsi_register(ucsi->ucsi);
++		ret = ucsi_register(ucsi->ucsi);
++		if (ret) {
++			dev_err(ucsi->dev, "UCSI registration failed: %d\n", ret);
++			return;
++		}
+ 		ucsi->ucsi_registered = true;
+ 	} else if (ucsi->ucsi_registered && !pd_running) {
+ 		ucsi_unregister(ucsi->ucsi);
+@@ -499,3 +504,7 @@ module_auxiliary_driver(pmic_glink_ucsi_driver);
+ 
+ MODULE_DESCRIPTION("Qualcomm PMIC GLINK UCSI driver");
+ MODULE_LICENSE("GPL");
++
++#if IS_ENABLED(CONFIG_UCSI_PMIC_GLINK_KUNIT_TEST)
++#include "ucsi_glink_test.c"
++#endif
+diff --git a/drivers/usb/typec/ucsi/ucsi_glink_test.c b/drivers/usb/typec/ucsi/ucsi_glink_test.c
+new file mode 100644
+index 000000000..1031e59e7
+--- /dev/null
++++ b/drivers/usb/typec/ucsi/ucsi_glink_test.c
+@@ -0,0 +1,120 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/* Exercise the actual registration worker and UCSI synchronous error paths. */
++#include <kunit/device.h>
++#include <kunit/test.h>
++
++struct glink_ucsi_test {
++	struct pmic_glink_ucsi glink;
++	int version_error;
++	u16 version;
++	unsigned int unregister_commands;
++};
++
++static int glink_test_version(struct ucsi *ucsi, u16 *version)
++{
++	struct glink_ucsi_test *f = ucsi_get_drvdata(ucsi);
++
++	*version = f->version;
++	return f->version_error;
++}
++
++static int glink_test_cci(struct ucsi *ucsi, u32 *cci)
++{
++	return -EIO;
++}
++
++static int glink_test_message(struct ucsi *ucsi, void *data, size_t size)
++{
++	return -EIO;
++}
++
++static int glink_test_sync(struct ucsi *ucsi, u64 command, u32 *cci,
++			   void *data, size_t size, void *out, size_t out_size)
++{
++	return -EIO;
++}
++
++static int glink_test_async(struct ucsi *ucsi, u64 command)
++{
++	struct glink_ucsi_test *f = ucsi_get_drvdata(ucsi);
++
++	if (command == UCSI_SET_NOTIFICATION_ENABLE)
++		f->unregister_commands++;
++	return -EIO;
++}
++
++static void glink_test_cleanup(void *data)
++{
++	struct glink_ucsi_test *f = data;
++
++	cancel_delayed_work_sync(&f->glink.ucsi->work);
++	if (f->glink.ucsi_registered)
++		ucsi_unregister(f->glink.ucsi);
++	ucsi_destroy(f->glink.ucsi);
++}
++
++static void glink_test_registration(struct kunit *test)
++{
++	static const struct ucsi_operations ops = {
++		.read_version = glink_test_version,
++		.read_cci = glink_test_cci,
++		.poll_cci = glink_test_cci,
++		.read_message_in = glink_test_message,
++		.sync_control = glink_test_sync,
++		.async_control = glink_test_async,
++	};
++	struct glink_ucsi_test *f = kunit_kzalloc(test, sizeof(*f), GFP_KERNEL);
++	struct auxiliary_device *adev = kunit_kzalloc(test, sizeof(*adev), GFP_KERNEL);
++
++	KUNIT_ASSERT_NOT_NULL(test, f);
++	KUNIT_ASSERT_NOT_NULL(test, adev);
++	f->glink.dev = kunit_device_register(test, "ucsi-glink-test");
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, f->glink.dev);
++	spin_lock_init(&f->glink.state_lock);
++	INIT_WORK(&f->glink.register_work, pmic_glink_ucsi_register);
++	INIT_WORK(&f->glink.notify_work, pmic_glink_ucsi_notify);
++	f->glink.ucsi = ucsi_create(f->glink.dev, &ops);
++	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, f->glink.ucsi);
++	ucsi_set_drvdata(f->glink.ucsi, f);
++	kunit_add_action_or_reset(test, glink_test_cleanup, f);
++
++	f->glink.pd_running = true;
++	f->version_error = -ETIMEDOUT;
++	pmic_glink_ucsi_register(&f->glink.register_work);
++	KUNIT_EXPECT_FALSE(test, f->glink.ucsi_registered);
++	KUNIT_EXPECT_FALSE(test, delayed_work_pending(&f->glink.ucsi->work));
++	f->glink.pd_running = false;
++	pmic_glink_ucsi_register(&f->glink.register_work);
++	KUNIT_EXPECT_EQ(test, f->unregister_commands, 0);
++
++	f->glink.pd_running = true;
++	f->version_error = 0;
++	f->version = 0;
++	pmic_glink_ucsi_register(&f->glink.register_work);
++	KUNIT_EXPECT_FALSE(test, f->glink.ucsi_registered);
++	dev_set_drvdata(&adev->dev, &f->glink);
++	pmic_glink_ucsi_remove(adev);
++	KUNIT_EXPECT_EQ(test, f->unregister_commands, 0);
++
++	/* The success branch still owns exactly one unregister on service down. */
++	f->version = 0x100;
++	pmic_glink_ucsi_register(&f->glink.register_work);
++	KUNIT_EXPECT_TRUE(test, f->glink.ucsi_registered);
++	f->glink.pd_running = false;
++	pmic_glink_ucsi_register(&f->glink.register_work);
++	KUNIT_EXPECT_FALSE(test, f->glink.ucsi_registered);
++	KUNIT_EXPECT_EQ(test, f->unregister_commands, 1);
++	pmic_glink_ucsi_register(&f->glink.register_work);
++	KUNIT_EXPECT_EQ(test, f->unregister_commands, 1);
++}
++
++static struct kunit_case glink_ucsi_cases[] = {
++	KUNIT_CASE(glink_test_registration),
++	{}
++};
++
++static struct kunit_suite glink_ucsi_suite = {
++	.name = "ucsi-pmic-glink",
++	.test_cases = glink_ucsi_cases,
++};
++kunit_test_suite(glink_ucsi_suite);
+diff --git a/include/linux/usb/wcd939x-usbss.h b/include/linux/usb/wcd939x-usbss.h
+new file mode 100644
+index 000000000..c039088af
+--- /dev/null
++++ b/include/linux/usb/wcd939x-usbss.h
+@@ -0,0 +1,31 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * WCD939x USBSS DPDM crossbar control for fast charge.
++ *
++ * On the OnePlus Pad 3 (erhai) the connector D+/D- lines are routed to the
++ * SC8547A charge-pump / VOOC PHY through the WCD939x USBSS analog switch, not
++ * directly to the SoC USB PHY. Before the VOOC serial handshake can reach the
++ * adapter, the USBSS must be flipped from the normal USB path (DN/DP) to the
++ * charge-pump crossbar (DN2/DR2). This helper lets the charge-pump driver
++ * request that route without owning the USBSS itself.
++ */
++#ifndef __LINUX_USB_WCD939X_USBSS_H
++#define __LINUX_USB_WCD939X_USBSS_H
++
++#include <linux/types.h>
++
++#if IS_REACHABLE(CONFIG_TYPEC_MUX_WCD939X_USBSS)
++/*
++ * Route connector D+/D- to the charge-pump crossbar (enable=true) or back to
++ * the normal USB path (enable=false). Returns 0 on success, -ENODEV if the
++ * USBSS has not probed yet, or a regmap error.
++ */
++int wcd939x_usbss_dpdm_switch_fast_charge(bool enable);
++#else
++static inline int wcd939x_usbss_dpdm_switch_fast_charge(bool enable)
++{
++	return -ENODEV;
++}
++#endif
++
++#endif /* __LINUX_USB_WCD939X_USBSS_H */

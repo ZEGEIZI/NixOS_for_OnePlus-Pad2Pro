@@ -1,0 +1,65 @@
+From 5da3d3993ee95fe0ed1dfa160be5c4df4142bedf Mon Sep 17 00:00:00 2001
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Date: Fri, 13 Nov 2026 18:04:39 +0800
+Subject: [PATCH] arm64: dts: qcom: describe the paired rear flash LEDs on
+ Erhai
+
+Port the channel assignments and per-emitter limits from TheMojoMan <themojoman@gmx.net>, oneplus-erhai-linux 110b27276c22 (erhai.dts). Enable the V4L2 flash interface to arbitrate camera and torch access.
+
+Co-Authored-By: gpt-6-astra <noreply@openai.com>
+Origin: https://github.com/yzddmr6/linux-sm8750-erhai/commit/344b773079ae62c0144e3cca000c7fff8e63126a
+---
+ arch/arm64/boot/dts/qcom/sm8750-erhai.dts | 25 +++++++++++++++++++++++
+ arch/arm64/configs/erhai-firstboot.config |  3 +++
+ 2 files changed, 28 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+index 043347fc3..c95b726ca 100644
+--- a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
++++ b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+@@ -1859,6 +1859,31 @@ &gpi_dma2 {
+ 	status = "okay";
+ };
+ 
++/* PM8550 LEDs: the four current sinks drive two emitters in pairs. */
++&pm8550_flash {
++	status = "okay";
++
++	led-0 {
++		function = LED_FUNCTION_FLASH;
++		color = <LED_COLOR_ID_WHITE>;
++		led-sources = <1>, <4>;
++		led-max-microamp = <500000>;
++		flash-max-microamp = <1500000>;
++		flash-max-timeout-us = <1280000>;
++		function-enumerator = <0>;
++	};
++
++	led-1 {
++		function = LED_FUNCTION_FLASH;
++		color = <LED_COLOR_ID_WHITE>;
++		led-sources = <2>, <3>;
++		led-max-microamp = <500000>;
++		flash-max-microamp = <1500000>;
++		flash-max-timeout-us = <1280000>;
++		function-enumerator = <1>;
++	};
++};
++
+ &pm8550_gpios {
+ 	volume_down_n: volume-down-n-state {
+ 		pins = "gpio6";
+diff --git a/arch/arm64/configs/erhai-firstboot.config b/arch/arm64/configs/erhai-firstboot.config
+index 5fcd0bfc1..6bcdc7af5 100644
+--- a/arch/arm64/configs/erhai-firstboot.config
++++ b/arch/arm64/configs/erhai-firstboot.config
+@@ -379,6 +379,9 @@ CONFIG_PHY_QCOM_MIPI_CSI2=m
+ CONFIG_VIDEO_SC1300CS=m
+ CONFIG_VIDEO_SC820CS=m
+ CONFIG_VIDEO_CN3927=m
++CONFIG_LEDS_CLASS_FLASH=m
++CONFIG_V4L2_FLASH_LED_CLASS=m
++CONFIG_LEDS_QCOM_FLASH=m
+ CONFIG_UDMABUF=y
+ CONFIG_DMABUF_HEAPS=y
+ CONFIG_DMABUF_HEAPS_SYSTEM=y

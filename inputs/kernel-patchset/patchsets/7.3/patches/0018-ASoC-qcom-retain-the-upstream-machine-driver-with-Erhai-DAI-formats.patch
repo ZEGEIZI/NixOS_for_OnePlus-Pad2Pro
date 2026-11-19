@@ -1,4 +1,4 @@
-From adc175d99163bcfd25cbc856ba58c7fa31a73c46 Mon Sep 17 00:00:00 2001
+From acd44ded43cd859070d8e7beb01116882eac2fde Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 22:35:11 +0800
 Subject: [PATCH] ASoC: qcom: retain the upstream machine driver with Erhai DAI

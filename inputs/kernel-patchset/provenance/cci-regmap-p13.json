@@ -1,0 +1,14 @@
+{
+  "base_release": "p12",
+  "source": "Downstream changes against the strictly replayed p12 sources",
+  "camera": {
+    "controller": "ac7b000.cci",
+    "core_clock_hz": 37500000,
+    "reference": "Stock Erhai Android DTB, qcom,cci0@ac7b000 clock-rates and qcom,i2c_fast_mode",
+    "p12_observation": "One of two eight-frame rear captures added a queue timeout and a frame interval near one second"
+  },
+  "cps8601": {
+    "change": "Give the programming register map a distinct name",
+    "program_regmap_name": "program"
+  }
+}

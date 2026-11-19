@@ -1,4 +1,4 @@
-From 41b9c7c45ed80beeb122491602a3f16faddd4ab5 Mon Sep 17 00:00:00 2001
+From e96535987d412e0c06721fe4f33283d3e5a2dd83 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:33 +0800
 Subject: [PATCH] erhai: port display-and-gpu to Linux 7.3

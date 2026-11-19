@@ -91,7 +91,10 @@
           firmware = pkgs.callPackage ./packages/firmware.nix { };
           bluetooth-firmware = pkgs.callPackage ./packages/bluetooth-firmware.nix { };
           audio = pkgs.callPackage ./packages/audio.nix { };
+          focus-camera = pkgs.callPackage ./packages/focus-camera.nix { };
+          charging-desktop = pkgs.callPackage ./packages/charging.nix { };
           hdr-player = pkgs.callPackage ./packages/hdr-player.nix { };
+          iris-vaapi = pkgs.callPackage ./packages/iris-vaapi.nix { };
           hdr-test-patterns = pkgs.callPackage ./packages/hdr-test-patterns.nix { };
           hdr-mutter = pkgs.callPackage ./packages/mutter-hdr.nix { };
           hdr-frc-mutter = pkgs.callPackage ./packages/mutter-hdr.nix { outputFrc = true; };
@@ -126,6 +129,24 @@
             inherit (pkgs) lib;
             kernel = self.packages.${system}.kernel;
           };
+          charging-objects = import ./packages/kernel-objects.nix {
+            inherit (pkgs) lib;
+            kernel = self.packages.${system}.kernel;
+            selectedObjects = [
+              "drivers/iio/adc/qcom-spmi-adc5-gen3.o"
+              "drivers/iio/adc/qcom-vadc-common.o"
+              "drivers/thermal/qcom/qcom-spmi-adc-tm5-gen3.o"
+              "drivers/soc/qcom/pmic_glink.o"
+              "drivers/power/supply/qcom_battmgr.o"
+              "drivers/power/supply/sc8547a.o"
+              "drivers/power/supply/erhai_pps.o"
+            ] ++ map (name: "drivers/power/supply/ufcs/${name}.o") [
+              "ufcs_core" "sc8547a_ufcs" "ufcs_event" "ufcs_event_ctrl"
+              "ufcs_event_data" "ufcs_event_vendor" "ufcs_intf" "ufcs_notify"
+              "ufcs_policy_engine" "ufcs_pe_cable" "ufcs_pe_vendor" "ufcs_pe_test"
+              "ufcs_sha256" "ufcs_timer"
+            ];
+          };
           wifi-objects = import ./packages/kernel-objects.nix {
             inherit (pkgs) lib;
             kernel = self.packages.${system}.kernel;
@@ -154,6 +175,7 @@
             python3 "$source/tools/testing/selftests/net/ath12k-range-scan-test.py"
             python3 "$source/tools/testing/selftests/net/ath12k-of-freq-test.py" \
               --dtb ${self.packages.${system}.kernel}/dtbs/qcom/sm8750-erhai.dtb
+            python3 ${inputs.kernel-patchset}/tools/check-charging.py "$source"
             python3 ${inputs.kernel-patchset}/tools/check-dtb.py \
               ${self.packages.${system}.kernel}/dtbs/qcom/sm8750-erhai.dtb
             touch $out
@@ -188,6 +210,9 @@
           } ''
             cp -r ${./tools} tools
             cp -r ${./tests} tests
+            cp -r ${./modules} modules
+            mkdir -p packages
+            cp -r ${./packages/charging} packages/charging
             mkdir inputs
             cp -r ${./inputs/kshim-protocol} inputs/kshim-protocol
             chmod -R u+w tools tests

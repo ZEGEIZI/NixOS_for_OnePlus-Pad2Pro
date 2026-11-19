@@ -1,5 +1,62 @@
 # 更新、回退与保留
 
+## 系统 profile 保留三代（2026-11-15）
+
+日常主机导入 `modules/system-profile-retention.nix` 并声明：
+
+```nix
+system.profileRetention = {
+  enable = true;
+  generations = 3;
+};
+```
+
+这是本项目提供的选项，限制 `/nix/var/nix/profiles/system` 的代际总数，
+包含当前所选代际。通常保留最新当前代及两个旧代；回退到较旧代际时，
+保留该当前代与另外两个最新代际，仍合计三代。普通用户的 profile 不删除。
+
+`nixos-system-profile-retention.path` 监视 profile 目录变化，服务也在启动时执行。
+服务使用标准 `nix-env --delete-generations` 删除计划内的旧系统代际，
+随后按现有 kShimC 声明同步菜单及专用 GC roots，最后运行 store GC。
+不使用 `nix-collect-garbage -d`，不按年龄删代际，也不设置周期定时器。
+Nix 自身的 profile 锁与当前代保护仍有效；并发更新可能短暂超过三代，后续目录事件再次收敛。
+
+系统 profile 的三代限制独立于菜单限制。菜单继续保护已启动、已激活和固定的系统，
+因此启动项数和 store 中存活的系统闭包可能超过三份；这不会增加 profile 代际数。
+删除 profile 后，相应编号不能再用于 `nixos-rebuild --rollback`。
+
+```sh
+run0 nixos-retain-system-generations --dry-run
+run0 systemctl start nixos-system-profile-retention.service
+nix-env --profile /nix/var/nix/profiles/system --list-generations
+journalctl -u nixos-system-profile-retention.service
+```
+
+实机已通过 `nixos-rebuild switch` 激活；服务与 path 均已启用，首次执行成功。
+实机 profile 为第 58、59 代，当前为 59，未重启。目录事件自动触发及重复执行通过；
+在独立临时 profile 上用实机 Nix 验证了回退场景下精确保留三代、当前代保护和 dry-run。
+31 项保留/菜单清理回归及 flake 求值检查通过，系统失败服务为 0，账户数据库未变。
+配置、升级日志及执行前清单位于平板 `/var/backups/system-profile-retention-20261115/`；
+这些记录不是被 GC 删除的系统闭包备份。
+
+## 默认软件包缓存（2026-11-15）
+
+`hosts/pad2pro/default.nix` 声明优先使用 NJU 二进制缓存：
+
+```nix
+nix.settings.substituters = [
+  "https://mirror.nju.edu.cn/nix-channels/store?priority=10"
+  "https://cache.nixos.org/?priority=40"
+];
+```
+
+NJU 未缓存的包从官方缓存回退下载；继续使用官方签名密钥和签名校验。
+配置通过 `nixos-rebuild switch` 激活，nix-daemon 自动重启，无需重启平板。
+本次未更新锁定的软件版本。nixpkgs 的版本更新地址仍使用官方渠道：检查时
+NJU 渠道快照早于当前锁定版本，直接改用它可能让后续更新选择旧版本。
+
+## 历史更新记录
+
 2026-11-13 正在迁移到官方 Linux 7.3.4 + 独立设备补丁集，当前代码及验收进度见
 [补丁集迁移](KERNEL-PATCHSET.md)。本文以下的 fork 包名、固定源码及历史闭包属于
 对应日期的记录，已移除的旧构建入口不代表当前 flake；本轮尚未切换实机默认内核。
@@ -17,6 +74,22 @@
 代际均已更新。此次仅替换运行系统的 fstab 依赖，保留现有桌面清理结果；
 内核、模块、initrd、用户空间及账户数据库均核对未变，失败服务为 0，未重启。
 实机备份及验证记录位于 `/var/lib/nixos-boot-rw/20261113-144116/`。
+
+上述可写默认值已于 2026-11-16 撤回：强制重启会遗留 ext4 的
+`needs_recovery` 标记，导致不回放日志的 kShimC 隐藏全部 NixOS 启动项。
+现恢复为只读默认值，发布和清理仅短暂改为可写，结束时统一恢复只读。
+
+同日已备份并恢复实机启动分区的日志，安装只读配置及新安装器。
+实机发布、清理结束后 `/boot` 为 `ro,noatime`，`needs_recovery` 清除，
+账户数据库未变，失败服务为 0。同步数据后以双重 `--force` 直接重启到
+bootloader，跳过正常关机卸载；随后在 Android 对未挂载分区执行完整只读
+检查，并用 kShimC 实际读取器验证读回镜像：3 个启动项及全部载荷通过，
+未再次出现恢复标记。Android `boot_a` 摘要未变。
+随后从持久 kShimC 菜单启动新 current `nixos-159c04e8be57c7a992ea3edffdff7751`，
+核对 booted/current/profile 均指向新代际；开机后 `/boot` 为只读、恢复标记未置位，
+全部载荷、账户数据库和失败服务检查再次通过。完整备份保存在设备
+`/var/lib/nixos-boot-reset-fix/20261116/`。
+这验证了日常只读状态下的强制重启；发布或清理的短暂可写窗口仍应避免强制重启。
 
 2026-11-12 按用户要求清除全部旧系统代际和旧内核：保留当前已启动的第 22 代
 `nixos-06f3e4b35a208da7db344a74adbfc516`（`g4k4c9zyappd43ic9ndj4d0alhy14w1m`）。
@@ -82,11 +155,13 @@ kShimC 启动项安装器读取每个代际的 Bootspec，安装实际 Image、�
 不被 GC 删除。更新失败可能留下未引用但完整的版本和 GC root，宁可多保留，
 不得误删旧入口。重试同一代际可恢复发布；不原位覆盖已有载荷。
 
-`/boot` 默认以 `rw,noatime` 挂载，写入受 root 所有权及普通文件权限限制。
+`/boot` 默认以 `ro,noatime` 挂载，避免日常强制重启遗留 ext4 日志恢复标记。
 安装器验证 boot 的真实挂载点、ext4、GPT 标签、PARTUUID、FSROOT，然后发布并同步。
-安装器保留原有挂载状态：通常保持可写；若用户手动设为只读，则仅在操作期间
-临时改为可写，结束时恢复只读。不触碰 Android boot 分区。
+安装器及清理器仅在操作期间临时改为可写，结束时统一恢复只读；旧配置已经
+挂载为可写时也会转为只读。同步失败仍尝试只读重挂载。不触碰 Android boot 分区。
 菜单和 Nix profile 分属不同位置，不是一个跨文件系统的原子事务。
+请勿在发布或清理启动项期间强制重启；这一短暂写入窗口仍可能需要在 Android
+或独立维护环境中对未挂载的启动分区执行日志恢复。
 
 回退优先用 `nixos-rebuild boot --rollback` 更新系统 profile 并调用相同安装器，
 或在菜单手动选择旧代际。菜单手选只改变当次启动，不写回系统 profile。

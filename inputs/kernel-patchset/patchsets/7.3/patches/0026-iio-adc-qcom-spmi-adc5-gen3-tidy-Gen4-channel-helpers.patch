@@ -1,0 +1,138 @@
+From 39b22ea045d75ab9e8d52fcd5cbdbaf2bc6d58c0 Mon Sep 17 00:00:00 2001
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 13:35:36 +0800
+Subject: [PATCH] iio: adc: qcom-spmi-adc5-gen3: tidy Gen4 channel helpers
+
+Use an inline function to form virtual channel IDs without evaluating a
+macro argument repeatedly. Document the per-channel generation data and
+flatten the invalid-result check as suggested in the Gen4 review.
+
+Keep the imported conversion logic and standard NTC table unchanged.
+
+(cherry picked from commit fa38723bd8cde59ac67d8cca3e073bd6b885f406)
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+---
+ drivers/iio/adc/qcom-spmi-adc5-gen3.c         | 15 +++++++--------
+ drivers/iio/adc/qcom-vadc-common.c            | 14 ++++++--------
+ include/linux/iio/adc/qcom-adc5-gen3-common.h | 14 ++++++++++----
+ 3 files changed, 23 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/iio/adc/qcom-spmi-adc5-gen3.c b/drivers/iio/adc/qcom-spmi-adc5-gen3.c
+index 810d25b66..af9f68b3a 100644
+--- a/drivers/iio/adc/qcom-spmi-adc5-gen3.c
++++ b/drivers/iio/adc/qcom-spmi-adc5-gen3.c
+@@ -100,11 +100,10 @@ static int adc5_gen3_read_voltage_data(struct adc5_chip *adc,
+ 
+ 	*data = get_unaligned_le16(rslt);
+ 
+-	if (*data == ADC5_USR_DATA_CHECK) {
+-		if (!(prop->generation == ADC5_GEN4 && prop->cal_method == ADC5_RATIOMETRIC_CAL)) {
+-			dev_err(adc->dev, "Invalid data:%#x\n", *data);
+-			return -EINVAL;
+-		}
++	if (*data == ADC5_USR_DATA_CHECK &&
++	    !(prop->generation == ADC5_GEN4 && prop->cal_method == ADC5_RATIOMETRIC_CAL)) {
++		dev_err(adc->dev, "Invalid data:%#x\n", *data);
++		return -EINVAL;
+ 	}
+ 
+ 	dev_dbg(adc->dev, "voltage raw code:%#x\n", *data);
+@@ -135,7 +134,7 @@ static int adc5_gen3_configure(struct adc5_chip *adc,
+ 	if (ret)
+ 		return ret;
+ 
+-	/* Write SID and bus_id*/
++	/* Write SID and bus index */
+ 	buf[0] = FIELD_PREP(ADC5_GEN4_BUS_INDEX_MASK, prop->bus_index) |
+ 		 FIELD_PREP(ADC5_GEN4_SID_MASK, prop->sid);
+ 
+@@ -330,7 +329,7 @@ static int adc5_gen3_fwnode_xlate(struct iio_dev *indio_dev,
+ 	int i, v_channel;
+ 
+ 	for (i = 0; i < adc->nchannels; i++) {
+-		v_channel = ADC5_GEN4_V_CHAN(adc->chan_props[i].common_props);
++		v_channel = adc5_gen4_v_chan(&adc->chan_props[i].common_props);
+ 		if (v_channel == iiospec->args[0])
+ 			return i;
+ 	}
+@@ -663,7 +662,7 @@ static int adc5_get_fw_data(struct adc5_chip *adc)
+ 		adc_chan = &data->adc_chans[chan_props->common_props.channel];
+ 		chan_props->common_props.scale_fn_type = adc_chan->scale_fn_type;
+ 
+-		iio_chan->channel = ADC5_GEN4_V_CHAN(chan_props->common_props);
++		iio_chan->channel = adc5_gen4_v_chan(&chan_props->common_props);
+ 		iio_chan->info_mask_separate = adc_chan->info_mask;
+ 		iio_chan->type = adc_chan->type;
+ 		iio_chan->address = index;
+diff --git a/drivers/iio/adc/qcom-vadc-common.c b/drivers/iio/adc/qcom-vadc-common.c
+index cb23d0d17..2523bab95 100644
+--- a/drivers/iio/adc/qcom-vadc-common.c
++++ b/drivers/iio/adc/qcom-vadc-common.c
+@@ -301,10 +301,9 @@ static const struct u32_fract adc5_prescale_ratios[] = {
+ 	{ .numerator =  1, .denominator = 16 },
+ };
+ 
+-static int qcom_adc5_gen4_scale_hw_calib_therm(
+-				const struct u32_fract *prescale,
+-				const struct adc5_data *data,
+-				u16 adc_code, int *result_mdec);
++static int qcom_adc5_gen4_scale_hw_calib_therm(const struct u32_fract *prescale,
++					       const struct adc5_data *data,
++					       u16 adc_code, int *result_mdec);
+ static int qcom_vadc_scale_hw_calib_volt(
+ 				const struct u32_fract *prescale,
+ 				const struct adc5_data *data,
+@@ -562,10 +561,9 @@ static int qcom_vadc7_scale_hw_calib_therm(
+ 	return 0;
+ }
+ 
+-static int qcom_adc5_gen4_scale_hw_calib_therm(
+-				const struct u32_fract *prescale,
+-				const struct adc5_data *data,
+-				u16 adc_code, int *result_mdec)
++static int qcom_adc5_gen4_scale_hw_calib_therm(const struct u32_fract *prescale,
++					       const struct adc5_data *data,
++					       u16 adc_code, int *result_mdec)
+ {
+ 	s64 resistance = adc_code;
+ 	int ret, result;
+diff --git a/include/linux/iio/adc/qcom-adc5-gen3-common.h b/include/linux/iio/adc/qcom-adc5-gen3-common.h
+index 5d8e38350..5c54e58b5 100644
+--- a/include/linux/iio/adc/qcom-adc5-gen3-common.h
++++ b/include/linux/iio/adc/qcom-adc5-gen3-common.h
+@@ -80,10 +80,6 @@
+ #define ADC5_GEN4_V_CHAN_BUS_INDEX_MASK		GENMASK(14, 13)
+ #define ADC5_GEN4_V_CHAN_SID_MASK		GENMASK(12, 8)
+ #define ADC5_GEN4_V_CHAN_CHANNEL_MASK		GENMASK(7, 0)
+-#define ADC5_GEN4_V_CHAN(x) \
+-	(FIELD_PREP(ADC5_GEN4_V_CHAN_BUS_INDEX_MASK, (x).bus_index) | \
+-	 FIELD_PREP(ADC5_GEN4_V_CHAN_SID_MASK, (x).sid) | \
+-	 FIELD_PREP(ADC5_GEN4_V_CHAN_CHANNEL_MASK, (x).channel))
+ 
+ /* ADC channels for PMIC5 Gen3 */
+ #define ADC5_GEN3_REF_GND			0x00
+@@ -186,6 +182,9 @@ struct adc5_device_data {
+  *	that is an average of multiple measurements.
+  * @scale_fn_type: Represents the scaling function to convert voltage
+  *	physical units desired by the client for the channel.
++ * @generation: ADC generation of the PMIC owning the channel.
++ * @bus_index: SPMI bus containing the PMIC owning the channel.
++ * @data: Conversion parameters for this channel's ADC generation.
+  */
+ struct adc5_channel_common_prop {
+ 	unsigned int channel;
+@@ -202,6 +201,13 @@ struct adc5_channel_common_prop {
+ 	const struct adc5_data *data;
+ };
+ 
++static inline unsigned int adc5_gen4_v_chan(const struct adc5_channel_common_prop *prop)
++{
++	return FIELD_PREP(ADC5_GEN4_V_CHAN_BUS_INDEX_MASK, prop->bus_index) |
++	       FIELD_PREP(ADC5_GEN4_V_CHAN_SID_MASK, prop->sid) |
++	       FIELD_PREP(ADC5_GEN4_V_CHAN_CHANNEL_MASK, prop->channel);
++}
++
+ /**
+  * struct tm5_aux_dev_wrapper - wrapper structure around TM auxiliary device
+  * @aux_dev: TM auxiliary device structure.

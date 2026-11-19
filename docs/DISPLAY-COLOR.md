@@ -21,6 +21,22 @@ HDR 精度选择使用 `pad2pro-display 10` / `pad2pro-display 12`，状态查�
 `umpv` 的辅助应用入口也不再发布。所有账户共用同一套配置和脚本。
 本次整理已发布为 `nixos-5616666963163da5e7d024d8ee9b3afb`，10bit/12bit 脚本及正常 mpv 入口均已验证。
 
+## 终端 mpv 的 Wayland 输出（2026-11-15）
+
+GNOME Console 的进程环境可能没有 `WAYLAND_DISPLAY`。此时普通 `mpv`
+自动探测会跳过 Wayland，尝试直接 DRM/KMS 输出，因 GNOME 已持有 DRM master
+而报 `Failed to acquire DRM master` / `Failed to set CRTC`，最终没有视频画面。
+
+`modules/gnome.nix` 通过 `/etc/mpv/mpv.conf` 为所有用户设置 `vo=gpu-next`、
+`gpu-api=opengl`、`gpu-context=wayland`。显式选择 Wayland 后可以使用默认会话
+socket，无需提升播放器权限。已有用户配置和命令行参数仍可以覆盖这些默认值。
+`--no-config` 会跳过系统配置，诊断时需显式传入以上三个参数。
+
+实机在缺少 `WAYLAND_DISPLAY` 的环境中复现了自动探测失败；显式后端成功
+解码并渲染 3840×2160 HEVC Main10（`yuv420p10`），渲染器为 Adreno 830。
+保留用户的底部视频留白及字幕参数，未执行持续播放性能或 HDR 高光验收。
+HDR 自动选择仍通过前述 `pad2pro-video-player` 入口完成。
+
 ## 所有账户共用的 HDR 入口（2026-11-13）
 
 HDR 驱动、Mutter 补丁、10bit/12bit 控制和 Chromium API 开关由系统发布，

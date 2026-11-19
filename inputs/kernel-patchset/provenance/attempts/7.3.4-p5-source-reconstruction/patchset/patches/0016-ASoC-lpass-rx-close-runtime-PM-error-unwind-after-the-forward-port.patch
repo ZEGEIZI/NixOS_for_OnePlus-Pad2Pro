@@ -1,0 +1,22 @@
+From 42c66f49899d3a0db4e2bb7dd7897ba74238b781 Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Fri, 13 Nov 2026 22:09:46 +0800
+Subject: [PATCH] ASoC: lpass-rx: close runtime PM error unwind after the
+ forward port
+
+---
+ sound/soc/codecs/lpass-rx-macro.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sound/soc/codecs/lpass-rx-macro.c b/sound/soc/codecs/lpass-rx-macro.c
+index c4139a83a..dab858c03 100644
+--- a/sound/soc/codecs/lpass-rx-macro.c
++++ b/sound/soc/codecs/lpass-rx-macro.c
+@@ -3683,6 +3683,7 @@ static int swclk_gate_enable(struct clk_hw *hw)
+ 	if (ret) {
+ 		pm_runtime_put_autosuspend(rx->dev);
+ 		return ret;
++	}
+ 
+ 	regmap_update_bits(rx->regmap, CDC_RX_CLK_RST_CTRL_SWR_CONTROL,
+ 			   CDC_RX_SWR_CLK_EN_MASK, 1);

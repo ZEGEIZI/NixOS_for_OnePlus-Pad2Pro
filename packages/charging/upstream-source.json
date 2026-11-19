@@ -1,0 +1,46 @@
+{
+  "repository": "https://github.com/yzddmr6/onepluspad-2pro-mainline",
+  "revision": "b2b06a3aa082d76645f199f7c0f76591f6d9b5cc",
+  "license": "MIT",
+  "files": [
+    {
+      "file": "libexec/tablet-charge-sample",
+      "upstream_path": "packaging/shared-charge/usr/libexec/tablet-charge-sample",
+      "sha256": "dc9b5ce2bc610cc2f13fcc0ec9783d145bb8aaf6e538a2979bac843475549519"
+    },
+    {
+      "file": "libexec/tablet-charge-display",
+      "upstream_path": "packaging/shared-charge/usr/libexec/tablet-charge-display",
+      "sha256": "137af33d8fde9625ebe4799bebfe48b30214863edacf506d57a3a4de7106da0c",
+      "local_sha256": "ef7bf97eaa6fd5ee92e6c26d16243f4cd9d12031b551787a221ad95a2459f8d9",
+      "local_changes": "Use the measured aggregate pump input for SUPERVOOC while the ordinary buck charger is suspended; unavailable ADC data stays unknown."
+    },
+    {
+      "file": "libexec/tablet-charge-idle",
+      "upstream_path": "packaging/shared-charge/usr/libexec/tablet-charge-idle",
+      "sha256": "761999338cdb2913a7b68837a448d8860c4de5a653da235cbf38c8dfdee7ec21"
+    },
+    {
+      "file": "schemas/org.gnome.shell.extensions.tablet-charge.gschema.xml",
+      "upstream_path": "packaging/shared-charge/usr/share/glib-2.0/schemas/org.gnome.shell.extensions.tablet-charge.gschema.xml",
+      "sha256": "023092cc849ac6885875a1d6fb0e3dab97a3210497eb3a0519667e83537b2874"
+    },
+    {
+      "file": "extension/extension.js",
+      "upstream_path": "packaging/shared-charge/usr/share/gnome-shell/extensions/charge-indicator@tablet-linux/extension.js",
+      "sha256": "bb6068dbca8bdc799a2aefd7cbcd3e1197cd510e5c46eb74bdf3cd8c0bee4b14",
+      "local_sha256": "ee723b632a5444df08bc5f26fdd7c777a7dd1e80df54e0f9ac052b5de5dfd147",
+      "local_changes": "Add Erhai charge behaviour controls through the NixOS polkit helper."
+    },
+    {
+      "file": "extension/metadata.json",
+      "upstream_path": "packaging/shared-charge/usr/share/gnome-shell/extensions/charge-indicator@tablet-linux/metadata.json",
+      "sha256": "91de207005fec6f8e3a1abfeca0fc56c37d2025251a4c992b9437bdce8852a82"
+    },
+    {
+      "file": "extension/reasons.js",
+      "upstream_path": "packaging/shared-charge/usr/share/gnome-shell/extensions/charge-indicator@tablet-linux/reasons.js",
+      "sha256": "8709cb975da65f7aded7c5e5d4d14ae72bb4fe58a4f57d5dff0df64404e3d99f"
+    }
+  ]
+}

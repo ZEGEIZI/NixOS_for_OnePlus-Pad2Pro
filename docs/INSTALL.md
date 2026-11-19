@@ -119,7 +119,10 @@ mkfs.ext4 -b 4096 -I 256 -O none,has_journal,ext_attr,resize_inode,dir_index,fil
 需要创建镜像文件并核对大小后才能执行示例。不得把示例路径直接替换成未核查的块设备。
 发布完成后同步，离线镜像检查前干净卸载文件系统，再使用独立 kShimC 的主机
 检查器验证整个 ext4 镜像；加载器不会回放 journal。NixOS 运行时的 `/boot`
-默认以 `rw,noatime` 挂载，写入由 root 所有权及普通文件权限限制。
+默认以 `ro,noatime` 挂载。安装器和清理器仅在操作期间临时改为可写，
+同步后恢复只读；即使接管旧配置的可写挂载，操作结束也会改为只读。
+长期可写的 ext4 即使没有文件写入，也会设置 `needs_recovery`；强制重启后
+kShimC 会拒绝读取整个启动分区。文件权限不能避免这一问题。
 
 ## Btrfs 和系统安装
 

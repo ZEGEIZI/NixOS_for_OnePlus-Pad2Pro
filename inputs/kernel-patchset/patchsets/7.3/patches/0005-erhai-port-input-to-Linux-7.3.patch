@@ -1,4 +1,4 @@
-From 78d9b1303b781bdbb98c8beab4e2ec38e2abc883 Mon Sep 17 00:00:00 2001
+From 19f71fc8e0983ca1c1869a9f6084320fec08fa2d Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:33 +0800
 Subject: [PATCH] erhai: port input to Linux 7.3

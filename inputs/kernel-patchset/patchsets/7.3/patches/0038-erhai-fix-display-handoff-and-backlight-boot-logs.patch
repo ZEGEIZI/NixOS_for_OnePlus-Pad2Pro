@@ -1,0 +1,79 @@
+From bb0730a5db332e0b5cbe4731d445fef97a1ce450 Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:25:21 +0800
+Subject: [PATCH] erhai fix display handoff and backlight boot logs
+
+---
+ arch/arm64/boot/dts/qcom/sm8750-erhai.dts |  8 ++++++++
+ drivers/video/backlight/ktz8866.c         | 18 ++++++++++++------
+ 2 files changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+index c95b726ca..50d5ae7ba 100644
+--- a/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
++++ b/arch/arm64/boot/dts/qcom/sm8750-erhai.dts
+@@ -35,6 +35,12 @@ aliases {
+ 	};
+ 
+ 	reserved-memory {
++		boot_splash: framebuffer@fc800000 {
++			reg = <0x0 0xfc800000 0x0 0x2b00000>;
++			iommu-addresses = <&mdss 0x0 0xfc800000 0x0 0x2b00000>;
++			no-map;
++		};
++
+ 		ramoops@afff00000 {
+ 			compatible = "ramoops";
+ 			reg = <0xa 0xfff00000 0x0 0x100000>;
+@@ -1574,6 +1580,7 @@ &i2c_master_hub_0 {
+ };
+ 
+ &i2c_hub_0 {
++	clock-frequency = <100000>;
+ 	status = "okay";
+ 
+ 	ktz8868_master: backlight@11 {
+@@ -1745,6 +1752,7 @@ &iris {
+ };
+ 
+ &mdss {
++	memory-region = <&boot_splash>;
+ 	status = "okay";
+ };
+ 
+diff --git a/drivers/video/backlight/ktz8866.c b/drivers/video/backlight/ktz8866.c
+index 6ee15c716..a79f7c2f9 100644
+--- a/drivers/video/backlight/ktz8866.c
++++ b/drivers/video/backlight/ktz8866.c
+@@ -396,6 +396,7 @@ static int ktz8866_probe(struct i2c_client *client)
+ 	struct fwnode_handle *led_node __free(fwnode_handle) = NULL;
+ 	struct backlight_device *backlight_dev;
+ 	struct backlight_properties props;
++	struct device *dev = &client->dev;
+ 	struct ktz8866 *ktz;
+ 	int ret = 0;
+ 
+@@ -409,12 +410,17 @@ static int ktz8866_probe(struct i2c_client *client)
+ 	if (IS_ERR(ktz->regmap))
+ 		return dev_err_probe(&client->dev, PTR_ERR(ktz->regmap), "failed to init regmap\n");
+ 
+-	ret = devm_regulator_get_enable(&client->dev, "vddpos");
+-	if (ret)
+-		return dev_err_probe(&client->dev, ret, "get regulator vddpos failed\n");
+-	ret = devm_regulator_get_enable(&client->dev, "vddneg");
+-	if (ret)
+-		return dev_err_probe(&client->dev, ret, "get regulator vddneg failed\n");
++	if (ktz->variant == KTZ8866 || device_property_present(dev, "vddpos-supply")) {
++		ret = devm_regulator_get_enable(dev, "vddpos");
++		if (ret)
++			return dev_err_probe(dev, ret, "get regulator vddpos failed\n");
++	}
++
++	if (ktz->variant == KTZ8866 || device_property_present(dev, "vddneg-supply")) {
++		ret = devm_regulator_get_enable(dev, "vddneg");
++		if (ret)
++			return dev_err_probe(dev, ret, "get regulator vddneg failed\n");
++	}
+ 
+ 	ktz->enable_gpio = devm_gpiod_get_optional(&client->dev, "enable",
+ 						   ktz->variant == KTZ8868 ?

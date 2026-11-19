@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-16",
+  "release": "7.3.4-erhai-p6",
+  "source_head": "9b519649fc7a717ac8fa51f128639116b60557bd",
+  "build": "passed",
+  "architecture": "AArch64 cross",
+  "toolchain": "current nixpkgs GCC 16.2.0",
+  "outputs": {
+    "dev": "/nix/store/jidvj3bhdg0d752fj8mnsng77w6lwcar-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-dev",
+    "modules": "/nix/store/icaxcr8iy80crci7c0z6aspp2bs87ry7-linux-erhai-aarch64-unknown-linux-gnu-7.3.4-modules",
+    "out": "/nix/store/myql0p1k6lwgxp4x99b0xclpc28zvfzl-linux-erhai-aarch64-unknown-linux-gnu-7.3.4",
+    "release": "7.3.4-erhai-p6"
+  },
+  "configuration": {
+    "CONFIG_OPLUS_UFCS_CLASS": "y",
+    "CONFIG_CHARGER_SC8547A": "y",
+    "CONFIG_CHARGER_ERHAI_PPS": "y",
+    "CONFIG_BATTERY_QCOM_BATTMGR": "y",
+    "CONFIG_QCOM_PMIC_GLINK": "y",
+    "CONFIG_DEBUG_INFO_BTF": "y",
+    "CONFIG_SCHED_CLASS_EXT": "y"
+  },
+  "btf": "ELF .BTF and .BTF_ids sections present",
+  "charging_symbols": "erhai_pps_register and sc8547a_ufcs_start present in vmlinux",
+  "payloads": {
+    "Image": {
+      "sha256": "8b4c86a819e865a8fa26ee261815e5b8bb4e67ea05d20f2cd9fe1194f2fb6e5e",
+      "bytes": 54766080
+    },
+    "DTB": {
+      "sha256": "3dc931c89b19aede8f8755bb095747d5b93df10d3dd3e6d7f0740b3f0f4c4168",
+      "bytes": 194299
+    }
+  },
+  "device_regression": "passed; charging policy, UART, Brahma, display, Wi-Fi and DTB checks",
+  "hardware_verified": true,
+  "native_system_build": "passed; complete cross kernel with native ARM64 userland and boot tree; duplicate native kernel build canceled, not claimed as passed",
+  "adc_module_vermagic": "7.3.4-erhai-p6 SMP preempt mod_unload aarch64",
+  "hardware_scope": "VCBAOBCH SUPERVOOC, high SOC entry, locked screen-off and QC 9 V/full tail; see charging-p6-device-acceptance.json for limits and pending checks"
+}

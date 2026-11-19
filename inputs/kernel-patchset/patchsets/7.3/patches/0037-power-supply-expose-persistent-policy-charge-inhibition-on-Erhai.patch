@@ -1,0 +1,260 @@
+From 5b49cde232f03d6df8b3ba40eda505c175de2801 Mon Sep 17 00:00:00 2001
+From: ZEGEIZI <ZEGEIZI@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 21:25:48 +0800
+Subject: [PATCH] power: supply: expose persistent-policy charge inhibition on
+ Erhai
+
+---
+ drivers/power/supply/qcom_battmgr.c | 78 +++++++++++++++++++++++------
+ 1 file changed, 62 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/power/supply/qcom_battmgr.c b/drivers/power/supply/qcom_battmgr.c
+index 98370c62c..d39eebd1d 100644
+--- a/drivers/power/supply/qcom_battmgr.c
++++ b/drivers/power/supply/qcom_battmgr.c
+@@ -526,6 +526,7 @@ struct qcom_battmgr {
+ 	bool charge_inhibited;
+ 	bool charge_error;
+ 	bool charge_policy_hold;
++	bool charge_paused;
+ 	struct wakeup_source *charge_ws;
+ 	bool charge_awake; /* protected by notify_lock */
+ 
+@@ -880,6 +881,14 @@ static int erhai_battery_status(int status, int current_ua)
+ 	return current_ua < 0 ? POWER_SUPPLY_STATUS_DISCHARGING : status;
+ }
+ 
++#define ERHAI_CHARGE_BEHAVIOURS (BIT(POWER_SUPPLY_CHARGE_BEHAVIOUR_AUTO) | \
++                                 BIT(POWER_SUPPLY_CHARGE_BEHAVIOUR_INHIBIT_CHARGE))
++
++static bool qcom_battmgr_charge_held(struct qcom_battmgr *b)
++{
++	return READ_ONCE(b->charge_paused) || READ_ONCE(b->charge_policy_hold);
++}
++
+ static int qcom_battmgr_bat_get_property(struct power_supply *psy,
+ 					 enum power_supply_property psp,
+ 					 union power_supply_propval *val)
+@@ -889,6 +898,13 @@ static int qcom_battmgr_bat_get_property(struct power_supply *psy,
+ 	u32 raw_ua;
+ 	int ret;
+ 
++	if (psp == POWER_SUPPLY_PROP_CHARGE_BEHAVIOUR) {
++		val->intval = READ_ONCE(battmgr->charge_paused) ?
++			POWER_SUPPLY_CHARGE_BEHAVIOUR_INHIBIT_CHARGE :
++			POWER_SUPPLY_CHARGE_BEHAVIOUR_AUTO;
++		return 0;
++	}
++
+ 	if (!battmgr->service_up)
+ 		return -EAGAIN;
+ 
+@@ -910,7 +926,8 @@ static int qcom_battmgr_bat_get_property(struct power_supply *psy,
+ 			 * can supply the system after output is disabled; it does
+ 			 * not undo full until the controller declares recharge.
+ 			 */
+-			if (READ_ONCE(battmgr->buck.phase) == ERHAI_BUCK_FULL &&
++			if (!READ_ONCE(battmgr->charge_paused) &&
++			    READ_ONCE(battmgr->buck.phase) == ERHAI_BUCK_FULL &&
+ 			    READ_ONCE(battmgr->buck_online)) {
+ 				val->intval = POWER_SUPPLY_STATUS_FULL;
+ 				break;
+@@ -920,7 +937,7 @@ static int qcom_battmgr_bat_get_property(struct power_supply *psy,
+ 			if (ret)
+ 				return ret;
+ 			if (READ_ONCE(battmgr->buck.disable) ||
+-				 READ_ONCE(battmgr->charge_policy_hold) ||
++				 qcom_battmgr_charge_held(battmgr) ||
+ 				 READ_ONCE(battmgr->charge_inhibited))
+ 				val->intval = POWER_SUPPLY_STATUS_NOT_CHARGING;
+ 			else if ((s32)raw_ua < 0)
+@@ -1213,7 +1230,7 @@ static int qcom_battmgr_charge_enable(struct qcom_battmgr *battmgr, bool enable)
+ {
+ 	int ret;
+ 
+-	enable &= !battmgr->buck.disable &&
++	enable &= !READ_ONCE(battmgr->charge_paused) && !battmgr->buck.disable &&
+ 		  !test_bit(PD_EVENT_TAIL, &battmgr->pd_events);
+ 
+ 	ret = qcom_battmgr_set_property(battmgr, BATTMGR_BAT_PROPERTY_SET,
+@@ -1242,6 +1259,15 @@ static void qcom_battmgr_charge_limit_update(struct qcom_battmgr *battmgr)
+ 	unsigned int soc;
+ 	int ret;
+ 
++	/* Firmware can restore charging on attach or restart. Reassert the
++	 * pause through the same path used by the threshold and protocol code.
++	 */
++	if (READ_ONCE(battmgr->charge_paused)) {
++		if (!qcom_battmgr_charge_enable(battmgr, false))
++			battmgr->charge_inhibited = true;
++		return;
++	}
++
+ 	if (!qcom_battmgr_charge_limited(battmgr)) {
+ 		battmgr->charge_policy_hold = false;
+ 		if ((battmgr->charge_inhibited || battmgr->charge_error) &&
+@@ -1266,7 +1292,7 @@ static void qcom_battmgr_charge_limit_update(struct qcom_battmgr *battmgr)
+ 	 * the hysteresis decision and reconcile it on the next poll, even
+ 	 * when SOC has since moved between the thresholds.
+ 	 */
+-	if (battmgr->charge_policy_hold) {
++	if (qcom_battmgr_charge_held(battmgr)) {
+ 		if ((soc >= end || !battmgr->charge_inhibited || battmgr->charge_error) &&
+ 		    !qcom_battmgr_charge_enable(battmgr, false) && !battmgr->charge_inhibited) {
+ 			battmgr->charge_inhibited = true;
+@@ -1608,7 +1634,7 @@ static int qcom_battmgr_pd_fcc(struct qcom_battmgr *b)
+ 		b->pd_saved_fcc_ua = current_fcc;
+ 	want = b->pd_saved_fcc_ua;
+ 	if (!b->tail_owned && !test_bit(PD_EVENT_TAIL, &b->pd_events) &&
+-	    !b->charge_inhibited && !b->charge_policy_hold && !b->charge_error &&
++	    !b->charge_inhibited && !qcom_battmgr_charge_held(b) && !b->charge_error &&
+ 	    !qcom_battmgr_get_property(b, BATTMGR_BAT_PROPERTY_GET, BATT_TEMP, &temp) &&
+ 	    !qcom_battmgr_get_property(b, BATTMGR_BAT_PROPERTY_GET, BATT_CAPACITY, &soc) &&
+ 	    !qcom_battmgr_get_property(b, BATTMGR_BAT_PROPERTY_GET, BATT_VOLT_NOW, &uv) &&
+@@ -1921,7 +1947,7 @@ static int qcom_battmgr_buck_pause(struct qcom_battmgr *b)
+ static int qcom_battmgr_buck_apply(struct qcom_battmgr *b)
+ {
+ 	struct erhai_buck *buck = &b->buck;
+-	bool enable = !buck->disable && !b->charge_policy_hold && !b->charge_inhibited &&
++	bool enable = !buck->disable && !qcom_battmgr_charge_held(b) && !b->charge_inhibited &&
+ 		      !READ_ONCE(b->otg_request);
+ 	int ret, hint, para, region, ffc = 0;
+ 	u32 fcc;
+@@ -1999,7 +2025,7 @@ static int qcom_battmgr_buck_release(struct qcom_battmgr *b)
+ 		return 0;
+ 	if (!b->buck.normal_fv_mv) {
+ 		ret = qcom_battmgr_buck_write(b, BATT_OPLUS_CHG_EN,
+-					    !b->charge_policy_hold && !b->charge_inhibited,
++					    !qcom_battmgr_charge_held(b) && !b->charge_inhibited,
+ 					    &b->buck_enable_applied);
+ 		if (!ret)
+ 			b->buck = (struct erhai_buck){};
+@@ -2007,7 +2033,7 @@ static int qcom_battmgr_buck_release(struct qcom_battmgr *b)
+ 	}
+ 	enable = b->buck.phase != ERHAI_BUCK_FULL && !b->buck.over_voltage &&
+ 		 b->buck.temp_region > 0 && b->buck.temp_region < 8 &&
+-		 !b->charge_policy_hold && !b->charge_inhibited;
++		 !qcom_battmgr_charge_held(b) && !b->charge_inhibited;
+ 	/* Withdraw elevated FV before leaving AP supervision, including reboot. */
+ 	b->buck.phase = ERHAI_BUCK_NORMAL;
+ 	b->buck.disable = true;
+@@ -2073,7 +2099,7 @@ static unsigned int qcom_battmgr_buck_tick(struct qcom_battmgr *b)
+ 	b->buck_sample_at = jiffies;
+ 	previous = b->buck.phase;
+ 	step = b->buck.step;
+-	if (!b->charge_policy_hold && !b->charge_inhibited)
++	if (!qcom_battmgr_charge_held(b) && !b->charge_inhibited)
+ 		erhai_buck_update(&b->buck, &sample, jiffies);
+ 	else {
+ 		erhai_buck_temperature(&b->buck, sample.temp);
+@@ -2304,7 +2330,7 @@ static unsigned int qcom_battmgr_pd_update(struct qcom_battmgr *battmgr)
+ 	can_probe = dedicated && battmgr->buck.phase != ERHAI_BUCK_FULL &&
+ 		    !battmgr->buck.disable && !READ_ONCE(battmgr->pps_suspended) &&
+ 		    !READ_ONCE(battmgr->otg_request) && !battmgr->charge_inhibited &&
+-		    !battmgr->charge_policy_hold && !battmgr->charge_error;
++		    !qcom_battmgr_charge_held(battmgr) && !battmgr->charge_error;
+ 	can_probe_pumps = can_probe && !status.connector_blocked;
+ 	qcom_battmgr_note_delivery(battmgr, status.delivering);
+ 	if (status.delivering == ERHAI_SERIAL) {
+@@ -2429,7 +2455,7 @@ static unsigned int qcom_battmgr_pd_update(struct qcom_battmgr *battmgr)
+ 		     !test_bit(PD_EVENT_TAIL, &battmgr->pd_events) && !READ_ONCE(battmgr->pps_suspended) &&
+ 		     battmgr->pps_ops && battmgr->pps_ops->enabled() &&
+ 		     src.sink && !READ_ONCE(battmgr->otg_request);
+-	if (prefer_pps && !battmgr->charge_inhibited && !battmgr->charge_policy_hold &&
++	if (prefer_pps && !battmgr->charge_inhibited && !qcom_battmgr_charge_held(battmgr) &&
+ 	    !battmgr->charge_error && battmgr->pps_ops->available(battmgr->pps_data)) {
+ 		unsigned int delay;
+ 
+@@ -2558,7 +2584,7 @@ static unsigned int qcom_battmgr_pd_update(struct qcom_battmgr *battmgr)
+ 	if (qcom_battmgr_get_property(battmgr, BATTMGR_BAT_PROPERTY_GET, BATT_HEALTH, &health) ||
+ 	    qcom_battmgr_get_property(battmgr, BATTMGR_BAT_PROPERTY_GET, BATT_VOLT_NOW, &vbat))
+ 		return CHARGE_CTRL_POLL_MS;
+-	if (battmgr->charge_inhibited || battmgr->charge_policy_hold || battmgr->charge_error ||
++	if (battmgr->charge_inhibited || qcom_battmgr_charge_held(battmgr) || battmgr->charge_error ||
+ 	    (health != POWER_SUPPLY_HEALTH_GOOD && health != POWER_SUPPLY_HEALTH_COOL &&
+ 	     health != POWER_SUPPLY_HEALTH_WARM) ||
+ 	    vbat >= (battmgr->pd_restore ? PD_VBAT_STOP_UV : PD_VBAT_START_UV)) {
+@@ -2925,6 +2951,8 @@ static int qcom_battmgr_bat_is_writeable(struct power_supply *psy,
+ 		return 0;
+ 
+ 	switch (psp) {
++	case POWER_SUPPLY_PROP_CHARGE_BEHAVIOUR:
++		return !!(battmgr->quirks & QCOM_BATTMGR_QUIRK_OPLUS_PD);
+ 	case POWER_SUPPLY_PROP_CHARGE_CONTROL_START_THRESHOLD:
+ 	case POWER_SUPPLY_PROP_CHARGE_CONTROL_END_THRESHOLD:
+ 		return 1;
+@@ -2945,6 +2973,18 @@ static int qcom_battmgr_bat_set_property(struct power_supply *psy,
+ 	if (qcom_battmgr_no_charge_ctrl(battmgr))
+ 		return -EOPNOTSUPP;
+ 
++	if (psp == POWER_SUPPLY_PROP_CHARGE_BEHAVIOUR) {
++		bool paused = pval->intval == POWER_SUPPLY_CHARGE_BEHAVIOUR_INHIBIT_CHARGE;
++
++		if (!(battmgr->quirks & QCOM_BATTMGR_QUIRK_OPLUS_PD) ||
++		    (!paused && pval->intval != POWER_SUPPLY_CHARGE_BEHAVIOUR_AUTO))
++			return -EINVAL;
++		WRITE_ONCE(battmgr->charge_paused, paused);
++		qcom_battmgr_charge_kick(battmgr);
++		power_supply_changed(psy);
++		return 0;
++	}
++
+ 	if (!battmgr->service_up)
+ 		return -EAGAIN;
+ 
+@@ -3092,6 +3132,7 @@ static const enum power_supply_property sm8550_bat_props[] = {
+ 	POWER_SUPPLY_PROP_POWER_NOW,
+ 	POWER_SUPPLY_PROP_CHARGE_CONTROL_START_THRESHOLD,
+ 	POWER_SUPPLY_PROP_CHARGE_CONTROL_END_THRESHOLD,
++	POWER_SUPPLY_PROP_CHARGE_BEHAVIOUR,
+ };
+ 
+ static const struct power_supply_desc sm8550_bat_psy_desc = {
+@@ -4118,6 +4159,8 @@ static bool qcom_battmgr_bat_prop_hidden(struct qcom_battmgr *battmgr,
+ 					 enum power_supply_property psp)
+ {
+ 	switch (psp) {
++	case POWER_SUPPLY_PROP_CHARGE_BEHAVIOUR:
++		return !(battmgr->quirks & QCOM_BATTMGR_QUIRK_OPLUS_PD);
+ 	/* Leave POWER_NOW out rather than report a value that is not one */
+ 	case POWER_SUPPLY_PROP_POWER_NOW:
+ 		return battmgr->quirks & QCOM_BATTMGR_QUIRK_NO_BATT_POWER_NOW;
+@@ -4138,8 +4181,9 @@ qcom_battmgr_sm8350_bat_desc(struct qcom_battmgr *battmgr,
+ 	struct power_supply_desc *copy;
+ 	size_t i, n = 0;
+ 
+-	if (!(battmgr->quirks & (QCOM_BATTMGR_QUIRK_NO_BATT_POWER_NOW |
+-				 QCOM_BATTMGR_QUIRK_NO_CHARGE_CONTROL)))
++	if (desc != &sm8550_bat_psy_desc &&
++	    !(battmgr->quirks & (QCOM_BATTMGR_QUIRK_NO_BATT_POWER_NOW |
++				  QCOM_BATTMGR_QUIRK_NO_CHARGE_CONTROL)))
+ 		return desc;
+ 
+ 	copy = devm_kmemdup(battmgr->dev, desc, sizeof(*desc), GFP_KERNEL);
+@@ -4152,6 +4196,8 @@ qcom_battmgr_sm8350_bat_desc(struct qcom_battmgr *battmgr,
+ 		if (!qcom_battmgr_bat_prop_hidden(battmgr, desc->properties[i]))
+ 			props[n++] = desc->properties[i];
+ 
++	if (battmgr->quirks & QCOM_BATTMGR_QUIRK_OPLUS_PD)
++		copy->charge_behaviours = ERHAI_CHARGE_BEHAVIOURS;
+ 	copy->properties = props;
+ 	copy->num_properties = n;
+ 
+@@ -4291,7 +4337,7 @@ int erhai_otg_adsp_prop_set(u32 opcode, u32 property, u32 value)
+ 		if (property == BATT_OPLUS_CHG_EN)
+ 			return qcom_battmgr_charge_enable(erhai_battmgr,
+ 						 !erhai_battmgr->charge_inhibited &&
+-						 !erhai_battmgr->charge_policy_hold);
++						 !qcom_battmgr_charge_held(erhai_battmgr));
+ 		if (property != BATT_CHG_CTRL_LIM && property != 46 &&
+ 		    !(property == BATT_OPLUS_SET_PDO && value == PD_DEFAULT_MV))
+ 			return -EINVAL;
+@@ -4306,7 +4352,7 @@ bool erhai_otg_charge_inhibited(void)
+ {
+ 	guard(mutex)(&erhai_bridge_lock);
+ 	return !erhai_battmgr || erhai_battmgr->charge_inhibited ||
+-	       erhai_battmgr->charge_policy_hold || erhai_battmgr->charge_error ||
++	       qcom_battmgr_charge_held(erhai_battmgr) || erhai_battmgr->charge_error ||
+ 	       READ_ONCE(erhai_battmgr->otg_request);
+ }
+ EXPORT_SYMBOL_GPL(erhai_otg_charge_inhibited);

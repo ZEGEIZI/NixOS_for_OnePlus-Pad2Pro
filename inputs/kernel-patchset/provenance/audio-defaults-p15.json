@@ -1,0 +1,7 @@
+{
+  "base_release": "p14",
+  "source": "Downstream changes against the strictly replayed p14 sources",
+  "wcd_mbhc": "Use 500 mV for the default button threshold and report invalid data only when the optional property is present",
+  "lpass_va": "Treat an absent optional qcom,dmic-sample-rate property as the default divider case",
+  "acceptance": "Confirm codec binding, ALSA device registration and boot diagnostics on the OPD2413"
+}

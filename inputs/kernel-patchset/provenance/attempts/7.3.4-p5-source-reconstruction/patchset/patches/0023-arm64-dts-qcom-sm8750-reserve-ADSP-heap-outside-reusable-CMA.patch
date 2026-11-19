@@ -1,0 +1,27 @@
+From 4a4041f5921c6cbe29946bf36a1035b601ff3400 Mon Sep 17 00:00:00 2001
+From: Erhai patchset migration <erhai-patchset@localhost>
+Date: Sat, 14 Nov 2026 06:13:12 +0800
+Subject: [PATCH] arm64: dts: qcom: sm8750: reserve ADSP heap outside reusable
+ CMA
+
+The 7.3 FastRPC driver assigns the complete ADSP remote heap to DSP VMIDs during probe. A reusable CMA pool can still back unrelated anonymous Linux pages after the CPU loses access to that memory. Native kernel compilation on Erhai produced synchronous external aborts in clear_page for six huge-page allocations inside the 12 MiB heap at fec00000-ff7fffff.
+
+Keep the dynamically allocated below-4G heap dedicated and unmapped instead of reusable. This matches its channel-lifetime ownership and prevents ordinary Linux allocations from receiving DSP-owned pages.
+---
+ arch/arm64/boot/dts/qcom/sm8750.dtsi | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/qcom/sm8750.dtsi b/arch/arm64/boot/dts/qcom/sm8750.dtsi
+index a9a4fc2d3..8b3fbc5cd 100644
+--- a/arch/arm64/boot/dts/qcom/sm8750.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8750.dtsi
+@@ -595,7 +595,8 @@ adsp_rpc_remote_heap_mem: adsp-rpc-remote-heap {
+ 			alloc-ranges = <0x0 0x00000000 0x0 0xffffffff>;
+ 			alignment = <0x0 0x400000>;
+ 			size = <0x0 0xc00000>;
+-			reusable;
++			/* FastRPC assigns the whole heap to DSP VMIDs at probe. */
++			no-map;
+ 		};
+ 	};
+ 

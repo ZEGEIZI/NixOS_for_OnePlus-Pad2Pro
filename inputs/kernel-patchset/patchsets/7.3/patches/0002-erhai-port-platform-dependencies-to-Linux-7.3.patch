@@ -1,4 +1,4 @@
-From 3bf8b72db4395cca113fc89698111b98ad793095 Mon Sep 17 00:00:00 2001
+From 70b757607eae894d9ff262f2d1959f4f9c970879 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:32 +0800
 Subject: [PATCH] erhai: port platform-dependencies to Linux 7.3

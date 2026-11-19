@@ -1,0 +1,391 @@
+{
+  "date": "2026-11-17",
+  "device": "OPD2413",
+  "scope": "read-only Android/NixOS SOC, voltage and full-state investigation; no charge policy or gauge state changed",
+  "nixos_before_switch": {
+    "timestamp": "2026-11-17T22:59:45+08:00",
+    "release": "7.3.4-erhai-p6",
+    "status": "Discharging",
+    "capacity_percent": 87,
+    "voltage_uv": 4301712,
+    "current_ua": -180059,
+    "charge_counter_uah": 10192825,
+    "charge_full_uah": 12300000,
+    "charge_full_design_uah": 12350000,
+    "voltage_max_uv": 4630000,
+    "temp_deci_c": 310,
+    "end_threshold_percent": 100,
+    "evidence": "Original SSH tool response; charge_contract was offline, phase0 and pump0."
+  },
+  "android_samples": [
+    {
+      "date": "2026-11-17T23:04:15+08:00",
+      "metrics": {
+        "batt_temp": 320,
+        "shell_temp": 320,
+        "vbat_mv": 4338,
+        "vbat_min_mv": 4338,
+        "ibat_ma": -874,
+        "batt_soc": 89,
+        "ui_soc": 100,
+        "wired_online": 1,
+        "charge_type": 3,
+        "notify_code": 0,
+        "wired_ibus_ma": 1291,
+        "wired_vbus_mv": 4667,
+        "smooth_soc": 90,
+        "led_on": 1,
+        "fv_mv": 4490,
+        "fcc_ma": 1600,
+        "wired_icl_ma": 1500,
+        "otg_switch": 0,
+        "cool_down": 14,
+        "bcc_current": -22,
+        "normal_cool_down": -19,
+        "chg_cycle": 0,
+        "mmi_chg": 1,
+        "usb_status": 0,
+        "cc_detect": 2,
+        "batt_full": 0,
+        "rechging": 0,
+        "pd_svooc": 0,
+        "prop_status": 1,
+        "batt_qmax": 0,
+        "batt_soh": 100,
+        "gauge_car_c": 0,
+        "batt_rm": 10369,
+        "batt_fcc": 11685,
+        "vooc_online": 0,
+        "vooc_started": 0,
+        "vooc_charging": 0,
+        "vooc_online_keep": 0,
+        "vooc_sid": 0,
+        "adapter_id": 0
+      }
+    },
+    {
+      "date": "2026-11-17T23:04:51+08:00",
+      "metrics": {
+        "batt_temp": 318,
+        "shell_temp": 318,
+        "vbat_mv": 4341,
+        "vbat_min_mv": 4341,
+        "ibat_ma": -845,
+        "batt_soc": 89,
+        "ui_soc": 100,
+        "wired_online": 1,
+        "charge_type": 3,
+        "notify_code": 0,
+        "wired_ibus_ma": 1294,
+        "wired_vbus_mv": 4665,
+        "smooth_soc": 90,
+        "led_on": 1,
+        "fv_mv": 4490,
+        "fcc_ma": 1600,
+        "wired_icl_ma": 1500,
+        "otg_switch": 0,
+        "cool_down": 14,
+        "bcc_current": -22,
+        "normal_cool_down": -19,
+        "chg_cycle": 0,
+        "mmi_chg": 1,
+        "usb_status": 0,
+        "cc_detect": 2,
+        "batt_full": 0,
+        "rechging": 0,
+        "pd_svooc": 0,
+        "prop_status": 1,
+        "batt_qmax": 0,
+        "batt_soh": 100,
+        "gauge_car_c": 0,
+        "batt_rm": 10396,
+        "batt_fcc": 11685,
+        "vooc_online": 0,
+        "vooc_started": 0,
+        "vooc_charging": 0,
+        "vooc_online_keep": 0,
+        "vooc_sid": 0,
+        "adapter_id": 0
+      }
+    },
+    {
+      "date": "2026-11-17T23:08:42+08:00",
+      "metrics": {
+        "batt_temp": 312,
+        "shell_temp": 312,
+        "vbat_mv": 4348,
+        "vbat_min_mv": 4348,
+        "ibat_ma": -960,
+        "batt_soc": 91,
+        "ui_soc": 100,
+        "wired_online": 1,
+        "charge_type": 3,
+        "notify_code": 1048704,
+        "wired_ibus_ma": 1341,
+        "wired_vbus_mv": 4679,
+        "smooth_soc": 92,
+        "led_on": 1,
+        "fv_mv": 4490,
+        "fcc_ma": 1600,
+        "wired_icl_ma": 1500,
+        "otg_switch": 0,
+        "cool_down": 14,
+        "bcc_current": -22,
+        "normal_cool_down": -19,
+        "chg_cycle": 0,
+        "mmi_chg": 1,
+        "usb_status": 0,
+        "cc_detect": 2,
+        "batt_full": 1,
+        "rechging": 0,
+        "pd_svooc": 0,
+        "prop_status": 4,
+        "batt_qmax": 0,
+        "batt_soh": 100,
+        "gauge_car_c": 0,
+        "batt_rm": 10691,
+        "batt_fcc": 11685,
+        "vooc_online": 0,
+        "vooc_started": 0,
+        "vooc_charging": 0,
+        "vooc_online_keep": 0,
+        "vooc_sid": 0,
+        "adapter_id": 0
+      }
+    }
+  ],
+  "android_boot_log_key_lines": [
+    "[    5.001040] [INFO]: OPLUS_CHG[CHG_COMM]([oplus_comm_subscribe_gauge_topic][6659]): shutdown_soc=100, soc=87, partition_uisoc=-22, smooth_soc=88",
+    "[    5.001041] [INFO]: OPLUS_CHG[CHG_COMM]([oplus_comm_subscribe_gauge_topic][6689]): set the init ui_soc = 100",
+    "[  305.120420] [ERROR]: OPLUS_CHG[CHG_COMM]([oplus_comm_report_full][4106]): pre set battery full soc=90 timeout=300s",
+    "[  305.120645] [INFO]: OPLUS_CHG[CHG_COMM]([oplus_comm_set_batt_full][1409]): batt_full=true"
+  ],
+  "capacity_paths": {
+    "nixos": "qcom_battmgr.c BATT_CAPACITY response -> firmware value / 100 -> status.percent -> POWER_SUPPLY_PROP_CAPACITY; no Oplus shutdown/UI smoothing layer",
+    "android": "live chip_soc 89/91 versus ui_soc100; boot logs show shutdown_soc100, soc87, smooth_soc88 and init ui_soc100",
+    "rounding": "NixOS integer division can lose less than one percentage point; it does not explain a 13-point gap."
+  },
+  "voltage_comparison": {
+    "nixos_before_switch_v": 4.301712,
+    "android_first_battery_service_v": 4.322,
+    "android_first_gauge_v": 4.341,
+    "limitation": "Sequential samples, not simultaneous; charging changed from off to USB CDP after switch. No factor-of-two or factor-of-1000 mismatch observed, but independent ADC calibration was not measured."
+  },
+  "charging_limits_comparison": [
+    {
+      "property": "fv-mv",
+      "android_live": [
+        4490,
+        4490,
+        4490,
+        4490,
+        4490,
+        4490,
+        4470,
+        4130,
+        4130
+      ],
+      "nixos_p6": [
+        4490,
+        4490,
+        4490,
+        4490,
+        4490,
+        4490,
+        4470,
+        4130,
+        4130
+      ],
+      "equal": true
+    },
+    {
+      "property": "sw-fv-mv",
+      "android_live": [
+        4440,
+        4440,
+        4440,
+        4440,
+        4440,
+        4440,
+        4420,
+        4080,
+        4080
+      ],
+      "nixos_p6": [
+        4440,
+        4440,
+        4440,
+        4440,
+        4440,
+        4440,
+        4420,
+        4080,
+        4080
+      ],
+      "equal": true
+    },
+    {
+      "property": "wired-vbatdet-mv",
+      "android_live": [
+        0,
+        4190,
+        4290,
+        4390,
+        4390,
+        4390,
+        4370,
+        4030,
+        0
+      ],
+      "nixos_p6": [
+        0,
+        4190,
+        4290,
+        4390,
+        4390,
+        4390,
+        4370,
+        4030,
+        0
+      ],
+      "equal": true
+    },
+    {
+      "property": "wired-ffc-fv-mv",
+      "android_live": [
+        4630,
+        4630
+      ],
+      "nixos_p6": [
+        4630,
+        4630
+      ],
+      "equal": true,
+      "verification": "scalar limits checked against erhai_buck.h; scalar list here records that source audit"
+    },
+    {
+      "property": "wired-ffc-fv-cutoff-mv",
+      "android_live": [
+        4540,
+        4540,
+        4540,
+        4540,
+        4540,
+        4540
+      ],
+      "nixos_p6": [
+        4540,
+        4540,
+        4540,
+        4540,
+        4540,
+        4540
+      ],
+      "equal": true,
+      "verification": "scalar limits checked against erhai_buck.h; scalar list here records that source audit"
+    },
+    {
+      "property": "wired-ffc-fcc-ma",
+      "android_live": [
+        1500,
+        1500,
+        1500,
+        1000,
+        1000,
+        1000
+      ],
+      "nixos_p6": [
+        1500,
+        1500,
+        1500,
+        1000,
+        1000,
+        1000
+      ],
+      "equal": true,
+      "verification": "scalar limits checked against erhai_buck.h; scalar list here records that source audit"
+    },
+    {
+      "property": "wired-ffc-fcc-cutoff-ma",
+      "android_live": [
+        1300,
+        1300,
+        1300,
+        900,
+        900,
+        900
+      ],
+      "nixos_p6": [
+        1300,
+        1300,
+        1300,
+        900,
+        900,
+        900
+      ],
+      "equal": true,
+      "verification": "scalar limits checked against erhai_buck.h; scalar list here records that source audit"
+    },
+    {
+      "property": "full-pre-ffc-mv",
+      "android_live": [
+        4485
+      ],
+      "nixos_p6": [
+        4485
+      ],
+      "equal": true,
+      "verification": "scalar limits checked against erhai_buck.h; scalar list here records that source audit"
+    },
+    {
+      "property": "vbatt-ov-thr-mv",
+      "android_live": [
+        4600
+      ],
+      "nixos_p6": [
+        4600
+      ],
+      "equal": true,
+      "verification": "scalar limits checked against erhai_buck.h; scalar list here records that source audit"
+    },
+    {
+      "property": "iterm-ma",
+      "android_live": [
+        597
+      ],
+      "nixos_p6": [
+        597
+      ],
+      "equal": true,
+      "verification": "scalar limits checked against erhai_buck.h; scalar list here records that source audit"
+    }
+  ],
+  "source_reference": {
+    "repository": "https://github.com/OnePlusOSS/android_kernel_modules_and_devicetree_oneplus_sm8750",
+    "revision": "cc463675855a",
+    "file": "vendor/oplus/kernel/charger/v2/oplus_chg_comm.c",
+    "sha256": "6f7974986a085cae25b148825699eb17ae0adbafa0aa212748ed134e26894e8a",
+    "scope": "Public source supports explanation of live boot/full-report logs; not asserted to be the exact running Android source revision."
+  },
+  "conclusions": [
+    "Observed SOC mismatch is explained by Android restoring a stale shutdown UI SOC of100 while actual gauge SOC was87.",
+    "Android subsequently reported Full after a300-second UI-full timer at raw SOC90; battery current still indicated charging and displayed FV remained4490mV. Android Full is not equivalent to electrical termination in this observation.",
+    "No evidence of NixOS overvoltage from this incident; inspected normal and FFC limits match the running stock Android device tree.",
+    "This read-only investigation is not an exhaustive electrical safety certification or a new full-cycle acceptance test. No percentage scaling, calibration reset, gauge writes or charging-limit changes were made."
+  ],
+  "remaining": [
+    "No simultaneous independent voltmeter measurements.",
+    "No new paired Android/NixOS full-charge cycle with identical charger and temperature.",
+    "Android learned capacity and ADSP-reported NixOS charge_full differ; not enough evidence to attribute that difference to a calibration defect."
+  ],
+  "nixos_source": {
+    "release": "7.3.4-erhai-p6",
+    "head": "9b519649fc7a717ac8fa51f128639116b60557bd",
+    "files_sha256": {
+      "qcom_battmgr.c": "7beebe215c5ce802b30a0017395fd6b7ae80bffcb83d45a3e318ce873bbc9e5f",
+      "erhai_buck.h": "812058e11d192e36eccd9ae5db23f014686bbdb92382b922b0c6726127f240fc"
+    }
+  },
+  "live_dt_capture_sha256": "2519cb1fdb8c17e2f5097f218a66632aa26681ee20b3e16c12485ff5398eaab2",
+  "learned_capacity_note": "Android reported design12140mAh and learned FCC11685mAh; NixOS firmware previously reported design12350mAh and FCC12300mAh. These reporting/learning differences are separate from the directly observed stale UI SOC restore and do not justify arbitrary percentage scaling."
+}

@@ -1,0 +1,46 @@
+From bffebda32638453dbc01cc165a13cc2aac1bc18b Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:27:14 +0800
+Subject: [PATCH] media: qcom: camss: describe test sources and handle deferred
+ PHY probe
+
+Report EPROBE_DEFER through dev_err_probe so a late PHY provider
+does not appear as a failed CAMSS probe. Keep real failures visible
+with their error code. Describe the TPG as a media graph video
+source, as other stand-alone camera test pattern generators do.
+---
+ drivers/media/platform/qcom/camss/camss-tpg.c | 1 +
+ drivers/media/platform/qcom/camss/camss.c     | 8 +++-----
+ 2 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/media/platform/qcom/camss/camss-tpg.c b/drivers/media/platform/qcom/camss/camss-tpg.c
+index c5b75132a..6578a59f6 100644
+--- a/drivers/media/platform/qcom/camss/camss-tpg.c
++++ b/drivers/media/platform/qcom/camss/camss-tpg.c
+@@ -489,6 +489,7 @@ int msm_tpg_register_entity(struct tpg_device *tpg,
+ 
+ 	tpg->pad.flags = MEDIA_PAD_FL_SOURCE;
+ 
++	sd->entity.function = MEDIA_ENT_F_CAM_SENSOR;
+ 	sd->entity.ops = &tpg_media_ops;
+ 	ret = media_entity_pads_init(&sd->entity, 1, &tpg->pad);
+ 	if (ret < 0) {
+diff --git a/drivers/media/platform/qcom/camss/camss.c b/drivers/media/platform/qcom/camss/camss.c
+index 1700185c9..421808ef6 100644
+--- a/drivers/media/platform/qcom/camss/camss.c
++++ b/drivers/media/platform/qcom/camss/camss.c
+@@ -5295,11 +5295,9 @@ static int camss_init_subdevices(struct camss *camss)
+ 							    res->csiphy_res[i].csiphy.id);
+ 		}
+ 
+-		if (ret < 0) {
+-			dev_err(camss->dev, "csiphy %d init fail\n",
+-				res->csiphy_res[i].csiphy.id);
+-			return ret;
+-		}
++		if (ret < 0)
++			return dev_err_probe(camss->dev, ret, "csiphy %d init failed\n",
++					     res->csiphy_res[i].csiphy.id);
+ 	}
+ 
+ 	if (camss->tpg) {

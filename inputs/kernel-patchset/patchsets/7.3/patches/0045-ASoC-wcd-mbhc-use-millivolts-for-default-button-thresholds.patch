@@ -1,0 +1,34 @@
+From e7065c8efe0de1b5f1933f8bf1a75bc27dd3222c Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:25:23 +0800
+Subject: [PATCH] ASoC wcd mbhc use millivolts for default button thresholds
+
+---
+ sound/soc/codecs/wcd-mbhc-v2.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/sound/soc/codecs/wcd-mbhc-v2.c b/sound/soc/codecs/wcd-mbhc-v2.c
+index bb0c8478a..6e166f7ad 100644
+--- a/sound/soc/codecs/wcd-mbhc-v2.c
++++ b/sound/soc/codecs/wcd-mbhc-v2.c
+@@ -1485,16 +1485,11 @@ int wcd_dt_parse_mbhc_data(struct device *dev, struct wcd_mbhc_config *cfg)
+ 					 "qcom,mbhc-buttons-vthreshold-microvolt",
+ 					 &cfg->btn_high[0],
+ 					 WCD_MBHC_DEF_BUTTONS);
+-	if (ret)
+-		dev_err(dev, "missing qcom,mbhc-buttons-vthreshold-microvolt entry\n");
++	if (ret && of_property_present(np, "qcom,mbhc-buttons-vthreshold-microvolt"))
++		dev_warn(dev, "invalid MBHC button thresholds: %d\n", ret);
+ 
+-	for (i = 0; i < WCD_MBHC_DEF_BUTTONS; i++) {
+-		if (ret) /* default voltage */
+-			cfg->btn_high[i] = 500000;
+-		else
+-			/* Micro to Milli Volts */
+-			cfg->btn_high[i] = cfg->btn_high[i]/1000;
+-	}
++	for (i = 0; i < WCD_MBHC_DEF_BUTTONS; i++)
++		cfg->btn_high[i] = ret ? 500 : cfg->btn_high[i] / 1000;
+ 
+ 	return 0;
+ }

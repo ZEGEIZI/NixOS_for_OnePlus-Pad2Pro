@@ -1,0 +1,33 @@
+From 56d84aea298db825f5993fc478c45e080c07382d Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:25:23 +0800
+Subject: [PATCH] i2c qcom cci autosuspend erhai camera controller when idle
+
+---
+ drivers/i2c/busses/i2c-qcom-cci.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-qcom-cci.c b/drivers/i2c/busses/i2c-qcom-cci.c
+index bd70c6bae..12fb1a01f 100644
+--- a/drivers/i2c/busses/i2c-qcom-cci.c
++++ b/drivers/i2c/busses/i2c-qcom-cci.c
+@@ -505,6 +505,7 @@ static void cci_put_of_node(void *data)
+ static int cci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
++	int autosuspend_delay = MSEC_PER_SEC;
+ 	struct resource *r;
+ 	struct cci *cci;
+ 	int ret, i;
+@@ -601,7 +602,10 @@ static int cci_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		goto disable_clocks;
+ 
+-	pm_runtime_set_autosuspend_delay(dev, MSEC_PER_SEC);
++	if (r->start == 0x0ac7b000 &&
++	    of_machine_is_compatible("oneplus,opd2413"))
++		autosuspend_delay = 0;
++	pm_runtime_set_autosuspend_delay(dev, autosuspend_delay);
+ 	ret = devm_pm_runtime_set_active_enabled(dev);
+ 	if (ret)
+ 		goto disable_clocks;

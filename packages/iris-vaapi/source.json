@@ -1,0 +1,13 @@
+{
+  "url": "https://github.com/phxinyang/qualcomm-iris-vaapi",
+  "revision": "4125b1190c66ff7cf46e54c2b6d4076a01d7d1cd",
+  "archive": "https://codeload.github.com/phxinyang/qualcomm-iris-vaapi/tar.gz/4125b1190c66ff7cf46e54c2b6d4076a01d7d1cd",
+  "sha256": "71b127e72f17a3056749de13fa68158a9f1d506f986d571f214312b5ee41b104",
+  "licenses": [ "MIT", "LGPL-2.1" ],
+  "adaptations": [
+    "Pin the archive build version without Git metadata.",
+    "Build with nixpkgs libraries and include the EGL/GLES/GBM copy engine.",
+    "Install only the driver, msm discovery alias, provenance and licenses.",
+    "Do not advertise AV1 after SM8750 Firefox testing exposed CAPTURE errors and a surface-sync timeout."
+  ]
+}

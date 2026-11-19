@@ -1,0 +1,25 @@
+From 6701611e8e15ac7e9866be646fd5e4b31e13b791 Mon Sep 17 00:00:00 2001
+From: ZEGEIZI <ZEGEIZI@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 19:43:43 +0800
+Subject: [PATCH] arm64: configs: support USB optical drives on Erhai
+
+Build the SCSI CD-ROM, ISO 9660 and UDF drivers as modules and enable Joliet filenames.
+---
+ arch/arm64/configs/erhai-firstboot.config | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/configs/erhai-firstboot.config b/arch/arm64/configs/erhai-firstboot.config
+index fa55290a1..5fcd0bfc1 100644
+--- a/arch/arm64/configs/erhai-firstboot.config
++++ b/arch/arm64/configs/erhai-firstboot.config
+@@ -70,6 +70,10 @@ CONFIG_USB_ROLE_SWITCH=y
+ # Removable storage uses upstream drivers loaded by the desktop's udev/udisks.
+ # Keep these optional protocols and filesystems out of the early boot image.
+ CONFIG_USB_UAS=m
++CONFIG_BLK_DEV_SR=m
++CONFIG_ISO9660_FS=m
++CONFIG_JOLIET=y
++CONFIG_UDF_FS=m
+ CONFIG_EXFAT_FS=m
+ CONFIG_NTFS3_FS=m
+ # NTFS3 uses the default NLS when desktop mounts omit iocharset.

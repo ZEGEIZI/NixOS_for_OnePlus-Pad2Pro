@@ -1,4 +1,4 @@
-From 5faf1dbecc2f83a67b875358dc4286d2e9bf72c7 Mon Sep 17 00:00:00 2001
+From 974c97ed314362d2c35a85e4b07c5893c89ba252 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:32 +0800
 Subject: [PATCH] erhai: port bindings-and-documentation to Linux 7.3

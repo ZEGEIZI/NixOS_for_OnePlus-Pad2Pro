@@ -1,0 +1,76 @@
+From 4e73b35745805c313de8a890dee4c1923b42b062 Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 10:25:22 +0800
+Subject: [PATCH] driver core distinguish skipped sync state only links
+
+---
+ drivers/base/core.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 1403298a5..798567964 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -744,6 +744,10 @@ postcore_initcall(devlink_class_init);
+ #define DL_ADD_VALID_FLAGS (DL_MANAGED_LINK_FLAGS | DL_FLAG_STATELESS | \
+ 			    DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE)
+ 
++static struct device_link *device_link_add_internal(struct device *consumer,
++						   struct device *supplier,
++						   u32 flags, bool *sync_state_skipped);
++
+ /**
+  * device_link_add - Create a link between two devices.
+  * @consumer: Consumer end of the link.
+@@ -805,6 +809,14 @@ postcore_initcall(devlink_class_init);
+  */
+ struct device_link *device_link_add(struct device *consumer,
+ 				    struct device *supplier, u32 flags)
++{
++	return device_link_add_internal(consumer, supplier, flags, NULL);
++}
++EXPORT_SYMBOL_GPL(device_link_add);
++
++static struct device_link *device_link_add_internal(struct device *consumer,
++						   struct device *supplier,
++						   u32 flags, bool *sync_state_skipped)
+ {
+ 	struct device_link *link;
+ 
+@@ -854,6 +866,8 @@ struct device_link *device_link_add(struct device *consumer,
+ 	if (flags & DL_FLAG_SYNC_STATE_ONLY &&
+ 	    consumer->links.status != DL_DEV_NO_DRIVER &&
+ 	    consumer->links.status != DL_DEV_PROBING) {
++		if (sync_state_skipped)
++			*sync_state_skipped = true;
+ 		link = NULL;
+ 		goto out;
+ 	}
+@@ -1001,7 +1015,6 @@ struct device_link *device_link_add(struct device *consumer,
+ 
+ 	return link;
+ }
+-EXPORT_SYMBOL_GPL(device_link_add);
+ 
+ static void __device_link_del(struct kref *kref)
+ {
+@@ -2226,6 +2239,8 @@ static int fw_devlink_create_devlink(struct device *con,
+ 		sup_dev = get_dev_from_fwnode(sup_handle);
+ 
+ 	if (sup_dev) {
++		bool sync_state_skipped = false;
++
+ 		/*
+ 		 * If it's one of those drivers that don't actually bind to
+ 		 * their device using driver core, then don't wait on this
+@@ -2240,7 +2255,9 @@ static int fw_devlink_create_devlink(struct device *con,
+ 			goto out;
+ 		}
+ 
+-		if (con != sup_dev && !device_link_add(con, sup_dev, flags)) {
++		if (con != sup_dev &&
++		    !device_link_add_internal(con, sup_dev, flags, &sync_state_skipped) &&
++		    !sync_state_skipped) {
+ 			dev_err(con, "Failed to create device link (0x%x) with supplier %s for %pfwf\n",
+ 				flags, dev_name(sup_dev), link->consumer);
+ 			ret = -EINVAL;

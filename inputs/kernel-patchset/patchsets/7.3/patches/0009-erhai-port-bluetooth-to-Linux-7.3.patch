@@ -1,4 +1,4 @@
-From 3d7e7d26192c726c088ca72e28ed594269ecbc71 Mon Sep 17 00:00:00 2001
+From c84956cad6c9eddfad189fbd963210b081217587 Mon Sep 17 00:00:00 2001
 From: Erhai patchset migration <erhai-patchset@localhost>
 Date: Fri, 13 Nov 2026 21:41:34 +0800
 Subject: [PATCH] erhai: port bluetooth to Linux 7.3

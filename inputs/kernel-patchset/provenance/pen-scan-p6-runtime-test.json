@@ -1,0 +1,30 @@
+{
+  "counts": {
+    "3:0": 2460,
+    "3:1": 2402,
+    "3:25": 50,
+    "1:320": 36,
+    "0:0": 2808,
+    "3:26": 105,
+    "3:27": 142,
+    "3:24": 1198,
+    "1:330": 32
+  },
+  "pressure_values": 757,
+  "pressure_min": 0,
+  "pressure_max": 14044,
+  "x_range": [
+    29960,
+    33824
+  ],
+  "y_range": [
+    989,
+    13130
+  ],
+  "kernel_release": "7.3.4-erhai-p6",
+  "scan_enabled_at_runtime": true,
+  "paired_pen_connected": true,
+  "user_report": "Pen started working after manual Bluetooth connection.",
+  "new_kernel_boot_verified": false,
+  "meaning": "Actual evdev pressure and motion observed on p6 after runtime scan enable; p7 default-on boot acceptance is separate."
+}
