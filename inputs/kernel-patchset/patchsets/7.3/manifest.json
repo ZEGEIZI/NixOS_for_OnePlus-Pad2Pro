@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "project": "linux-sm8750-erhai-patchset",
-  "release": "p21",
+  "release": "p22",
   "series": "7.3",
   "minimum_version": "7.3.4",
   "upstream": {
@@ -12,7 +12,7 @@
     "sha256": "b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f"
   },
   "branch": "patchset-7.3",
-  "head": "4457d3dd09a76c04b50dda388ade03f82eeba182",
+  "head": "c006b88483b73a3d85d5b50f20dc757da7e99292",
   "patches": [
     {
       "file": "patches/0001-erhai-port-bindings-and-documentation-to-Linux-7.3.patch",
@@ -533,6 +533,15 @@
         "a6a36c0addc8ea8b2d7987ece8e84a13243f5624"
       ],
       "upstream_status": "downstream; see provenance/port-7.3.json"
+    },
+    {
+      "file": "patches/0059-power-supply-ufcs-keep-the-policy-thread-idle-between-requests.patch",
+      "commit": "c006b88483b73a3d85d5b50f20dc757da7e99292",
+      "sha256": "cea18ce5ff4d88653467536b9aab8e3aa41950fb89d308ead72d3999d347e760",
+      "depends_on": [
+        "4457d3dd09a76c04b50dda388ade03f82eeba182"
+      ],
+      "upstream_status": "downstream; see provenance/port-7.3.json"
     }
   ],
   "configs": [
@@ -738,7 +747,7 @@
     "drivers/power/supply/ufcs/Makefile": "4c9bed29d332091cd834c8c9dae6c96d65a8d55cb15c23faee55921d4cd4123f",
     "drivers/power/supply/ufcs/include/internal/ufcs_core.h": "cee4c8d4306f03d8fa085b3fe025637c4dd3593bc4f237b8780b1f0630c1890e",
     "drivers/power/supply/ufcs/include/internal/ufcs_debug.h": "1dbfdb280a075611d2555d88fa8c294b1d7dcbd55685896ce312174e87d02e29",
-    "drivers/power/supply/ufcs/include/internal/ufcs_event.h": "93d90223254881a685ec05165e44dbdbd57fbfb6f6ea9169c2de141144a1fea9",
+    "drivers/power/supply/ufcs/include/internal/ufcs_event.h": "a18da1516062dd0f35479e2b0d3d3c9781e50876903d35610ddbd4aca4072b3b",
     "drivers/power/supply/ufcs/include/internal/ufcs_intf.h": "15ed51966abca1857c376c146ca9aea21b72f45f2eb12b81cab14b93c5dd34e8",
     "drivers/power/supply/ufcs/include/internal/ufcs_msg.h": "d8ae8146e8d35cc392529600fc3f126695999b4a0a86a6a8a9ca991ac918a77a",
     "drivers/power/supply/ufcs/include/internal/ufcs_notify.h": "4f4c7af70f0e7c1f3f3724623e27de8e987affa52b12c1e54f5a288dd9de18e6",
@@ -750,19 +759,19 @@
     "drivers/power/supply/ufcs/sc8547a_ufcs.h": "8dce196d1e3d0a889e02d40389974eab73cb50129f9468167e4c87e6027ee6f7",
     "drivers/power/supply/ufcs/ufcs_core.c": "b322a151f94ced91f6f2dcc0988a56843776369ee911000933b6117781a2900c",
     "drivers/power/supply/ufcs/ufcs_debug.c": "1355074e8be0d27e9adea2f70911462ae066240c1a2501b87c92e35a371d1c4d",
-    "drivers/power/supply/ufcs/ufcs_event.c": "c94ce1c7f6e8465f63f4e981f6ccc4cb70cfffb2cbbee9785c7d8d50d1f07ab5",
+    "drivers/power/supply/ufcs/ufcs_event.c": "05a05fc710adf826535b43957dce6164c35ce9fae7bdc31869a12a5399264f5c",
     "drivers/power/supply/ufcs/ufcs_event_ctrl.c": "998973aec143da7fa61201a28b933a32209f7cfff4a053c4566af109cbc75e6e",
     "drivers/power/supply/ufcs/ufcs_event_data.c": "4abfe32415967a413abf8d5b7793f7793b4bb55853bbca46a72bc2410414b807",
     "drivers/power/supply/ufcs/ufcs_event_vendor.c": "8bbe2c3838f01e6931c6ec05d5a9aeecdaf4f0e6bf74a9d474c2c53b82cf444e",
-    "drivers/power/supply/ufcs/ufcs_intf.c": "747d6d32f44325d4266b89c055e138313e20d195c7fd3a49c0ba56d3523c3590",
+    "drivers/power/supply/ufcs/ufcs_intf.c": "160f019f1b41dbc1553a3fd39366e3116b1df5094f461952aebd2beaa1b6dd6d",
     "drivers/power/supply/ufcs/ufcs_notify.c": "d13f9eff8eea0dd87390b84c43b5ea5798448645890aba03c7e972690b1044c1",
     "drivers/power/supply/ufcs/ufcs_pe_cable.c": "19421457e7dbc2b04ae8bc38ef28bff70437a5a6a696c17bd5b0af7dfbf53fca",
     "drivers/power/supply/ufcs/ufcs_pe_test.c": "75b0b8d5513c1939c20fbcf293ae676f0b4872a253f3b724e2c7a0f4a3b8af69",
     "drivers/power/supply/ufcs/ufcs_pe_vendor.c": "9b5fc6b93ccbc127a31043ec79cdb8e85c33c6fc647f658c78df7725df0976e4",
-    "drivers/power/supply/ufcs/ufcs_policy_engine.c": "26e42665cfb0f098b267d95c60a651bded5a676d86941d654e281885a9e0342c",
+    "drivers/power/supply/ufcs/ufcs_policy_engine.c": "284b53da128fbe4b3d91cac0a61b05f984d744f91aeeea25347d99149beaabf6",
     "drivers/power/supply/ufcs/ufcs_sha256.c": "4c187f8cab7846e7332617eb9fae35222e407325eac2ea7d357253ec157ef8e4",
-    "drivers/power/supply/ufcs/ufcs_test.c": "139c2d084e1ef7193574adf6f070673bec9da93695d8283c77035557d0cdee6e",
-    "drivers/power/supply/ufcs/ufcs_timer.c": "cda002ab00fc3fc3650db558f80ff527e9641ad1206fb548caa4092fad357c4d",
+    "drivers/power/supply/ufcs/ufcs_test.c": "41c5e3abb705a28b2c27b478b2287e67a996e2cccada96e617643922485e3f3c",
+    "drivers/power/supply/ufcs/ufcs_timer.c": "5055feb2588941b210c989a6fea0e0bfd20cc3a15c9ccdcfa61b079f03e4d417",
     "drivers/remoteproc/qcom_q6v5_pas.c": "d89feeca7924a62043996c9a6ecfb0b7dc29d6508631b90c410cf54355e979fb",
     "drivers/rpmsg/qcom_glink_native.c": "a3532b952fac1b24081d5e59cdacf31117779bc829309c0943a9d6c8f2ee5511",
     "drivers/soc/qcom/Kconfig": "812b698531b21b956625d53c30b1b67e98f024fd804c7022bbcf24424f16d485",

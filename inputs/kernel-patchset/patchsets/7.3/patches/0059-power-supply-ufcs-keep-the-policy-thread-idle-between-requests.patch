@@ -1,0 +1,179 @@
+From c006b88483b73a3d85d5b50f20dc757da7e99292 Mon Sep 17 00:00:00 2001
+From: Erhai patchset maintainers <erhai-patchset@localhost>
+Date: Thu, 19 Nov 2026 17:29:01 +0800
+Subject: [PATCH] power: supply: ufcs: keep the policy thread idle between
+ requests
+
+The policy thread waits in the event queue after a handshake times out and can stay there indefinitely. Mark the outer event wait idle and keep the waits inside protocol exchanges eligible for hung-task detection.
+
+Ignore empty IRQ status and report handshake timeouts and successful fallback resets as expected negotiation results. Keep reporting real PHY operation failures. Check idle state and reentry with the simulated charger.
+---
+ .../supply/ufcs/include/internal/ufcs_event.h |  1 +
+ drivers/power/supply/ufcs/ufcs_event.c        | 24 +++++++++++++++----
+ drivers/power/supply/ufcs/ufcs_intf.c         | 11 +++++++--
+ .../power/supply/ufcs/ufcs_policy_engine.c    |  3 ++-
+ drivers/power/supply/ufcs/ufcs_test.c         |  8 +++++++
+ drivers/power/supply/ufcs/ufcs_timer.c        |  2 +-
+ 6 files changed, 41 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/power/supply/ufcs/include/internal/ufcs_event.h b/drivers/power/supply/ufcs/include/internal/ufcs_event.h
+index 18eb5b645..76bb7de5c 100644
+--- a/drivers/power/supply/ufcs/include/internal/ufcs_event.h
++++ b/drivers/power/supply/ufcs/include/internal/ufcs_event.h
+@@ -143,6 +143,7 @@ int ufcs_send_msg(struct ufcs_class *class, struct ufcs_msg *msg, bool retry);
+ void ufcs_free_event(struct ufcs_class *class, struct ufcs_event **event);
+ void ufcs_free_all_event(struct ufcs_class *class);
+ struct ufcs_event *ufcs_get_next_event(struct ufcs_class *class);
++struct ufcs_event *ufcs_wait_for_next_request(struct ufcs_class *class);
+ struct ufcs_msg *ufcs_unpack_msg(struct ufcs_class *class, const u8 *buf, int len);
+ int ufcs_process_event(struct ufcs_class *class, struct ufcs_event *event);
+ int ufcs_dump_msg_info(struct ufcs_msg *msg, const char *prefix);
+diff --git a/drivers/power/supply/ufcs/ufcs_event.c b/drivers/power/supply/ufcs/ufcs_event.c
+index eca42bde3..a8ad07317 100644
+--- a/drivers/power/supply/ufcs/ufcs_event.c
++++ b/drivers/power/supply/ufcs/ufcs_event.c
+@@ -12,6 +12,7 @@
+ #include <linux/delay.h>
+ #include <linux/device.h>
+ #include <linux/errno.h>
++#include <linux/sched.h>
+ #include <linux/spinlock.h>
+ 
+ #include "ufcs_core.h"
+@@ -607,7 +608,10 @@ static int ufcs_check_error_info(struct ufcs_class *class, unsigned int dev_err_
+ 		} else {
+ 			class->handshake_success = false;
+ 			ufcs_send_state(UFCS_NOTIFY_SOURCE_HW_RESET, NULL);
+-			ufcs_err("source hard reset\n");
++			if (READ_ONCE(class->ufcs->handshake_state) == UFCS_HS_TIMEOUT)
++				ufcs_info("source hard reset during handshake fallback\n");
++			else
++				ufcs_err("source hard reset\n");
+ 		}
+ 		sender->status = MSG_RETRY_OVER;
+ 		complete(&sender->ack);
+@@ -657,7 +661,9 @@ static int ufcs_check_error_info(struct ufcs_class *class, unsigned int dev_err_
+ 		}
+ 	} else {
+ 		if (!(dev_err_flag & BIT(UFCS_RECV_ERR_DATA_READY))) {
+-			ufcs_err("sent packet complete = 0 && data ready = 0\n");
++			if (dev_err_flag)
++				ufcs_err("no packet completion or data ready, flags=0x%x\n",
++					 dev_err_flag);
+ 			goto err;
+ 		}
+ 	}
+@@ -1197,7 +1203,7 @@ void ufcs_free_all_event(struct ufcs_class *class)
+ 	}
+ }
+ 
+-struct ufcs_event *ufcs_get_next_event(struct ufcs_class *class)
++static struct ufcs_event *ufcs_wait_for_event(struct ufcs_class *class, unsigned int state)
+ {
+ 	struct ufcs_event *event;
+ #if IS_ENABLED(CONFIG_OPLUS_UFCS_CLASS_DEBUG)
+@@ -1223,7 +1229,7 @@ struct ufcs_event *ufcs_get_next_event(struct ufcs_class *class)
+ 		}
+ 		reinit_completion(&class->event.ack);
+ 		spin_unlock_irq(&class->event.event_list_lock);
+-		wait_for_completion(&class->event.ack);
++		wait_for_completion_state(&class->event.ack, state);
+ 		if (class->event.exit)
+ 			return NULL;
+ 		goto recheck;
+@@ -1254,3 +1260,13 @@ struct ufcs_event *ufcs_get_next_event(struct ufcs_class *class)
+ 	ufcs_free_event(class, &event);
+ 	goto recheck;
+ }
++
++struct ufcs_event *ufcs_get_next_event(struct ufcs_class *class)
++{
++	return ufcs_wait_for_event(class, TASK_UNINTERRUPTIBLE);
++}
++
++struct ufcs_event *ufcs_wait_for_next_request(struct ufcs_class *class)
++{
++	return ufcs_wait_for_event(class, TASK_IDLE);
++}
+diff --git a/drivers/power/supply/ufcs/ufcs_intf.c b/drivers/power/supply/ufcs/ufcs_intf.c
+index a714dbd2b..588ed651f 100644
+--- a/drivers/power/supply/ufcs/ufcs_intf.c
++++ b/drivers/power/supply/ufcs/ufcs_intf.c
+@@ -225,10 +225,17 @@ int ufcs_source_hard_reset(struct ufcs_class *class)
+ 		return -EINVAL;
+ 	}
+ 
+-	ufcs_err("send source hard reset\n");
++	rc = class->ufcs->ops->source_hard_reset(class->ufcs);
++	if (rc)
++		ufcs_err("failed to send source hard reset: %d\n", rc);
++	else if (READ_ONCE(class->ufcs->handshake_state) == UFCS_HS_TIMEOUT)
++		ufcs_info("sent source hard reset after handshake timeout\n");
++	else
++		ufcs_err("sent source hard reset\n");
+ 
+-	class->ufcs->ops->source_hard_reset(class->ufcs);
+ 	rc = class->ufcs->ops->disable(class->ufcs);
++	if (rc)
++		ufcs_err("failed to disable PHY after source hard reset: %d\n", rc);
+ 	ufcs_clean_process_info(class);
+ 	ufcs_exit_sm_work(class);
+ 	ufcs_send_state(UFCS_NOTIFY_SOURCE_HW_RESET, NULL);
+diff --git a/drivers/power/supply/ufcs/ufcs_policy_engine.c b/drivers/power/supply/ufcs/ufcs_policy_engine.c
+index ea925d346..4b680b140 100644
+--- a/drivers/power/supply/ufcs/ufcs_policy_engine.c
++++ b/drivers/power/supply/ufcs/ufcs_policy_engine.c
+@@ -1371,7 +1371,8 @@ static int ufcs_sm_task(void *arg)
+ 			break;
+ 		WRITE_ONCE(class->sm_task_wakeup, false);
+ retry:
+-		event = ufcs_get_next_event(class);
++		/* Only the waits inside a protocol exchange have a deadline. */
++		event = ufcs_wait_for_next_request(class);
+ 		if (event == NULL) {
+ 			if (!class->event.exit) {
+ 				ufcs_err("can't get ufcs event\n");
+diff --git a/drivers/power/supply/ufcs/ufcs_test.c b/drivers/power/supply/ufcs/ufcs_test.c
+index 408d7acce..35de774a5 100644
+--- a/drivers/power/supply/ufcs/ufcs_test.c
++++ b/drivers/power/supply/ufcs/ufcs_test.c
+@@ -2,6 +2,8 @@
+ #include <crypto/sha2.h>
+ #include <kunit/test.h>
+ #include <kunit/device.h>
++#include <linux/delay.h>
++#include <linux/sched.h>
+ #include <linux/unaligned.h>
+ #include "ufcs_class.h"
+ #include "ufcs_core.h"
+@@ -178,11 +180,17 @@ static void negotiate(struct kunit *test)
+ static void timeout_and_reenter(struct kunit *test)
+ {
+ 	struct peer *p = test->priv;
++	struct task_struct *task = p->dev->class->sm_task;
++	int i;
+ 
+ 	p->silent = true;
+ 	KUNIT_ASSERT_EQ(test, ufcs_handshake(p->dev), -ETIMEDOUT);
+ 	KUNIT_EXPECT_EQ(test, p->attempts, 1);
+ 	KUNIT_EXPECT_GT(test, p->disabled, 0);
++	/* The policy thread must become idle after the failed handshake. */
++	for (i = 0; i < 100 && READ_ONCE(task->__state) != TASK_IDLE; i++)
++		msleep(10);
++	KUNIT_EXPECT_EQ(test, READ_ONCE(task->__state), (unsigned int)TASK_IDLE);
+ 	p->silent = false;
+ 	KUNIT_EXPECT_EQ(test, ufcs_handshake(p->dev), 0);
+ }
+diff --git a/drivers/power/supply/ufcs/ufcs_timer.c b/drivers/power/supply/ufcs/ufcs_timer.c
+index fcb12ab12..ecc76e346 100644
+--- a/drivers/power/supply/ufcs/ufcs_timer.c
++++ b/drivers/power/supply/ufcs/ufcs_timer.c
+@@ -210,7 +210,7 @@ static enum hrtimer_restart handshake_timeout(struct hrtimer *timer)
+ 	struct ufcs_event *event;
+ 	int rc;
+ 
+-	ufcs_err("handshake timeout\n");
++	ufcs_info("handshake timeout\n");
+ 	event = class->timeout_event[HANDSHAKE_TIMER];
+ 	class->timeout_event[HANDSHAKE_TIMER] = NULL;
+ 	if (event == NULL) {

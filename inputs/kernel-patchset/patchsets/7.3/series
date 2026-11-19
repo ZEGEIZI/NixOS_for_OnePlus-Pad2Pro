@@ -56,3 +56,4 @@ patches/0055-PCI-qcom-Honor-IOMMU-provider-s-iommu-cells-in-qcom_pcie_config_sid
 patches/0056-power-supply-cps8601-restore-Erhai-pen-charger-wake-and-IRQ-delivery.patch
 patches/0057-power-supply-cps8601-use-the-Erhai-charger-supply-pulse.patch
 patches/0058-power-supply-cps8601-stop-charging-a-full-pen.patch
+patches/0059-power-supply-ufcs-keep-the-policy-thread-idle-between-requests.patch
